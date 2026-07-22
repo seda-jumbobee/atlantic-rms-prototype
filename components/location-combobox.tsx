@@ -55,6 +55,7 @@ export function LocationCombobox({
                     key={p.id}
                     value={label}
                     onSelect={() => { onChange({ kind: "port", id: p.id, label }); setOpen(false); }}
+                    className="[&>svg:last-child]:hidden"
                   >
                     <Anchor className="size-4 shrink-0 text-primary" />
                     <span className="min-w-0 flex-1 truncate">{p.name}, {p.country}</span>
