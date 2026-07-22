@@ -137,13 +137,12 @@
   --chart-4: #388e3c;
   --chart-5: #4a4fcf; /* brand/primary/light */
   --radius: 0.625rem;
-  /* Sidebar = brand-primary surface; items walk the ramp:
-     rest = default, hover = hover, selected = active (task: Brand/Primary/Active). */
+  /* Sidebar = brand-primary surface. */
   --sidebar: #282aab;
   --sidebar-foreground: #fafafa;
   --sidebar-primary: #cc3f00; /* brand/secondary/dark — count badge (white text ≥4.5:1) */
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #20248f; /* hover */
+  --sidebar-accent: var(--status-info-fg); /* hover — replaced per request (= #282aab) */
   --sidebar-accent-foreground: #ffffff;
   --sidebar-active: #4a4fcf; /* active/selected item — brand/primary/light, lighter than the menu surface */
   --sidebar-border: #20248f;
@@ -205,7 +204,7 @@
   --sidebar-foreground: #fafafa;
   --sidebar-primary: #cc3f00;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #20248f;
+  --sidebar-accent: var(--status-info-fg);
   --sidebar-accent-foreground: #ffffff;
   --sidebar-active: #4a4fcf;
   --sidebar-border: #20248f;
