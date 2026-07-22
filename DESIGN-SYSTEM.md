@@ -7,18 +7,18 @@ Every token and component in this codebase mirrors that file 1:1. When a request
 
 ### Colors — Figma "Color" collection (Light / Dark), aliasing "Brand Primitives"
 
-Brand palette (2026-07-22 reference board): **brand/primary = indigo ramp** (default `#282aab` · light `#4a4fcf` · dark/hover `#20248f` · active `#14166d` · disabled `#dfdff3`), **brand/secondary = orange ramp** (default `#ff4c00` · light `#ff7033` · dark `#cc3f00` · hover `#e64500` · active `#b53800` · disabled `#ffe4d9`).
+Brand palette (2026-07-22 reference board): **brand/primary = indigo ramp** (default `#282aab` · light `#4a4fcf` · dark/hover `#20248f` · active `#14166d` · disabled `#f3f3f8`), **brand/secondary = orange ramp** (default `#ff4c00` · light `#ff7033` · dark `#cc3f00` · hover `#e64500` · active `#b53800` · disabled `#ffe4d9`).
 
 | Token | Light | Dark | Notes |
 |---|---|---|---|
 | `--background` | `#fafafa` | `#121212` | background/page · neutral/black |
 | `--card` / `--popover` | `#ffffff` | `#1e1e1e` (derived) | background/surface |
 | `--foreground` | `#121212` | `#fafafa` | text/primary |
-| `--primary` (+`-hover/-active/-disabled`) | `#282aab` (`#20248f`/`#14166d`/`#dfdff3`) | `#4a4fcf` (ramp shifted) | brand/primary; also `--ring`, links |
+| `--primary` (+`-hover/-active/-disabled`) | `#282aab` (`#20248f`/`#14166d`/`#f3f3f8`) | `#4a4fcf` (ramp shifted) | brand/primary; also `--ring`, links |
 | `--brand-secondary` (+states) | `#ff4c00` (hover `#e64500`, active `#b53800`, disabled `#ffe4d9`) | `#ff7033` | orange; Button variant `brand-secondary` |
 | `--secondary` / `--muted` | `#f6f6f6` | `#242424`/`#1e1e1e` (derived) | neutral/gray-50 — shadcn subtle surface, NOT the orange |
 | `--muted-foreground` | `#4f4f4f` | `#cccccc` | text/secondary · gray-300 |
-| `--accent` | `#dfdff3` | `#20248f` | light-indigo tint — menu hover/selection |
+| `--accent` | `#f3f3f8` | `#20248f` | light-indigo tint — menu hover/selection |
 | `--accent-foreground` | `#14166d` | `#ffffff` | |
 | `--destructive` | `#d32f2f` | same | feedback/danger/default = text/error; fg white |
 | `--success` | `#388e3c` | same | fg white |
@@ -34,7 +34,7 @@ Reference-board quirks (resolved, documented in `globals.css`): `text/link` prin
 | Tone | bg | fg | Typical mapping |
 |---|---|---|---|
 | `neutral` | `#f6f6f6` | `#4f4f4f` | draft, offline tariff, archived |
-| `info` | `#dfdff3` | `#282aab` | sent, qualification, spot |
+| `info` | `#f3f3f8` | `#282aab` | sent, qualification, spot |
 | `positive` | `#c8e6c9` | `#2e7d32` | confirmed, won, contract, active |
 | `warning` | `#ffecb3` | `#8a5300` | negotiation, expired, pending review |
 | `negative` | `#ffcdd2` | `#c62828` | lost, failed, overdue |

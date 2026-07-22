@@ -100,7 +100,7 @@
   --primary-foreground: #ffffff;
   --primary-hover: #20248f; /* brand/primary/hover */
   --primary-active: #14166d; /* brand/primary/active */
-  --primary-disabled: #dfdff3; /* brand/primary/disabled */
+  --primary-disabled: #f3f3f8; /* brand/primary/disabled */
   --brand-secondary: #ff4c00; /* brand/secondary/default */
   --brand-secondary-foreground: #ffffff;
   --brand-secondary-hover: #e64500;
@@ -110,7 +110,7 @@
   --secondary-foreground: #121212;
   --muted: #f6f6f6;
   --muted-foreground: #4f4f4f; /* text/secondary */
-  --accent: #dfdff3; /* brand/primary/disabled tint — menu hover/selection */
+  --accent: #f3f3f8; /* brand/primary/disabled tint — menu hover/selection */
   --accent-foreground: #14166d;
   --destructive: #d32f2f; /* feedback/danger/default = text/error */
   --destructive-foreground: #ffffff;
@@ -121,7 +121,7 @@
   --border: #e9e9e9; /* border/light */
   --input: #e9e9e9;
   --ring: #282aab;
-  --status-info-bg: #dfdff3;
+  --status-info-bg: #f3f3f8;
   --status-info-fg: #282aab;
   --status-positive-bg: #c8e6c9; /* feedback/success/light */
   --status-positive-fg: #2e7d32; /* feedback/success/dark */
@@ -184,7 +184,7 @@
   --input: #4f4f4f;
   --ring: #4a4fcf;
   /* Status scale is theme-stable */
-  --status-info-bg: #dfdff3;
+  --status-info-bg: #f3f3f8;
   --status-info-fg: #282aab;
   --status-positive-bg: #c8e6c9;
   --status-positive-fg: #2e7d32;
@@ -198,7 +198,7 @@
   --chart-2: #ff7033;
   --chart-3: #ffa000;
   --chart-4: #388e3c;
-  --chart-5: #dfdff3;
+  --chart-5: #f3f3f8;
   /* Sidebar is theme-stable (brand surface in both modes) */
   --sidebar: #282aab;
   --sidebar-foreground: #fafafa;
