@@ -68,11 +68,11 @@ function OverviewCard({
 function OceanGraphic() {
   return (
     <div aria-hidden className="hidden shrink-0 select-none md:block">
-      <svg viewBox="0 0 260 118" fill="none" className="h-auto w-[320px] text-primary lg:w-[420px] xl:w-[480px]">
-        {/* route arc between ports */}
-        <path d="M14 82 C 70 26, 190 26, 246 82" stroke="currentColor" strokeOpacity="0.3" strokeWidth="1.5" strokeDasharray="2 6" strokeLinecap="round" />
-        <circle cx="14" cy="82" r="4" fill="currentColor" fillOpacity="0.45" />
-        <circle cx="246" cy="82" r="4" fill="currentColor" fillOpacity="0.45" />
+      <svg viewBox="44 36 172 72" fill="none" className="h-auto w-[320px] text-primary lg:w-[420px] xl:w-[480px]">
+        {/* route arc between ports — kept short, hugging the ship */}
+        <path d="M54 80 C 95 42, 165 42, 206 80" stroke="currentColor" strokeOpacity="0.3" strokeWidth="1.5" strokeDasharray="2 6" strokeLinecap="round" />
+        <circle cx="54" cy="80" r="4" fill="currentColor" fillOpacity="0.45" />
+        <circle cx="206" cy="80" r="4" fill="currentColor" fillOpacity="0.45" />
         {/* container stacks */}
         <rect x="106" y="59" width="14" height="9" rx="1" fill="currentColor" fillOpacity="0.7" />
         <rect x="122" y="59" width="14" height="9" rx="1" fill="currentColor" fillOpacity="0.4" />
@@ -200,7 +200,7 @@ export default function DashboardPage() {
 
       {/* 3 · Quick actions */}
       <section aria-label="Quick actions" className="space-y-2">
-        <h2 className="text-sm font-medium text-muted-foreground">Quick actions</h2>
+        <h2 className="font-semibold">Quick actions</h2>
         <div className="flex flex-wrap gap-2">
           {QUICK_ACTIONS.map((a) => (
             <Button key={a.href} asChild variant="outline" size="sm" className="text-muted-foreground hover:text-foreground">
