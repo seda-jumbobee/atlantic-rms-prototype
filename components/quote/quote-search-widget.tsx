@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Anchor, ArrowLeftRight, CalendarDays, Info, MapPin, RotateCcw, Search, Sparkles } from "lucide-react";
+import { Anchor, ArrowLeftRight, Info, MapPin, RotateCcw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -361,13 +361,11 @@ export function QuoteSearchWidget({
           {routeComplete && commodity && (
             <section aria-label="Schedule and rate sources" className="space-y-4 duration-300 animate-in fade-in slide-in-from-top-1">
               <Separator />
-              <div className="flex flex-col gap-3 rounded-lg border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-6 rounded-lg border bg-muted/30 p-3">
                 <div className="flex items-center gap-2">
                   <label className="flex items-center gap-2.5">
                     <Switch checked={advanced} onCheckedChange={setAdvanced} />
-                    <span className="flex items-center gap-1.5 text-sm font-medium">
-                      <Sparkles className="size-4 text-primary" /> Extended search
-                    </span>
+                    <span className="text-sm font-medium">Extended search</span>
                   </label>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -386,10 +384,9 @@ export function QuoteSearchWidget({
                   </Tooltip>
                 </div>
                 {advanced && (
-                  <div className="flex items-center gap-2 duration-300 animate-in fade-in slide-in-from-right-1">
-                    <CalendarDays className="size-4 text-muted-foreground" />
-                    <Label htmlFor="rq-loading-date" className="text-sm text-muted-foreground">Loading date</Label>
-                    <Input id="rq-loading-date" type="date" value={loadingDate} onChange={(e) => setLoadingDate(e.target.value)} className="h-9 w-auto" />
+                  <div className="space-y-1.5 duration-300 animate-in fade-in slide-in-from-top-1">
+                    <Label htmlFor="rq-loading-date" className="text-sm">Loading date</Label>
+                    <Input id="rq-loading-date" type="date" value={loadingDate} onChange={(e) => setLoadingDate(e.target.value)} className="h-10 w-full sm:w-56" />
                   </div>
                 )}
               </div>
