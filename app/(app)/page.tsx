@@ -371,7 +371,7 @@ export default function DashboardPage() {
                   key={c.id}
                   href={calculatorHref(c)}
                   className={cn(
-                    "flex items-start justify-between gap-3 p-3 outline-none transition",
+                    "flex items-start justify-between gap-3 p-4 outline-none transition",
                     "hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-ring/50",
                     "first:rounded-t-xl last:rounded-b-xl"
                   )}
