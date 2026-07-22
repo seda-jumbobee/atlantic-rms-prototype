@@ -22,8 +22,8 @@ import { CALCULATORS } from "@/lib/data/calculators";
 
 const NAV = [
   { label: "Dashboard", href: "/" },
-  { label: "Quote Master", href: "/quote-master" },
-  { label: "Route Builder", href: "/route-builder" },
+  { label: "Rate Quote", href: "/quote-master" },
+  { label: "Custom Route", href: "/route-builder" },
   { label: "Deals & CRM", href: "/deals" },
   { label: "History", href: "/history" },
 ];

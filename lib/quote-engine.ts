@@ -6,6 +6,7 @@ import type {
   ContainerCode,
   CommodityKind,
   RouteRequirement,
+  Dimensions,
 } from "@/lib/types";
 import { CARRIERS, getCarrier } from "@/lib/data/carriers";
 import { getPort, getAddress, REQUIREMENTS } from "@/lib/data/ports";
@@ -25,6 +26,10 @@ export interface SearchInput {
   container?: ContainerCode;
   advancedSearch: boolean;
   loadingDate?: string;
+  /* Display-only round-trip fields (not used by pricing) — preserve manually
+     entered values when the search form is reopened for editing. */
+  condition?: "operable" | "inoperable";
+  dimensions?: Dimensions;
 }
 
 export function chargeTotal(c: ChargeLine): number {

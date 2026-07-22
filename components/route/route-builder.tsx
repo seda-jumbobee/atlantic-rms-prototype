@@ -219,7 +219,7 @@ export function RouteBuilder() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Route Builder" description="Configure the commodity, then build its multi-leg route with vendors, live totals & map.">
+      <PageHeader title="Custom Route" description="Build and price transportation stages manually using selected vendors and contracts.">
         <Button variant="outline" onClick={loadExample}><Wand2 className="size-4" /> Load example: US → Baku</Button>
       </PageHeader>
 

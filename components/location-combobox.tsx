@@ -18,17 +18,19 @@ export function LocationCombobox({
   value,
   onChange,
   placeholder = "Search port or address…",
+  id,
 }: {
   value?: LocationValue;
   onChange: (v: LocationValue) => void;
   placeholder?: string;
+  id?: string;
 }) {
   const [open, setOpen] = useState(false);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" role="combobox" className="h-10 w-full justify-between font-normal">
+        <Button id={id} variant="outline" role="combobox" className="h-10 w-full justify-between font-normal">
           {value ? (
             <span className="flex items-center gap-2 truncate">
               {value.kind === "port" ? <Anchor className="size-4 shrink-0 text-primary" /> : <MapPin className="size-4 shrink-0 text-status-info-fg" />}

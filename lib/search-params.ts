@@ -14,6 +14,15 @@ export function encodeSearch(input: SearchInput): string {
   if (input.container) p.set("ct", input.container);
   if (input.advancedSearch) p.set("adv", "1");
   if (input.loadingDate) p.set("ld", input.loadingDate);
+  // display-only round-trip fields (ignored by older links)
+  if (input.condition === "inoperable") p.set("cond", "n");
+  const d = input.dimensions;
+  if (d && (d.lengthIn || d.widthIn || d.heightIn || d.weightLb)) {
+    if (d.lengthIn) p.set("dl", String(d.lengthIn));
+    if (d.widthIn) p.set("dw", String(d.widthIn));
+    if (d.heightIn) p.set("dh", String(d.heightIn));
+    if (d.weightLb) p.set("dwt", String(d.weightLb));
+  }
   return p.toString();
 }
 
@@ -25,6 +34,11 @@ export function decodeSearch(sp: URLSearchParams | Record<string, string | undef
   if (!ck || !st) return null;
   if (!get("op") && !get("oa")) return null;
   if (!get("dp") && !get("da")) return null;
+  const num = (k: string) => {
+    const n = Number(get(k));
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  };
+  const hasDims = ["dl", "dw", "dh", "dwt"].some((k) => get(k));
   return {
     originPortId: get("op"),
     originAddressId: get("oa"),
@@ -37,5 +51,9 @@ export function decodeSearch(sp: URLSearchParams | Record<string, string | undef
     container: get("ct") as ContainerCode | undefined,
     advancedSearch: get("adv") === "1",
     loadingDate: get("ld"),
+    condition: get("cond") === "n" ? "inoperable" : undefined,
+    dimensions: hasDims
+      ? { lengthIn: num("dl"), widthIn: num("dw"), heightIn: num("dh"), weightLb: num("dwt") }
+      : undefined,
   };
 }

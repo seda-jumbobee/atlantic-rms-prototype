@@ -93,7 +93,9 @@ Tailwind defaults; sanctioned spacing steps 0–6, 8, 10, 12, 16, 20, 24 (×4px)
 | Page header | `55:6` | [components/page-header.tsx](components/page-header.tsx) |
 | KPI stat strip / Icon tile | `55:20` / `55:63` | pattern of StatCard — see [components/stat-card.tsx](components/stat-card.tsx) |
 | Filter toolbar & list header | `56:2` | pattern — admin pages' toolbars |
-| Stepper | `56:28` | quote-master wizard steps ([components/quote/quote-master.tsx](components/quote/quote-master.tsx)) |
+| Stepper | `56:28` | Rate Quote wizard steps ([components/quote/quote-master.tsx](components/quote/quote-master.tsx)) |
+
+> **User-facing naming (2026-07-22):** "Quote Master" → **Rate Quote**, "Route Builder" → **Custom Route**. Internal route paths (`/quote-master`, `/route-builder`), file names, and code identifiers are unchanged by design. |
 | Icons | `73:33` | lucide-react, `size-4` default |
 
 ## Rules

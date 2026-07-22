@@ -1,16 +1,21 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { Check, Search, ListChecks, FileText } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useMemo, useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Check, Search, ListChecks, Calculator, Send, SearchX, Route } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { QuoteSearchWidget } from "@/components/quote/quote-search-widget";
 import { ResultsView } from "@/components/quote/results-view";
 import { QuoteEditor } from "@/components/quote/quote-editor";
-import { decodeSearch } from "@/lib/search-params";
-import { buildRateOptions, destinationRequirements } from "@/lib/quote-engine";
+import type { LocationValue } from "@/components/location-combobox";
+import type { CommoditySelection } from "@/components/commodity-picker";
+import { decodeSearch, encodeSearch } from "@/lib/search-params";
+import { buildRateOptions, destinationRequirements, type SearchInput } from "@/lib/quote-engine";
 import { getPort, getAddress } from "@/lib/data/ports";
+import { getEquipment } from "@/lib/data/equipment";
 import { seeded } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { RateOption } from "@/lib/types";
@@ -22,37 +27,93 @@ function locLabel(portId?: string, addrId?: string): string {
   return a?.city ?? a?.label ?? "—";
 }
 
+// Rebuild the search form's values from an encoded search so "Edit shipment details"
+// returns the Manager to a fully pre-filled form (nothing entered is lost).
+function widgetInitialFromInput(input: SearchInput) {
+  const toLoc = (portId?: string, addrId?: string): LocationValue | undefined => {
+    const p = getPort(portId);
+    if (p) return { kind: "port", id: p.id, label: `${p.name}, ${p.country} · ${p.locode}` };
+    const a = getAddress(addrId);
+    if (a) return { kind: "address", id: a.id, label: a.label };
+    return undefined;
+  };
+  const eq = getEquipment(input.equipmentId);
+  const selfPropelled = ["equipment", "vehicle", "boat"].includes(input.commodityKind);
+  const commodity: CommoditySelection = {
+    kind: input.commodityKind,
+    label: input.commodityLabel,
+    shipmentType: input.shipmentType,
+    container: input.container,
+    equipmentId: input.equipmentId,
+    industry: eq?.industry,
+    category: eq?.category,
+    make: eq?.make,
+    dimensions: input.dimensions ?? eq?.dimensions,
+    condition: input.condition ?? (selfPropelled ? "operable" : undefined),
+  };
+  return {
+    origin: toLoc(input.originPortId, input.originAddressId),
+    dest: toLoc(input.destPortId, input.destAddressId),
+    commodity,
+    advanced: input.advancedSearch,
+    loadingDate: input.loadingDate ?? "",
+  };
+}
+
 const STEPS = [
-  { key: "search", label: "Search", icon: Search },
+  { key: "search", label: "Shipment details", icon: Search },
   { key: "choose", label: "Choose rate", icon: ListChecks },
-  { key: "build", label: "Build quote", icon: FileText },
+  { key: "pricing", label: "Set pricing", icon: Calculator },
+  { key: "review", label: "Review & send", icon: Send },
 ];
 
 export function QuoteMaster() {
   const sp = useSearchParams();
+  const router = useRouter();
   const input = useMemo(() => decodeSearch(sp), [sp]);
   const [selected, setSelected] = useState<RateOption | null>(null);
+  // Revisit the search form while results already exist (values pre-filled).
+  const [editingSearch, setEditingSearch] = useState(false);
 
   const rates = useMemo(() => (input ? buildRateOptions(input) : []), [input]);
   const requirements = useMemo(() => (input ? destinationRequirements(input) : []), [input]);
 
-  // ?edit=1 → reopen straight into the editable editor (edit a quoted rate & re-send)
+  // ?edit=1 → reopen straight into the editable editor (edit a quoted rate & re-send).
+  // Consumed once so "Back to rates" / the stepper still work afterwards.
   const editFlag = sp.get("edit") === "1";
+  const editConsumedRef = useRef(false);
   useEffect(() => {
-    if (editFlag && input && !selected && rates.length) {
+    if (editFlag && !editConsumedRef.current && input && !selected && rates.length) {
+      editConsumedRef.current = true;
       setSelected(rates.find((r) => r.recommended) ?? rates[0]);
     }
   }, [editFlag, input, rates, selected]);
 
-  const step = !input ? "search" : selected ? "build" : "choose";
+  // A new search landed → leave edit mode and show its results.
+  const spString = sp.toString();
+  useEffect(() => {
+    setEditingSearch(false);
+  }, [spString]);
+
+  const showSearch = !input || editingSearch;
+  const stepIndex = showSearch ? 0 : selected ? 2 : 1;
   const origin = input ? locLabel(input.originPortId, input.originAddressId) : "";
   const destination = input ? locLabel(input.destPortId, input.destAddressId) : "";
   const quoteId = input ? `Q-${190600 + Math.floor(seeded(JSON.stringify(input)) * 380)}` : "Q-190600";
 
+  const goToStep = (i: number) => {
+    if (i >= stepIndex) return;
+    if (i === 0) setEditingSearch(true);
+    if (i === 1) setSelected(null);
+  };
+
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <PageHeader title="Quote Master" description="Search, compare and assemble an end-to-end project-cargo quote.">
-        {input && (
+      <PageHeader
+        title="Rate Quote"
+        description="Find available rates and create a client quote using commodity-specific formulas and contract rates."
+      >
+        {input && !showSearch && (
           <div className="hidden text-sm text-muted-foreground sm:block">
             <span className="font-medium text-foreground">{origin}</span> → <span className="font-medium text-foreground">{destination}</span>
             <span className="mx-1.5">·</span>{input.commodityLabel || input.commodityKind}
@@ -60,54 +121,108 @@ export function QuoteMaster() {
         )}
       </PageHeader>
 
-      {/* Stepper */}
-      <div className="flex items-center gap-2">
-        {STEPS.map((s, i) => {
-          const active = s.key === step;
-          const done = STEPS.findIndex((x) => x.key === step) > i;
-          return (
-            <div key={s.key} className="flex flex-1 items-center gap-2">
-              <div className={cn(
-                "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm",
-                active ? "border-primary bg-primary/5 font-medium text-primary" : done ? "text-success" : "text-muted-foreground",
-              )}>
-                <span className={cn(
-                  "grid size-6 place-items-center rounded-full text-xs",
-                  active ? "bg-primary text-primary-foreground" : done ? "bg-success text-success-foreground" : "bg-muted",
-                )}>
-                  {done ? <Check className="size-3.5" /> : i + 1}
+      {/* Progress — full main-content width. "Review & send" activates inside the editor
+          flow; it is shown so the Manager can see the whole journey. */}
+      <nav aria-label="Quote progress" className="w-full">
+        <ol className="flex w-full items-center gap-2 sm:gap-3">
+          {STEPS.map((s, i) => {
+            const state = i === stepIndex ? "active" : i < stepIndex ? "done" : "upcoming";
+            const clickable = state === "done";
+            const Inner = (
+              <>
+                <span
+                  className={cn(
+                    "grid size-7 shrink-0 place-items-center rounded-full text-xs font-medium transition",
+                    state === "active" && "bg-primary text-primary-foreground",
+                    state === "done" && "bg-primary/15 text-primary",
+                    state === "upcoming" && "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {state === "done" ? <Check className="size-4" /> : i + 1}
                 </span>
-                <span className="hidden sm:inline">{s.label}</span>
-              </div>
-              {i < STEPS.length - 1 && <div className={cn("h-px flex-1", done ? "bg-success" : "bg-border")} />}
-            </div>
-          );
-        })}
-      </div>
+                <span
+                  className={cn(
+                    "hidden whitespace-nowrap text-sm md:inline",
+                    state === "active" && "font-semibold text-foreground",
+                    state === "done" && "font-medium text-foreground",
+                    state === "upcoming" && "text-muted-foreground",
+                  )}
+                >
+                  {s.label}
+                </span>
+              </>
+            );
+            return (
+              <li key={s.key} className={cn("flex min-w-0 items-center gap-2 sm:gap-3", i < STEPS.length - 1 && "flex-1")}>
+                {clickable ? (
+                  <button
+                    type="button"
+                    onClick={() => goToStep(i)}
+                    className="flex items-center gap-2 rounded-full outline-none transition hover:opacity-80 focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    aria-label={`Back to ${s.label}`}
+                  >
+                    {Inner}
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2" aria-current={state === "active" ? "step" : undefined}>
+                    {Inner}
+                  </div>
+                )}
+                {i < STEPS.length - 1 && (
+                  <span aria-hidden className={cn("h-0.5 min-w-4 flex-1 rounded-full", i < stepIndex ? "bg-primary" : "bg-border")} />
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
 
-      {step === "search" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Start a quote</CardTitle>
-            <CardDescription>Choose origin & destination (port or address), then the commodity.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <QuoteSearchWidget />
-          </CardContent>
-        </Card>
-      )}
-
-      {step === "choose" && input && (
-        <ResultsView
-          rates={rates}
-          requirements={requirements}
-          lane={`${origin} → ${destination}`}
-          advanced={input.advancedSearch}
-          onChoose={setSelected}
+      {showSearch && (
+        <QuoteSearchWidget
+          key={input ? spString : "fresh"}
+          initial={input ? widgetInitialFromInput(input) : undefined}
+          existingQuery={input ? encodeSearch(input) : undefined}
+          onSearch={
+            input
+              ? (next) => {
+                  // Unchanged criteria → back to the existing results; changed → new search.
+                  const q = encodeSearch(next);
+                  if (q === encodeSearch(input)) setEditingSearch(false);
+                  else router.push(`/quote-master?${q}`);
+                }
+              : undefined
+          }
         />
       )}
 
-      {step === "build" && selected && input && (
+      {!showSearch && stepIndex === 1 && input && (
+        rates.length ? (
+          <ResultsView
+            rates={rates}
+            requirements={requirements}
+            lane={`${origin} → ${destination}`}
+            advanced={input.advancedSearch}
+            onChoose={setSelected}
+          />
+        ) : (
+          <EmptyState
+            icon={SearchX}
+            title="No matching rates found"
+            description="We could not find a rate for the selected route and shipment details. Adjust the shipment details, or price the transportation stages manually in Custom Route."
+            action={
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button onClick={() => setEditingSearch(true)}>Edit shipment details</Button>
+                <Button variant="outline" asChild>
+                  <Link href="/route-builder"><Route className="size-4" /> Build custom route</Link>
+                </Button>
+              </div>
+            }
+            className="mx-auto max-w-lg"
+          />
+        )
+      )}
+
+      {!showSearch && stepIndex === 2 && selected && input && (
         <QuoteEditor
           rate={selected}
           quoteId={quoteId}

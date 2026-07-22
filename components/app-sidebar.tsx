@@ -26,8 +26,8 @@ const CALC_ICON: Record<string, typeof Ship> = {
 
 const MAIN = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/quote-master", label: "Quote Master", icon: Sparkles },
-  { href: "/route-builder", label: "Route Builder", icon: Route },
+  { href: "/quote-master", label: "Rate Quote", icon: Sparkles },
+  { href: "/route-builder", label: "Custom Route", icon: Route },
   { href: "/templates", label: "Templates", icon: LayoutTemplate },
 ];
 const SECONDARY = [

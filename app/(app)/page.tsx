@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Sparkles, Calculator, ArrowRight, FileText, Briefcase, TrendingUp,
-  AlertCircle, LayoutTemplate, Ship, MapPin, Pencil, Send, ExternalLink,
+  AlertCircle, LayoutTemplate, Ship, MapPin, Pencil, Send, ExternalLink, Route,
   type LucideIcon,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -97,7 +97,7 @@ function RouteGraphic() {
 }
 
 const QUICK_ACTIONS = [
-  { href: "/quote-master", label: "Create quote", icon: Sparkles },
+  { href: "/quote-master", label: "Create rate quote", icon: Sparkles },
   { href: "/templates", label: "Use template", icon: LayoutTemplate },
   { href: "/calculators", label: "Open calculators", icon: Calculator },
 ];
@@ -181,19 +181,29 @@ export default function DashboardPage() {
             <div className="max-w-xl space-y-2">
               <h2 className="text-xl font-semibold tracking-tight">Create a new quote</h2>
               <p className="text-sm text-muted-foreground">
-                Enter shipment details, compare available rates, and prepare a client offer.
+                Find available rates for a commodity-based quote or manually build a custom route.
               </p>
-              <div className="flex flex-wrap items-center gap-2 pt-2">
-                <Button asChild size="lg">
-                  <Link href="/quote-master">
-                    <Sparkles className="size-4" /> Create quote
-                  </Link>
-                </Button>
-                <Button asChild variant="ghost" size="lg" className="text-muted-foreground hover:text-foreground">
-                  <Link href="/templates">
-                    <LayoutTemplate className="size-4" /> Use template
-                  </Link>
-                </Button>
+              <div className="flex flex-col gap-4 pt-2 sm:flex-row sm:gap-6">
+                <div className="space-y-1.5">
+                  <Button asChild size="lg">
+                    <Link href="/quote-master">
+                      <Sparkles className="size-4" /> Create rate quote
+                    </Link>
+                  </Button>
+                  <p className="text-caption text-muted-foreground">
+                    Use commodity formulas and available contract rates.
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  <Button asChild variant="outline" size="lg">
+                    <Link href="/route-builder">
+                      <Route className="size-4" /> Build custom route
+                    </Link>
+                  </Button>
+                  <p className="text-caption text-muted-foreground">
+                    Select transportation stages, vendors, and contracts manually.
+                  </p>
+                </div>
               </div>
             </div>
             <RouteGraphic />
@@ -275,7 +285,7 @@ export default function DashboardPage() {
               description="Your quotes will appear here once you create your first one."
               action={
                 <Button asChild size="sm">
-                  <Link href="/quote-master">Create quote</Link>
+                  <Link href="/quote-master">Create rate quote</Link>
                 </Button>
               }
             />
