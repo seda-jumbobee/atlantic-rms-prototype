@@ -32,12 +32,12 @@ export function LocationCombobox({
       <PopoverTrigger asChild>
         <Button id={id} variant="outline" role="combobox" className="h-10 w-full justify-between font-normal">
           {value ? (
-            <span className="flex items-center gap-2 truncate">
+            <span className="flex min-w-0 flex-1 items-center gap-2">
               {value.kind === "port" ? <Anchor className="size-4 shrink-0 text-primary" /> : <MapPin className="size-4 shrink-0 text-status-info-fg" />}
               <span className="truncate">{value.label}</span>
             </span>
           ) : (
-            <span className="text-muted-foreground">{placeholder}</span>
+            <span className="min-w-0 flex-1 truncate text-left text-muted-foreground">{placeholder}</span>
           )}
           <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
         </Button>

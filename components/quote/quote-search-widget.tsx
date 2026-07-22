@@ -276,7 +276,7 @@ export function QuoteSearchWidget({
                 Where the shipment starts and ends — pick a port or a door address for each.
               </p>
             </div>
-            <div ref={originAnchor} className="grid items-start gap-3 sm:grid-cols-[1fr_auto_1fr]">
+            <div ref={originAnchor} className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
               <div id="rq-origin" className="space-y-1.5">
                 <Label htmlFor="rq-origin-trigger"><span>Origin<RequiredMark /></span></Label>
                 <LocationCombobox id="rq-origin-trigger" value={origin} onChange={setOrigin} placeholder="Port or pickup address…" />
