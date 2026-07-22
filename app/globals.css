@@ -138,7 +138,7 @@
   --chart-5: #4a4fcf; /* brand/primary/light */
   --radius: 0.625rem;
   /* Sidebar = brand-primary surface. */
-  --sidebar: var(--primary-active); /* menu surface = primary-active (#14166d) per request */
+  --sidebar: var(--sidebar-border); /* menu surface = sidebar-border per request (= #20248f) */
   --sidebar-foreground: #fafafa;
   --sidebar-primary: #cc3f00; /* brand/secondary/dark — count badge (white text ≥4.5:1) */
   --sidebar-primary-foreground: #ffffff;
@@ -200,7 +200,7 @@
   --chart-4: #388e3c;
   --chart-5: #f3f3f8;
   /* Sidebar is theme-stable (brand surface in both modes) */
-  --sidebar: var(--primary-active);
+  --sidebar: var(--sidebar-border);
   --sidebar-foreground: #fafafa;
   --sidebar-primary: #cc3f00;
   --sidebar-primary-foreground: #ffffff;
