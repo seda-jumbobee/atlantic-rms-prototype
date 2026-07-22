@@ -56,10 +56,10 @@ export function LocationCombobox({
                     value={label}
                     onSelect={() => { onChange({ kind: "port", id: p.id, label }); setOpen(false); }}
                   >
-                    <Anchor className="size-4 text-primary" />
-                    <span>{p.name}, {p.country}</span>
-                    <span className="ml-auto font-mono text-xs text-muted-foreground">{p.locode}</span>
-                    {value?.id === p.id && <Check className="ml-1 size-4" />}
+                    <Anchor className="size-4 shrink-0 text-primary" />
+                    <span className="min-w-0 flex-1 truncate">{p.name}, {p.country}</span>
+                    {value?.id === p.id && <Check className="size-4 shrink-0" />}
+                    <span className="shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground">{p.locode}</span>
                   </CommandItem>
                 );
               })}
@@ -71,9 +71,9 @@ export function LocationCombobox({
                   value={a.label}
                   onSelect={() => { onChange({ kind: "address", id: a.id, label: a.label }); setOpen(false); }}
                 >
-                  <MapPin className="size-4 text-status-info-fg" />
-                  <span className="truncate">{a.label}</span>
-                  {value?.id === a.id && <Check className="ml-1 size-4" />}
+                  <MapPin className="size-4 shrink-0 text-status-info-fg" />
+                  <span className="min-w-0 flex-1 truncate">{a.label}</span>
+                  {value?.id === a.id && <Check className="size-4 shrink-0" />}
                 </CommandItem>
               ))}
             </CommandGroup>
