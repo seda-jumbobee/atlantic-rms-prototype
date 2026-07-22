@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeftRight, CalendarDays, Pencil, RotateCcw, Search, Sparkles } from "lucide-react";
+import { Anchor, ArrowLeftRight, CalendarDays, MapPin, RotateCcw, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -59,6 +59,29 @@ function mapPoint(v?: LocationValue): MapPoint | undefined {
   return rec ? { lat: rec.lat, lng: rec.lng, label: shortLoc(v) } : undefined;
 }
 
+/** Emoji flag derived from the location's ISO country code (dynamic per selection). */
+function flagEmoji(v?: LocationValue): string | null {
+  if (!v) return null;
+  const rec = v.kind === "port" ? PORTS.find((p) => p.id === v.id) : ADDRESSES.find((a) => a.id === v.id);
+  const cc = rec?.countryCode;
+  if (!cc || cc.length !== 2) return null;
+  return String.fromCodePoint(...[...cc.toUpperCase()].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
+}
+
+function LocationRow({ label, value }: { label: string; value: LocationValue }) {
+  const Icon = value.kind === "port" ? Anchor : MapPin;
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <dt className="w-20 shrink-0 text-muted-foreground">{label}</dt>
+      <dd className="flex min-w-0 items-center gap-1.5 font-medium">
+        <Icon aria-hidden className="size-3.5 shrink-0 text-primary" />
+        {flagEmoji(value) && <span aria-hidden className="shrink-0 text-sm leading-none">{flagEmoji(value)}</span>}
+        <span className="truncate">{value.label}</span>
+      </dd>
+    </div>
+  );
+}
+
 type FieldErrors = Partial<Record<"origin" | "dest" | "kind" | "details" | "dims", string>>;
 
 function validateForm(
@@ -89,32 +112,18 @@ function validateForm(
 
 /* ── Context summary cards (desktop side panel + inline on smaller screens) ── */
 
-function RouteOverviewCard({
-  origin, dest, onEdit,
-}: { origin: LocationValue; dest: LocationValue; onEdit: () => void }) {
+function RouteOverviewCard({ origin, dest }: { origin: LocationValue; dest: LocationValue }) {
   const o = mapPoint(origin);
   const d = mapPoint(dest);
   return (
-    <Card className="gap-3 py-4">
-      <CardHeader className="flex-row items-center justify-between px-4">
-        <CardTitle className="text-sm">Route overview</CardTitle>
-        <Button variant="ghost" size="sm" className="-my-1 h-7 gap-1 px-2 text-xs text-muted-foreground" onClick={onEdit}>
-          <Pencil className="size-3.5" /> Edit route
-        </Button>
+    <Card className="gap-3 p-4">
+      <CardHeader className="p-0">
+        <CardTitle className="text-base font-semibold">Route overview</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3 px-4">
-        <p className="text-sm font-medium">
-          {shortLoc(origin)} <span className="text-muted-foreground">→</span> {shortLoc(dest)}
-        </p>
-        <dl className="space-y-1 text-xs">
-          <div className="flex gap-2">
-            <dt className="w-20 shrink-0 text-muted-foreground">Origin</dt>
-            <dd className="min-w-0 truncate">{origin.label}</dd>
-          </div>
-          <div className="flex gap-2">
-            <dt className="w-20 shrink-0 text-muted-foreground">Destination</dt>
-            <dd className="min-w-0 truncate">{dest.label}</dd>
-          </div>
+      <CardContent className="space-y-3 p-0">
+        <dl className="space-y-1.5">
+          <LocationRow label="Origin" value={origin} />
+          <LocationRow label="Destination" value={dest} />
         </dl>
         {o && d && <MapPreview origin={o} destination={d} className="h-44" />}
       </CardContent>
@@ -133,16 +142,16 @@ function CommodityDetailsCard({ commodity }: { commodity: CommoditySelection }) 
   if (d && (d.lengthIn || d.widthIn || d.heightIn)) rows.push(["Dimensions", `${d.lengthIn || "—"}″L × ${d.widthIn || "—"}″W × ${d.heightIn || "—"}″H`]);
   if (d?.weightLb) rows.push(["Weight", `${d.weightLb.toLocaleString()} lb`]);
   return (
-    <Card className="gap-3 py-4">
-      <CardHeader className="px-4">
-        <CardTitle className="text-sm">Commodity details</CardTitle>
+    <Card className="gap-3 p-4">
+      <CardHeader className="p-0">
+        <CardTitle className="text-base font-semibold">Commodity details</CardTitle>
       </CardHeader>
-      <CardContent className="px-4">
-        <dl className="space-y-1 text-xs">
+      <CardContent className="p-0">
+        <dl className="space-y-1.5 text-sm">
           {rows.map(([k, v]) => (
-            <div key={k} className="flex gap-2">
-              <dt className="w-24 shrink-0 text-muted-foreground">{k}</dt>
-              <dd className="min-w-0 font-medium">{v}</dd>
+            <div key={k} className="flex items-baseline justify-between gap-3">
+              <dt className="shrink-0 text-muted-foreground">{k}</dt>
+              <dd className="min-w-0 break-words text-right font-medium">{v}</dd>
             </div>
           ))}
         </dl>
@@ -280,16 +289,12 @@ export function QuoteSearchWidget({
       {/* ── Form column ── */}
       <Card className="lg:col-span-7">
         <CardContent className="space-y-7 p-5 sm:p-6">
-          <p className="text-xs text-muted-foreground">
-            Fields marked with <RequiredMark /> are required.
-          </p>
-
           {/* 1 · Route */}
           <section aria-labelledby="rq-route-heading" className="space-y-4">
-            <h3 id="rq-route-heading" className="text-sm font-semibold">Route</h3>
+            <h3 id="rq-route-heading" className="text-base font-semibold">Route</h3>
             <div ref={originAnchor} className="grid items-start gap-3 sm:grid-cols-[1fr_auto_1fr]">
               <div id="rq-origin" className="space-y-1.5">
-                <Label htmlFor="rq-origin-trigger">Origin<RequiredMark /></Label>
+                <Label htmlFor="rq-origin-trigger"><span>Origin<RequiredMark /></span></Label>
                 <LocationCombobox id="rq-origin-trigger" value={origin} onChange={setOrigin} placeholder="Port or pickup address…" />
                 {errors.origin && <p role="alert" className="text-xs font-medium text-destructive">{errors.origin}</p>}
               </div>
@@ -308,7 +313,7 @@ export function QuoteSearchWidget({
                 <TooltipContent>Swap origin and destination</TooltipContent>
               </Tooltip>
               <div id="rq-dest" className="space-y-1.5">
-                <Label htmlFor="rq-dest-trigger">Destination<RequiredMark /></Label>
+                <Label htmlFor="rq-dest-trigger"><span>Destination<RequiredMark /></span></Label>
                 <LocationCombobox id="rq-dest-trigger" value={dest} onChange={setDest} placeholder="Port or delivery address…" />
                 {errors.dest && <p role="alert" className="text-xs font-medium text-destructive">{errors.dest}</p>}
               </div>
@@ -318,7 +323,7 @@ export function QuoteSearchWidget({
           {/* Inline route summary on smaller screens */}
           {routeComplete && (
             <div className="lg:hidden">
-              <RouteOverviewCard origin={origin!} dest={dest!} onEdit={() => focusSection("rq-origin")} />
+              <RouteOverviewCard origin={origin!} dest={dest!} />
             </div>
           )}
 
@@ -331,7 +336,7 @@ export function QuoteSearchWidget({
             >
               <Separator />
               <div>
-                <h3 id="rq-commodity-heading" className="text-sm font-semibold">Commodity</h3>
+                <h3 id="rq-commodity-heading" className="text-base font-semibold">Commodity</h3>
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   Commodity type determines which rates and pricing formula will be used.
                 </p>
@@ -417,7 +422,7 @@ export function QuoteSearchWidget({
       <aside className="sticky top-20 hidden space-y-4 self-start lg:col-span-5 lg:block" aria-label="Shipment summary">
         {routeComplete && (
           <div className="duration-300 animate-in fade-in">
-            <RouteOverviewCard origin={origin!} dest={dest!} onEdit={() => focusSection("rq-origin")} />
+            <RouteOverviewCard origin={origin!} dest={dest!} />
           </div>
         )}
         {routeComplete && commodity && (

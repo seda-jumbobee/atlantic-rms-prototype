@@ -26,7 +26,9 @@ export interface CommoditySelection {
   condition?: "operable" | "inoperable";
 }
 
-/** Required-field asterisk — sidebar-primary in normal state per the DS rule. */
+/** Required-field asterisk — sidebar-primary in normal state per the DS rule.
+    Always render inside the same inline span as the label text (shadcn Label is
+    a flex container with gap-2, which would otherwise push the mark away). */
 export function RequiredMark() {
   return (
     <>
@@ -134,7 +136,7 @@ export function CommodityPicker({
     <div className="space-y-5">
       <div>
         <Label id="commodity-kind-label" className="mb-2 block">
-          Type of commodity<RequiredMark />
+          <span>Type of commodity<RequiredMark /></span>
         </Label>
         <div role="group" aria-labelledby="commodity-kind-label" className="flex flex-wrap gap-2">
           {KINDS.map((k) => {
@@ -149,8 +151,8 @@ export function CommodityPicker({
                   "rounded-md border px-3.5 py-2 text-sm transition outline-none",
                   "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
                   active
-                    ? "border-primary bg-primary font-medium text-primary-foreground shadow-xs"
-                    : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-accent/60",
+                    ? "border-brand-secondary bg-brand-secondary-disabled font-medium text-brand-secondary-active shadow-xs"
+                    : "border-border bg-background text-foreground hover:border-brand-secondary/50 hover:bg-brand-secondary-disabled/40",
                 )}
               >
                 {k.label}
@@ -165,7 +167,7 @@ export function CommodityPicker({
 
       {value && (
         <div id="rq-details" className="space-y-5 duration-300 animate-in fade-in slide-in-from-top-1">
-          {sectionHeadings && <h3 className="text-sm font-semibold">Cargo details</h3>}
+          {sectionHeadings && <h3 className="text-base font-semibold">Cargo details</h3>}
           {value.kind === "equipment" ? (
             <div className="space-y-5">
               <div className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
@@ -238,7 +240,7 @@ export function CommodityPicker({
             </div>
           )}
 
-          {sectionHeadings && <h3 className="pt-1 text-sm font-semibold">Loading & transport details</h3>}
+          {sectionHeadings && <h3 className="pt-1 text-base font-semibold">Loading & transport details</h3>}
           <ShippingOptions value={value} onChange={onChange} />
         </div>
       )}
@@ -309,7 +311,7 @@ function blankDims(): Dimensions {
 function Field({ label, required, htmlFor, children }: { label: string; required?: boolean; htmlFor?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={htmlFor}>{label}{required && <RequiredMark />}</Label>
+      <Label htmlFor={htmlFor}><span>{label}{required && <RequiredMark />}</span></Label>
       {children}
     </div>
   );
