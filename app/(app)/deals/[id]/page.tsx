@@ -87,7 +87,7 @@ function Economics({ deal }: { deal: Deal }) {
                 <div className="bg-destructive/70" style={{ width: `${expPct}%` }} />
                 <div className="bg-success/70" style={{ width: `${100 - expPct}%` }} />
               </div>
-              <div className="flex justify-between text-[11px] text-muted-foreground">
+              <div className="flex justify-between text-caption text-muted-foreground">
                 <span>Expenses {money(expenses)}</span>
                 <span>Profit {gp != null ? money(gp) : "—"}</span>
               </div>
@@ -120,7 +120,7 @@ function IntegrationChip({
       )}
       <div className="min-w-0">
         <p className="text-xs font-medium">{label}</p>
-        <p className="truncate font-mono text-[11px] text-muted-foreground">{value ?? "Not linked"}</p>
+        <p className="truncate font-mono text-caption text-muted-foreground">{value ?? "Not linked"}</p>
       </div>
     </div>
   );
@@ -312,7 +312,7 @@ function OperationsSection({ deal }: { deal: Deal }) {
                   )}
                   <div className="min-w-0">
                     <p className="text-xs font-medium">{s.key}</p>
-                    <p className="truncate font-mono text-[11px] text-muted-foreground">
+                    <p className="truncate font-mono text-caption text-muted-foreground">
                       {value ?? s.sub}
                     </p>
                   </div>
@@ -341,7 +341,7 @@ function OperationsSection({ deal }: { deal: Deal }) {
                 </li>
               ))}
             </ul>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-caption text-muted-foreground">
               Derived from shipping type &amp; destination — carried automatically into DemSys.
             </p>
           </div>
@@ -395,7 +395,7 @@ function OperationsSection({ deal }: { deal: Deal }) {
               </div>
             ))}
           </div>
-          <p className="text-[11px] text-muted-foreground">Auto-synced to DemSys.</p>
+          <p className="text-caption text-muted-foreground">Auto-synced to DemSys.</p>
         </div>
 
         <div className="rounded-lg border bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground">

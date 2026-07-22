@@ -9,6 +9,7 @@ import { StatCard } from "@/components/stat-card";
 import { CarrierLogo } from "@/components/carrier-logo";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { FRONT_RATE_REQUESTS, getVendor, getUser, findFrontDuplicates, DEDUP_WINDOW_DAYS } from "@/lib/data";
@@ -21,16 +22,16 @@ type Status = FrontRateRequest["status"];
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-0.5">
-      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-caption uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="text-sm font-medium tabular-nums">{children}</div>
     </div>
   );
 }
 
 function confidenceTone(c: number): string {
-  if (c >= 0.9) return "text-success";
-  if (c >= 0.8) return "text-amber-600";
-  return "text-destructive";
+  if (c >= 0.9) return "text-status-positive-fg";
+  if (c >= 0.8) return "text-status-warning-fg";
+  return "text-status-negative-fg";
 }
 
 function ReviewCard({
@@ -51,10 +52,10 @@ function ReviewCard({
   const dupBy = getUser(dupOf?.salesRequestedBy);
 
   return (
-    <Card className={cn(req.status !== "new" && "opacity-75", dupes.length > 0 && "border-amber-300")}>
+    <Card className={cn(req.status !== "new" && "opacity-75", dupes.length > 0 && "border-warning")}>
       <CardContent className="space-y-4 p-5">
         {dupes.length > 0 && (
-          <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-800">
+          <div className="flex items-start gap-2 rounded-lg border border-warning bg-status-warning-bg p-2.5 text-xs text-status-warning-fg">
             <Copy className="mt-0.5 size-4 shrink-0" />
             <span>
               <b>Possible duplicate request.</b> Same lane &amp; mode ({p.lane} · {p.shipmentType}) was already requested by{" "}
@@ -87,13 +88,13 @@ function ReviewCard({
             </div>
           </div>
           {req.status === "approved" && (
-            <Badge variant="secondary" className="bg-success/15 text-success">Approved</Badge>
+            <StatusBadge tone="positive">Approved</StatusBadge>
           )}
           {req.status === "rejected" && (
-            <Badge variant="secondary" className="bg-destructive/10 text-destructive">Rejected</Badge>
+            <StatusBadge tone="negative">Rejected</StatusBadge>
           )}
           {req.status === "new" && (
-            <Badge variant="secondary" className="bg-blue-100 text-blue-700">New</Badge>
+            <StatusBadge tone="info">New</StatusBadge>
           )}
         </div>
 
@@ -113,7 +114,7 @@ function ReviewCard({
           </div>
           {p.surcharges && p.surcharges.length > 0 && (
             <div className="mt-3 space-y-1">
-              <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Surcharges</div>
+              <div className="text-caption uppercase tracking-wide text-muted-foreground">Surcharges</div>
               <div className="flex flex-wrap gap-1.5">
                 {p.surcharges.map((s) => (
                   <Badge key={s.code} variant="secondary" className="bg-background font-normal tabular-nums">

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FileText, ScanLine, Database } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge, type StatusTone } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -44,10 +44,10 @@ type ReviewTarget = {
   reference: string;
 };
 
-const STATUS_STYLE: Record<VendorInvoice["status"], string> = {
-  matched: "bg-success/15 text-success",
-  discrepancy: "bg-destructive/10 text-destructive",
-  pending: "bg-amber-100 text-amber-700",
+const STATUS_TONE: Record<VendorInvoice["status"], StatusTone> = {
+  matched: "positive",
+  discrepancy: "negative",
+  pending: "warning",
 };
 
 function Variance({ value }: { value: number }) {
@@ -113,9 +113,9 @@ export function InvoiceComparison({ dealId }: { dealId: string }) {
                   <span className="text-xs text-muted-foreground">· {inv.reference}</span>
                   <span className="text-xs text-muted-foreground">· {fmtDate(inv.issuedAt)}</span>
                 </div>
-                <Badge variant="secondary" className={cn("capitalize", STATUS_STYLE[inv.status])}>
+                <StatusBadge tone={STATUS_TONE[inv.status]} dot={false} className="capitalize">
                   {inv.status}
-                </Badge>
+                </StatusBadge>
               </div>
               <Table>
                 <TableHeader>

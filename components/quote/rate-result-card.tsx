@@ -28,10 +28,10 @@ export function RateResultCard({
             <CarrierLogo carrierId={rate.carrierId} showName />
             <SourceBadge source={rate.sourceType} />
             {rate.recommended && (
-              <Badge className="gap-1 bg-success/15 text-success"><Star className="size-3" /> Recommended</Badge>
+              <Badge variant="status-positive" className="gap-1"><Star className="size-3" /> Recommended</Badge>
             )}
             {rate.expired && (
-              <Badge variant="secondary" className="gap-1 bg-amber-100 text-amber-700">
+              <Badge variant="status-warning" className="gap-1">
                 <AlertTriangle className="size-3" /> Rate expired — still quotable
               </Badge>
             )}
@@ -48,7 +48,7 @@ export function RateResultCard({
             {rate.vessel && <span className="flex items-center gap-1"><Anchor className="size-3.5" /> {rate.vessel}</span>}
             <span className="flex items-center gap-1"><CalendarDays className="size-3.5" /> Valid to {fmtDate(rate.validTo)}</span>
             {rate.contractNo && (
-              <span className="flex items-center gap-1 font-mono text-[11px]"><FileText className="size-3.5" /> {rate.contractNo}</span>
+              <span className="flex items-center gap-1 font-mono text-caption"><FileText className="size-3.5" /> {rate.contractNo}</span>
             )}
           </div>
         </div>
@@ -56,9 +56,9 @@ export function RateResultCard({
         {/* total + actions */}
         <div className="flex shrink-0 items-end justify-between gap-3 border-t pt-3 lg:flex-col lg:items-end lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
           <div className="text-right">
-            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">All-in total</div>
+            <div className="text-caption uppercase tracking-wide text-muted-foreground">All-in total</div>
             <div className="text-2xl font-bold tabular-nums">{money(rate.total)}</div>
-            <div className="text-[11px] text-muted-foreground">{rate.currency} · expenses</div>
+            <div className="text-caption text-muted-foreground">{rate.currency} · expenses</div>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => onDetails?.(rate)}>Details</Button>

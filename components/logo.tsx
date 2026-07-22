@@ -4,7 +4,7 @@ export function LogoMark({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "grid size-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-sky-500 to-blue-700 text-white shadow-sm",
+        "grid size-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-primary to-accent-foreground text-primary-foreground shadow-sm",
         className,
       )}
     >
@@ -26,7 +26,7 @@ export function Logo({ collapsed = false }: { collapsed?: boolean }) {
       {!collapsed && (
         <div className="leading-tight">
           <div className="font-semibold tracking-tight text-sidebar-foreground">Atlantic RMS</div>
-          <div className="text-[11px] text-sidebar-foreground/60">Rate Management</div>
+          <div className="text-caption text-sidebar-foreground/60">Rate Management</div>
         </div>
       )}
     </div>

@@ -73,7 +73,7 @@ export function QuoteMaster() {
               )}>
                 <span className={cn(
                   "grid size-6 place-items-center rounded-full text-xs",
-                  active ? "bg-primary text-primary-foreground" : done ? "bg-success text-white" : "bg-muted",
+                  active ? "bg-primary text-primary-foreground" : done ? "bg-success text-success-foreground" : "bg-muted",
                 )}>
                   {done ? <Check className="size-3.5" /> : i + 1}
                 </span>

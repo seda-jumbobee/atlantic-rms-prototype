@@ -171,7 +171,7 @@ export function QuoteEditor({
           <div className="mt-2">
             <Input type="number" value={markupValue} onChange={(e) => setMarkupValue(Number(e.target.value))} />
           </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">
+          <p className="mt-1 text-caption text-muted-foreground">
             {markupType === "flat" && `Flat ${money(markupValue)} markup on buy.`}
             {markupType === "percent" && `${markupValue}% markup on buy → +${money(baseMarkup)}.`}
             {markupType === "margin" && `Target margin ${markupValue}% → sell ${money(sell)} (маржинальность).`}
@@ -193,7 +193,7 @@ export function QuoteEditor({
 
         <Card className="space-y-3 p-4">
           <div className="text-sm font-medium">Generate / re-send offer</div>
-          <p className="flex items-start gap-1.5 rounded-md bg-muted/40 p-2 text-[11px] text-muted-foreground">
+          <p className="flex items-start gap-1.5 rounded-md bg-muted/40 p-2 text-caption text-muted-foreground">
             <Pencil className="mt-0.5 size-3.5 shrink-0 text-primary" />
             Edit any leg above (e.g. unforeseen costs during processing), then re-send the updated quote via Front / message / PDF — edits feed payroll.
           </p>
@@ -225,9 +225,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function Stat({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
   return (
     <div className="rounded-lg border p-2">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-caption uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="text-sm font-bold tabular-nums">{value}</div>
-      {sub && <div className={accent ? "text-[10px] font-medium text-success" : "text-[10px] text-muted-foreground"}>{sub}</div>}
+      {sub && <div className={accent ? "text-caption font-medium text-status-positive-fg" : "text-caption text-muted-foreground"}>{sub}</div>}
     </div>
   );
 }

@@ -16,7 +16,7 @@ export function ManagerAvatar({
   if (!user) {
     return <span className={cn("text-xs text-muted-foreground", className)}>Unassigned</span>;
   }
-  const dim = size === "md" ? "size-7 text-xs" : "size-6 text-[10px]";
+  const dim = size === "md" ? "size-7 text-xs" : "size-6 text-caption";
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <span

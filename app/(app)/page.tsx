@@ -123,7 +123,7 @@ export default function HomePage() {
                 </div>
                 <div className="shrink-0 text-right">
                   <div className="text-sm font-semibold tabular-nums">{c.unit ? c.result : money(c.result)}</div>
-                  <div className="text-[10px] text-muted-foreground">{relativeAge(c.createdAt)}</div>
+                  <div className="text-caption text-muted-foreground">{relativeAge(c.createdAt)}</div>
                 </div>
               </div>
             ))}

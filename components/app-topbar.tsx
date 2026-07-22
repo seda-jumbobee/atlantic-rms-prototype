@@ -60,7 +60,7 @@ export function AppTopbar() {
       >
         <Search className="size-4" />
         <span>Search lanes, deals, carriers…</span>
-        <kbd className="ml-auto hidden rounded border bg-background px-1.5 text-[10px] sm:inline">⌘K</kbd>
+        <kbd className="ml-auto hidden rounded border bg-background px-1.5 text-caption sm:inline">⌘K</kbd>
       </button>
 
       <div className="ml-auto flex items-center gap-2">
@@ -94,7 +94,7 @@ export function AppTopbar() {
               </Avatar>
               <div className="hidden text-left leading-tight md:block">
                 <div className="text-xs font-medium">{user?.name}</div>
-                <div className="text-[10px] text-muted-foreground">{user?.title}</div>
+                <div className="text-caption text-muted-foreground">{user?.title}</div>
               </div>
               <ChevronsUpDown className="hidden size-3.5 text-muted-foreground md:block" />
             </Button>

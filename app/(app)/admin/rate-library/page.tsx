@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { CarrierLogo } from "@/components/carrier-logo";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge, type StatusTone } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -32,14 +32,13 @@ import {
   type RateType,
 } from "@/lib/data";
 import { money, fmtDate } from "@/lib/format";
-import { cn } from "@/lib/utils";
 
 const TODAY = new Date("2026-06-23T00:00:00Z").getTime();
 
-const STATUS_STYLE: Record<string, string> = {
-  actual: "bg-success/15 text-success",
-  on_review: "bg-amber-100 text-amber-700",
-  old: "bg-slate-100 text-slate-700",
+const STATUS_TONE: Record<string, StatusTone> = {
+  actual: "positive",
+  on_review: "warning",
+  old: "neutral",
 };
 const STATUS_LABEL: Record<string, string> = {
   actual: "Actual",
@@ -47,13 +46,13 @@ const STATUS_LABEL: Record<string, string> = {
   old: "Old",
 };
 
-const TYPE_STYLE: Record<RateType, string> = {
-  ocean: "bg-blue-100 text-blue-700",
-  roro: "bg-cyan-100 text-cyan-700",
-  trucking: "bg-amber-100 text-amber-700",
-  loading: "bg-violet-100 text-violet-700",
-  drayage: "bg-emerald-100 text-emerald-700",
-  surcharge: "bg-rose-100 text-rose-700",
+const TYPE_TONE: Record<RateType, StatusTone> = {
+  ocean: "info",
+  roro: "info",
+  trucking: "warning",
+  loading: "neutral",
+  drayage: "positive",
+  surcharge: "negative",
 };
 
 const TYPE_ORDER: RateType[] = ["ocean", "roro", "trucking", "loading", "drayage", "surcharge"];
@@ -155,9 +154,9 @@ export default function RateLibraryPage() {
                   return (
                     <TableRow key={r.id}>
                       <TableCell>
-                        <Badge variant="secondary" className={cn("font-normal", TYPE_STYLE[r.type])}>
+                        <StatusBadge tone={TYPE_TONE[r.type]} dot={false} className="font-normal">
                           {RATE_TYPE_LABEL[r.type]}
-                        </Badge>
+                        </StatusBadge>
                       </TableCell>
                       <TableCell className="text-sm">
                         {r.origin || r.destination ? (
@@ -191,7 +190,7 @@ export default function RateLibraryPage() {
                         <div className="text-sm tabular-nums">
                           {fmtDate(r.validFrom)} → {fmtDate(r.validTo)}
                         </div>
-                        {expired && <div className="text-xs font-medium text-amber-600">expired</div>}
+                        {expired && <div className="text-xs font-medium text-status-warning-fg">expired</div>}
                       </TableCell>
                       <TableCell className="text-sm">
                         {source ? (
@@ -206,9 +205,9 @@ export default function RateLibraryPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className={cn("font-normal", STATUS_STYLE[r.status])}>
+                        <StatusBadge tone={STATUS_TONE[r.status]} className="font-normal">
                           {STATUS_LABEL[r.status]}
-                        </Badge>
+                        </StatusBadge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">

@@ -65,22 +65,19 @@ import {
 } from "@/lib/data";
 import type { Role } from "@/lib/types";
 import { fmtDate, relativeAge } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { StatusBadge, type StatusTone } from "@/components/status-badge";
 
 const ROLE_LABEL: Record<Role, string> = { manager: "Sales Manager", admin: "Procurement (Admin)" };
 
-const STATUS_STYLE: Record<string, string> = {
-  active: "bg-success/15 text-success",
-  pending: "bg-amber-100 text-amber-700",
-  disabled: "bg-slate-100 text-slate-600",
+const STATUS_TONE: Record<string, StatusTone> = {
+  active: "positive",
+  pending: "warning",
+  disabled: "neutral",
 };
 
 function RoleBadge({ role }: { role: Role }) {
   return (
-    <Badge
-      variant={role === "admin" ? "default" : "secondary"}
-      className={cn(role === "admin" ? "" : "bg-slate-100 text-slate-700")}
-    >
+    <Badge variant={role === "admin" ? "default" : "secondary"}>
       {ROLE_LABEL[role]}
     </Badge>
   );
@@ -235,9 +232,9 @@ export default function UsersPage() {
                         <RoleBadge role={u.role} />
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className={cn("capitalize", STATUS_STYLE[status])}>
+                        <StatusBadge tone={STATUS_TONE[status] ?? "neutral"} className="capitalize">
                           {status}
-                        </Badge>
+                        </StatusBadge>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {acct?.lastActive ? relativeAge(acct.lastActive) : "—"}
@@ -300,12 +297,12 @@ export default function UsersPage() {
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-medium">{reg.name}</span>
                         {reg.emailConfirmed ? (
-                          <Badge variant="secondary" className="bg-success/15 text-success">
+                          <Badge variant="status-positive">
                             <MailCheck className="size-3.5" />
                             Confirmed
                           </Badge>
                         ) : (
-                          <Badge variant="secondary" className="bg-amber-100 text-amber-700">
+                          <Badge variant="status-warning">
                             <MailX className="size-3.5" />
                             Unconfirmed
                           </Badge>

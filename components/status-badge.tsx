@@ -2,39 +2,62 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { QuoteStatus, DealStage } from "@/lib/types";
 
-const QUOTE_STYLE: Record<QuoteStatus, string> = {
-  draft: "bg-muted text-muted-foreground",
-  sent: "bg-blue-100 text-blue-700",
-  confirmed: "bg-success/15 text-success",
-  lost: "bg-destructive/10 text-destructive",
-  expired: "bg-amber-100 text-amber-700",
+/**
+ * Unified semantic status scale (Figma: "Status badge" node 43:25).
+ * Every domain status — quote, deal stage, source, route step, invoice,
+ * admin tables — maps into one of these five tones. Never use raw palette
+ * colors (amber/emerald/slate/…) for state chips.
+ */
+export type StatusTone = "neutral" | "info" | "positive" | "warning" | "negative";
+
+export function StatusBadge({
+  tone = "neutral",
+  dot = true,
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"span"> & { tone?: StatusTone; dot?: boolean }) {
+  return (
+    <Badge variant={`status-${tone}`} className={cn("gap-[5px]", className)} {...props}>
+      {dot && <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-current" />}
+      {children}
+    </Badge>
+  );
+}
+
+const QUOTE_TONE: Record<QuoteStatus, StatusTone> = {
+  draft: "neutral",
+  sent: "info",
+  confirmed: "positive",
+  lost: "negative",
+  expired: "warning",
 };
 
 export function QuoteStatusBadge({ status }: { status: QuoteStatus }) {
-  return <Badge variant="secondary" className={cn("capitalize", QUOTE_STYLE[status])}>{status}</Badge>;
+  return <StatusBadge tone={QUOTE_TONE[status]} className="capitalize">{status}</StatusBadge>;
 }
 
-const STAGE_STYLE: Record<DealStage, string> = {
-  "Incoming Lead": "bg-slate-100 text-slate-700",
-  Qualification: "bg-indigo-100 text-indigo-700",
-  "Quote Sent": "bg-blue-100 text-blue-700",
-  Negotiation: "bg-amber-100 text-amber-700",
-  "Confirmed (Won)": "bg-success/15 text-success",
-  Lost: "bg-destructive/10 text-destructive",
+const STAGE_TONE: Record<DealStage, StatusTone> = {
+  "Incoming Lead": "neutral",
+  Qualification: "info",
+  "Quote Sent": "info",
+  Negotiation: "warning",
+  "Confirmed (Won)": "positive",
+  Lost: "negative",
 };
 
 export function DealStageBadge({ stage }: { stage: DealStage }) {
-  return <Badge variant="secondary" className={cn(STAGE_STYLE[stage])}>{stage}</Badge>;
+  return <StatusBadge tone={STAGE_TONE[stage]}>{stage}</StatusBadge>;
 }
 
-const SOURCE_STYLE: Record<string, string> = {
-  Spot: "bg-violet-100 text-violet-700",
-  "Carrier Haulage Spot": "bg-fuchsia-100 text-fuchsia-700",
-  Contract: "bg-emerald-100 text-emerald-700",
-  "Offline Tariff": "bg-slate-100 text-slate-700",
-  "Front Import": "bg-orange-100 text-orange-700",
+const SOURCE_TONE: Record<string, StatusTone> = {
+  Spot: "info",
+  "Carrier Haulage Spot": "info",
+  Contract: "positive",
+  "Offline Tariff": "neutral",
+  "Front Import": "warning",
 };
 
 export function SourceBadge({ source }: { source: string }) {
-  return <Badge variant="secondary" className={cn("font-normal", SOURCE_STYLE[source] ?? "bg-muted text-muted-foreground")}>{source}</Badge>;
+  return <StatusBadge tone={SOURCE_TONE[source] ?? "neutral"} dot={false}>{source}</StatusBadge>;
 }

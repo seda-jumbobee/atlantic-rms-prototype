@@ -78,7 +78,7 @@ function ManagerCell({ managerId }: { managerId: string }) {
   return (
     <div className="flex items-center gap-2">
       <span
-        className="flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white"
+        className="flex size-6 shrink-0 items-center justify-center rounded-full text-caption font-semibold text-white"
         style={{ backgroundColor: u.avatarColor }}
       >
         {u.initials}

@@ -63,23 +63,23 @@ export function MapPreview({
       const pin = (color: string) =>
         L.divIcon({
           className: "",
-          html: `<span style="display:block;width:14px;height:14px;border-radius:9999px;background:${color};box-shadow:0 0 0 4px ${color}33;border:2px solid white"></span>`,
+          html: `<span style="display:block;width:14px;height:14px;border-radius:9999px;background:${color};box-shadow:0 0 0 4px color-mix(in srgb, ${color} 20%, transparent);border:2px solid white"></span>`,
           iconSize: [14, 14],
           iconAnchor: [7, 7],
         });
 
       const pts: [number, number][] = [];
       if (origin) {
-        L.marker([origin.lat, origin.lng], { icon: pin("#2563eb") }).addTo(map).bindTooltip(origin.label, { direction: "top" });
+        L.marker([origin.lat, origin.lng], { icon: pin("var(--chart-1)") }).addTo(map).bindTooltip(origin.label, { direction: "top" });
         pts.push([origin.lat, origin.lng]);
       }
       if (destination) {
-        L.marker([destination.lat, destination.lng], { icon: pin("#0ea5b7") }).addTo(map).bindTooltip(destination.label, { direction: "top" });
+        L.marker([destination.lat, destination.lng], { icon: pin("var(--chart-2)") }).addTo(map).bindTooltip(destination.label, { direction: "top" });
         pts.push([destination.lat, destination.lng]);
       }
       if (origin && destination) {
         const line = arc(origin, destination);
-        L.polyline(line, { color: "#2563eb", weight: 2.5, opacity: 0.85, dashArray: "1 8", lineCap: "round" }).addTo(map);
+        L.polyline(line, { color: "var(--chart-1)", weight: 2.5, opacity: 0.85, dashArray: "1 8", lineCap: "round" }).addTo(map);
         map.fitBounds(line as [number, number][], { padding: [38, 38] });
       } else if (pts.length === 1) {
         map.setView(pts[0], 4);

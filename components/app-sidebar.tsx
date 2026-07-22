@@ -45,6 +45,8 @@ const ADMIN = [
   { href: "/admin/integrations", label: "Integrations & API", icon: Plug },
 ];
 
+const NAV_ITEM = "h-auto px-4 py-3";
+
 export function AppSidebar() {
   const pathname = usePathname();
   const { user } = useSession();
@@ -65,7 +67,7 @@ export function AppSidebar() {
           <SidebarMenu>
             {MAIN.map((item) => (
               <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton asChild isActive={active(item.href)} tooltip={item.label}>
+                <SidebarMenuButton asChild isActive={active(item.href)} tooltip={item.label} className={NAV_ITEM}>
                   <Link href={item.href}>
                     <item.icon />
                     <span>{item.label}</span>
@@ -78,7 +80,7 @@ export function AppSidebar() {
             <Collapsible defaultOpen={calcOpen} className="group/collapsible">
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
-                  <SidebarMenuButton isActive={calcOpen} tooltip="Calculators">
+                  <SidebarMenuButton isActive={calcOpen} tooltip="Calculators" className={NAV_ITEM}>
                     <Calculator />
                     <span>Calculators</span>
                     <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
@@ -106,7 +108,7 @@ export function AppSidebar() {
 
             {SECONDARY.map((item) => (
               <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton asChild isActive={active(item.href)} tooltip={item.label}>
+                <SidebarMenuButton asChild isActive={active(item.href)} tooltip={item.label} className={NAV_ITEM}>
                   <Link href={item.href}>
                     <item.icon />
                     <span>{item.label}</span>
@@ -123,14 +125,16 @@ export function AppSidebar() {
             <SidebarMenu>
               {ADMIN.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={active(item.href)} tooltip={item.label}>
+                  <SidebarMenuButton asChild isActive={active(item.href)} tooltip={item.label} className={NAV_ITEM}>
                     <Link href={item.href}>
                       <item.icon />
                       <span>{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                   {item.href === "/admin/front-review" && newFront > 0 && (
-                    <SidebarMenuBadge>{newFront}</SidebarMenuBadge>
+                    <SidebarMenuBadge className="peer-data-[size=default]/menu-button:top-1/2 right-4 h-auto min-w-0 -translate-y-1/2 rounded-full bg-sidebar-primary px-1.5 py-px text-caption font-normal whitespace-nowrap text-sidebar-primary-foreground">
+                      {newFront}
+                    </SidebarMenuBadge>
                   )}
                 </SidebarMenuItem>
               ))}
@@ -139,7 +143,7 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="text-[11px] text-sidebar-foreground/50 px-3 pb-3">
+      <SidebarFooter className="text-caption text-sidebar-foreground/50 px-3 pb-3">
         <span className="group-data-[collapsible=icon]:hidden">v0.1 · prototype · API · CLI · MCP</span>
       </SidebarFooter>
       <SidebarRail />

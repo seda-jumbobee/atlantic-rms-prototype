@@ -258,7 +258,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return <div className="space-y-1.5"><Label>{label}</Label>{children}</div>;
 }
 function Spec({ k, v }: { k: string; v: string }) {
-  return <div><span className="block text-[11px] uppercase tracking-wide">{k}</span><span className="font-medium text-foreground">{v}</span></div>;
+  return <div><span className="block text-caption uppercase tracking-wide">{k}</span><span className="font-medium text-foreground">{v}</span></div>;
 }
 function Dim({ label, v, onChange }: { label: string; v?: number; onChange: (n: number) => void }) {
   return (

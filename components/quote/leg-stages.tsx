@@ -59,7 +59,7 @@ export function LegStages({
                 leg.kind === "ocean" && "border-primary/30 bg-primary/[0.03]",
               )}
             >
-              <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              <div className="flex items-center gap-1.5 text-caption font-medium uppercase tracking-wide text-muted-foreground">
                 <Icon className="size-3.5 text-primary" />
                 {LEG_LABEL[leg.kind]}
               </div>

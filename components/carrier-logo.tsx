@@ -15,7 +15,7 @@ export function CarrierLogo({
 }) {
   const carrier = getCarrier(carrierId);
   const dims =
-    size === "sm" ? "h-7 min-w-7 text-[10px] px-1.5" : size === "lg" ? "h-12 min-w-12 text-sm px-2.5" : "h-9 min-w-9 text-[11px] px-2";
+    size === "sm" ? "h-7 min-w-7 text-caption px-1.5" : size === "lg" ? "h-12 min-w-12 text-sm px-2.5" : "h-9 min-w-9 text-caption px-2";
   if (!carrier) {
     return (
       <div className={cn("grid place-items-center rounded-md bg-muted font-semibold text-muted-foreground", dims, className)}>

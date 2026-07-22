@@ -27,6 +27,7 @@ import { QuoteOutput, type OutputPayload } from "@/components/quote/quote-output
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/status-badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -122,9 +123,9 @@ function pointFromLocation(v?: LocationValue): MapPoint | undefined {
 }
 
 function StatusChip({ status }: { status: RouteStep["status"] }) {
-  if (status === "quoted") return <Badge className="border-success/30 bg-success/15 text-success">Quoted</Badge>;
-  if (status === "pending_ai") return <Badge className="border-warning/30 bg-warning/15 text-warning">Pending AI</Badge>;
-  return <Badge variant="secondary">Set</Badge>;
+  if (status === "quoted") return <StatusBadge tone="positive">Quoted</StatusBadge>;
+  if (status === "pending_ai") return <StatusBadge tone="warning">Pending AI</StatusBadge>;
+  return <StatusBadge tone="neutral">Set</StatusBadge>;
 }
 
 export function RouteBuilder() {
@@ -290,18 +291,18 @@ export function RouteBuilder() {
               </SelectContent>
             </Select>
             {isOversize && routingProvider === "google" && (
-              <div className="flex items-start gap-1.5 rounded-md border border-amber-300 bg-amber-50 p-2 text-[11px] text-amber-800">
+              <div className="flex items-start gap-1.5 rounded-md border border-status-warning-fg/30 bg-status-warning-bg p-2 text-caption text-status-warning-fg">
                 <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
                 Over-dimension load — Google Maps ignores height/weight/width & bridge limits. Use HERE or Trimble for restriction-aware truck routing (auto-detours).
               </div>
             )}
-            <p className="text-[11px] text-muted-foreground">Trucker Path is a driver app + load board (no routing API). Oversize routing uses HERE/Trimble; Google is kept for geocoding &amp; basemap tiles.</p>
+            <p className="text-caption text-muted-foreground">Trucker Path is a driver app + load board (no routing API). Oversize routing uses HERE/Trimble; Google is kept for geocoding &amp; basemap tiles.</p>
           </Card>
 
           {warnings.length > 0 && (
-            <Card className="border-amber-200 bg-amber-50/60 p-3">
-              <div className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-amber-800"><AlertTriangle className="size-4" /> Route check</div>
-              <ul className="space-y-1 text-xs text-amber-800/90">{warnings.map((w, i) => <li key={i}>• {w}</li>)}</ul>
+            <Card className="border-status-warning-fg/30 bg-status-warning-bg p-3">
+              <div className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-status-warning-fg"><AlertTriangle className="size-4" /> Route check</div>
+              <ul className="space-y-1 text-xs text-status-warning-fg/90">{warnings.map((w, i) => <li key={i}>• {w}</li>)}</ul>
             </Card>
           )}
 
@@ -444,7 +445,7 @@ function OceanSearchDialog({ open, onOpenChange, onPick }: { open: boolean; onOp
         <div className="space-y-2">
           {[...OCEAN_OFFERS].sort((a, b) => a.cost - b.cost).map((o, i) => (
             <button key={o.carrierId} onClick={() => onPick(o.carrierId, o.cost, o.days)} className={cn("flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted/60", i === 0 && "border-primary/40 bg-primary/5")}>
-              <div className="flex items-center gap-3"><CarrierLogo carrierId={o.carrierId} size="md" showName />{i === 0 && <Badge className="border-success/30 bg-success/15 text-success">Cheapest</Badge>}</div>
+              <div className="flex items-center gap-3"><CarrierLogo carrierId={o.carrierId} size="md" showName />{i === 0 && <StatusBadge tone="positive" dot={false}>Cheapest</StatusBadge>}</div>
               <div className="flex items-center gap-4 text-sm"><span className="flex items-center gap-1 text-muted-foreground"><Clock className="size-3.5" /> {o.days} d</span><span className="w-20 text-right font-semibold tabular-nums">{money(o.cost)}</span></div>
             </button>
           ))}

@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge, type StatusTone } from "@/components/status-badge";
 import {
   Table,
   TableHeader,
@@ -37,10 +38,19 @@ const CHANNEL_ICON: Record<RequestChannel, LucideIcon> = {
 const ANONYMOUS_CHANNELS: RequestChannel[] = ["jumbobee_public", "website_calc"];
 const CHANNELS = Object.keys(CHANNEL_META) as RequestChannel[];
 
-function statusClass(status: number): string {
-  if (status >= 200 && status < 300) return "bg-success/15 text-success";
-  if (status >= 400 && status < 500) return "bg-amber-100 text-amber-700";
-  return "bg-destructive/10 text-destructive";
+const CHANNEL_TONE: Record<RequestChannel, StatusTone> = {
+  manager_ui: "info",
+  jumbobee_public: "warning",
+  website_calc: "positive",
+  api: "info",
+  cli: "neutral",
+  mcp: "neutral",
+};
+
+function statusTone(status: number): StatusTone {
+  if (status >= 200 && status < 300) return "positive";
+  if (status >= 400 && status < 500) return "warning";
+  return "negative";
 }
 
 function timeLabel(iso: string): string {
@@ -102,10 +112,10 @@ export default function RequestLogPage() {
             {CHANNELS.map((c) => (
               <button key={c} onClick={() => setChannel(c)}>
                 <Badge
-                  variant="secondary"
+                  variant={channel === c ? `status-${CHANNEL_TONE[c]}` : "secondary"}
                   className={cn(
                     "cursor-pointer",
-                    channel === c ? CHANNEL_META[c].tone + " ring-2 ring-offset-1 ring-primary/40" : "bg-muted text-muted-foreground",
+                    channel === c ? "ring-2 ring-offset-1 ring-primary/40" : "bg-muted text-muted-foreground",
                   )}
                 >
                   {CHANNEL_META[c].label}
@@ -143,9 +153,9 @@ export default function RequestLogPage() {
                         {timeLabel(r.at)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className={cn("font-normal", CHANNEL_META[r.channel].tone)}>
+                        <StatusBadge tone={CHANNEL_TONE[r.channel]} dot={false} className="font-normal">
                           {CHANNEL_META[r.channel].label}
-                        </Badge>
+                        </StatusBadge>
                       </TableCell>
                       <TableCell className="font-mono text-xs">{r.endpoint}</TableCell>
                       <TableCell>
@@ -165,16 +175,16 @@ export default function RequestLogPage() {
                         <span
                           className={cn(
                             "font-mono text-xs",
-                            anonymous ? "rounded bg-amber-100 px-1.5 py-0.5 text-amber-700" : "text-muted-foreground",
+                            anonymous ? "rounded bg-status-warning-bg px-1.5 py-0.5 text-status-warning-fg" : "text-muted-foreground",
                           )}
                         >
                           {r.caller}
                         </span>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge variant="secondary" className={cn("tabular-nums", statusClass(r.status))}>
+                        <StatusBadge tone={statusTone(r.status)} dot={false} className="tabular-nums">
                           {r.status}
-                        </Badge>
+                        </StatusBadge>
                       </TableCell>
                       <TableCell className="text-right text-sm tabular-nums">{r.latencyMs} ms</TableCell>
                       <TableCell className="text-right text-sm font-medium tabular-nums">

@@ -7,7 +7,7 @@ import { AdminGate } from "@/components/admin-gate";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge, type StatusTone } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import {
@@ -20,16 +20,16 @@ import { money, fmtDate } from "@/lib/format";
 import type { VendorInvoice } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const STATUS_STYLE: Record<NonNullable<VendorInvoice["status"]>, string> = {
-  matched: "bg-success/15 text-success",
-  discrepancy: "bg-destructive/10 text-destructive",
-  pending: "bg-amber-100 text-amber-700",
+const STATUS_TONE: Record<NonNullable<VendorInvoice["status"]>, StatusTone> = {
+  matched: "positive",
+  discrepancy: "negative",
+  pending: "warning",
 };
 
-const QBO_STYLE: Record<NonNullable<VendorInvoice["qboStatus"]>, string> = {
-  synced: "bg-success/15 text-success",
-  pending: "bg-amber-100 text-amber-700",
-  unmatched: "bg-slate-100 text-slate-600",
+const QBO_TONE: Record<NonNullable<VendorInvoice["qboStatus"]>, StatusTone> = {
+  synced: "positive",
+  pending: "warning",
+  unmatched: "neutral",
 };
 
 function vendorName(id: string): string {
@@ -157,33 +157,30 @@ export default function InvoicesPage() {
                         <TableCell
                           className={cn(
                             "text-right tabular-nums font-medium",
-                            totals.variance > 0 && "text-destructive",
-                            totals.variance < 0 && "text-success",
+                            totals.variance > 0 && "text-status-negative-fg",
+                            totals.variance < 0 && "text-status-positive-fg",
                             totals.variance === 0 && "text-muted-foreground",
                           )}
                         >
                           {totals.variance > 0 ? "+" : ""}{money(totals.variance)}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary" className={cn("capitalize", STATUS_STYLE[inv.status])}>
+                          <StatusBadge tone={STATUS_TONE[inv.status]} className="capitalize">
                             {inv.status}
-                          </Badge>
+                          </StatusBadge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <span className="font-mono text-xs text-muted-foreground">{inv.qboRef ?? "—"}</span>
-                            <Badge variant="secondary" className={cn("capitalize", QBO_STYLE[qboStatus])}>
+                            <StatusBadge tone={QBO_TONE[qboStatus]} className="capitalize">
                               {qboStatus}
-                            </Badge>
+                            </StatusBadge>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant="secondary"
-                            className={cn(inv.paid ? "bg-success/15 text-success" : "bg-muted text-muted-foreground")}
-                          >
+                          <StatusBadge tone={inv.paid ? "positive" : "neutral"}>
                             {inv.paid ? "Paid" : "Unpaid"}
-                          </Badge>
+                          </StatusBadge>
                         </TableCell>
                         <TableCell className="text-right">
                           <Button asChild size="sm" variant="ghost" className="h-7 text-xs">

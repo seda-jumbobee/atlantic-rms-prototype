@@ -8,30 +8,17 @@ import { AdminGate } from "@/components/admin-gate";
 import { PageHeader } from "@/components/page-header";
 import { CarrierLogo } from "@/components/carrier-logo";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { getCarrier } from "@/lib/data";
-import { cn } from "@/lib/utils";
 
 type ConnStatus = "connected" | "mock";
 
 function StatusChip({ status }: { status: ConnStatus }) {
   return (
-    <Badge
-      variant="secondary"
-      className={cn(
-        "font-normal",
-        status === "connected" ? "bg-success/15 text-success" : "bg-amber-100 text-amber-700",
-      )}
-    >
-      <span
-        className={cn(
-          "mr-1.5 inline-block size-1.5 rounded-full",
-          status === "connected" ? "bg-success" : "bg-amber-500",
-        )}
-      />
+    <StatusBadge tone={status === "connected" ? "positive" : "warning"} className="font-normal">
       {status === "connected" ? "Connected" : "Mock"}
-    </Badge>
+    </StatusBadge>
   );
 }
 

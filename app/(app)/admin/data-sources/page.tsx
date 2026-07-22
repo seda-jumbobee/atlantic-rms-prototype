@@ -24,16 +24,16 @@ import {
 import { DATA_SOURCES, getVendor } from "@/lib/data";
 import type { DataSource, DataSourceKind, DataSourceStatus } from "@/lib/types";
 import { fmtDate } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { StatusBadge, type StatusTone } from "@/components/status-badge";
 
 const TODAY = new Date("2026-06-23T00:00:00Z").getTime();
 
-const STATUS_STYLE: Record<DataSourceStatus, string> = {
-  actual: "bg-success/15 text-success",
-  on_review: "bg-amber-100 text-amber-700",
-  in_edits: "bg-blue-100 text-blue-700",
-  additional: "bg-violet-100 text-violet-700",
-  old: "bg-slate-100 text-slate-700",
+const STATUS_TONE: Record<DataSourceStatus, StatusTone> = {
+  actual: "positive",
+  on_review: "warning",
+  in_edits: "warning",
+  additional: "info",
+  old: "neutral",
 };
 
 const STATUS_LABEL: Record<DataSourceStatus, string> = {
@@ -73,11 +73,11 @@ function isExpired(ds: DataSource): boolean {
   return !!ds.validTo && new Date(ds.validTo).getTime() < TODAY;
 }
 
-function StatusBadge({ status }: { status: DataSourceStatus }) {
+function SourceStatusBadge({ status }: { status: DataSourceStatus }) {
   return (
-    <Badge variant="secondary" className={cn("font-normal", STATUS_STYLE[status])}>
+    <StatusBadge tone={STATUS_TONE[status]} className="font-normal">
       {STATUS_LABEL[status]}
-    </Badge>
+    </StatusBadge>
   );
 }
 
@@ -125,13 +125,13 @@ function SourceTable({ sources }: { sources: DataSource[] }) {
                   <span className="text-muted-foreground">—</span>
                 )}
               </TableCell>
-              <TableCell><StatusBadge status={ds.status} /></TableCell>
+              <TableCell><SourceStatusBadge status={ds.status} /></TableCell>
               <TableCell>
                 <div className="text-sm tabular-nums">
                   {fmtDate(ds.validFrom)} → {fmtDate(ds.validTo)}
                 </div>
                 {expired && (
-                  <div className="text-xs font-medium text-amber-600">expired — still quotable</div>
+                  <div className="text-xs font-medium text-status-warning-fg">expired — still quotable</div>
                 )}
               </TableCell>
               <TableCell className="text-right tabular-nums">
@@ -204,7 +204,7 @@ export default function DataSourcesPage() {
         </div>
 
         {expiredCount > 0 && (
-          <p className="text-xs text-amber-600">
+          <p className="text-xs text-status-warning-fg">
             {expiredCount} source{expiredCount > 1 ? "s" : ""} past validity — these remain quotable until replaced.
           </p>
         )}

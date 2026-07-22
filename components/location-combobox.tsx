@@ -31,7 +31,7 @@ export function LocationCombobox({
         <Button variant="outline" role="combobox" className="h-10 w-full justify-between font-normal">
           {value ? (
             <span className="flex items-center gap-2 truncate">
-              {value.kind === "port" ? <Anchor className="size-4 shrink-0 text-primary" /> : <MapPin className="size-4 shrink-0 text-blue-600" />}
+              {value.kind === "port" ? <Anchor className="size-4 shrink-0 text-primary" /> : <MapPin className="size-4 shrink-0 text-status-info-fg" />}
               <span className="truncate">{value.label}</span>
             </span>
           ) : (
@@ -69,7 +69,7 @@ export function LocationCombobox({
                   value={a.label}
                   onSelect={() => { onChange({ kind: "address", id: a.id, label: a.label }); setOpen(false); }}
                 >
-                  <MapPin className="size-4 text-blue-600" />
+                  <MapPin className="size-4 text-status-info-fg" />
                   <span className="truncate">{a.label}</span>
                   {value?.id === a.id && <Check className="ml-1 size-4" />}
                 </CommandItem>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ShieldAlert, CheckCircle2, Bot, Sparkles, Send, Wand2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -73,7 +74,7 @@ function AiRequestDialog({ req, lane }: { req: RouteRequirement; lane: string })
 
         <DialogFooter>
           {sent ? (
-            <span className="flex items-center gap-1.5 text-sm text-success">
+            <span className="flex items-center gap-1.5 text-sm text-status-positive-fg">
               <CheckCircle2 className="size-4" /> Sent via Front — awaiting reply in Rate Review
             </span>
           ) : (
@@ -93,8 +94,8 @@ function AiRequestDialog({ req, lane }: { req: RouteRequirement; lane: string })
 export function RequirementsPanel({ requirements, lane }: { requirements: RouteRequirement[]; lane: string }) {
   if (!requirements.length) return null;
   return (
-    <Card className="border-amber-200 bg-amber-50/50 p-4">
-      <div className="mb-2 flex items-center gap-2 text-sm font-medium text-amber-800">
+    <Card className="border-status-warning-fg/25 bg-status-warning-bg p-4">
+      <div className="mb-2 flex items-center gap-2 text-sm font-medium text-status-warning-fg">
         <ShieldAlert className="size-4" /> Route requirements for this lane
       </div>
       <div className="space-y-2">
@@ -104,9 +105,9 @@ export function RequirementsPanel({ requirements, lane }: { requirements: RouteR
               <div className="flex items-center gap-2">
                 <span className="font-medium">{req.label}</span>
                 {req.hasVendor ? (
-                  <Badge variant="secondary" className="bg-success/15 text-success">vendor available</Badge>
+                  <StatusBadge tone="positive" dot={false}>vendor available</StatusBadge>
                 ) : (
-                  <Badge variant="secondary" className="bg-destructive/10 text-destructive">no vendor on lane</Badge>
+                  <StatusBadge tone="negative" dot={false}>no vendor on lane</StatusBadge>
                 )}
               </div>
               <p className="text-xs text-muted-foreground">{req.reason}</p>
@@ -116,7 +117,7 @@ export function RequirementsPanel({ requirements, lane }: { requirements: RouteR
                 <span className="text-sm text-muted-foreground">~{money(req.estimatedCost)}</span>
               )}
               {req.hasVendor ? (
-                <Badge className="gap-1 bg-success/15 text-success"><CheckCircle2 className="size-3" /> auto-added</Badge>
+                <StatusBadge tone="positive" dot={false} className="gap-1"><CheckCircle2 className="size-3" /> auto-added</StatusBadge>
               ) : (
                 <AiRequestDialog req={req} lane={lane} />
               )}

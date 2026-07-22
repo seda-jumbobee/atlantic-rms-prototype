@@ -234,7 +234,7 @@ function RoRoPanel() {
       }
       right={
         <>
-          <p className="rounded-md bg-muted/60 p-2 text-[11px] leading-relaxed text-muted-foreground">
+          <p className="rounded-md bg-muted/60 p-2 text-caption leading-relaxed text-muted-foreground">
             total = ((rate + BAF + ECA + EU-ETS) × CBM) + THC + (Wharfage × CBM) + Doc + Margin · Baltimore→Bremerhaven preset
 
           </p>
@@ -617,7 +617,7 @@ function OogPanel() {
           <Separator />
           <ResultRow label="Slots occupied" value={String(lostSlots)} />
           <ResultRow label="Lost (blocked) TEU slots" value={String(blocked)} strong />
-          <p className="rounded-md bg-muted/60 p-2 text-[11px] leading-relaxed text-muted-foreground">
+          <p className="rounded-md bg-muted/60 p-2 text-caption leading-relaxed text-muted-foreground">
             lostSlots = ceil(({cargoWidthCm} + {overLeftCm} + {overRightCm}) / {FR_WIDTH_CM}) ={" "}
             {Math.ceil(occupied / FR_WIDTH_CM)}; the rack itself is one slot, so {blocked} extra slot(s) are billed.
           </p>
@@ -794,7 +794,7 @@ function EquipmentDimsPanel() {
                 <ResultRow label="Units per container" value={String(selected.unitsPerContainer)} muted />
               )}
               {selected.loadingNotes && (
-                <p className="rounded-md bg-muted/60 p-2 text-[11px] leading-relaxed text-muted-foreground">
+                <p className="rounded-md bg-muted/60 p-2 text-caption leading-relaxed text-muted-foreground">
                   {selected.loadingNotes}
                 </p>
               )}
@@ -845,7 +845,7 @@ function AirFreightPanel() {
       }
       right={
         <>
-          <p className="rounded-md bg-muted/60 p-2 text-[11px] leading-relaxed text-muted-foreground">
+          <p className="rounded-md bg-muted/60 p-2 text-caption leading-relaxed text-muted-foreground">
             volumetric = (L × W × H × pieces) / 6000 · chargeable = max(actual, volumetric)
           </p>
           <ResultRow label="Actual weight" value={`${actualWeightKg.toLocaleString()} kg`} />
@@ -854,7 +854,7 @@ function AirFreightPanel() {
             label="Chargeable weight"
             value={`${chargeableKg.toFixed(1)} kg`}
           />
-          <div className="text-right text-[11px] text-muted-foreground">
+          <div className="text-right text-caption text-muted-foreground">
             ({useVolumetric ? "volumetric governs" : "actual governs"})
           </div>
           <Separator />
@@ -926,7 +926,7 @@ function DemurragePanel() {
           <ResultRow label={`${daysOver} × ${money(perDiemUsd)} × ${containers}`} value={money(cost)} />
           <Separator />
           <ResultRow label="Demurrage cost" value={money(cost)} strong />
-          <p className="rounded-md bg-muted/60 p-2 text-[11px] leading-relaxed text-muted-foreground">
+          <p className="rounded-md bg-muted/60 p-2 text-caption leading-relaxed text-muted-foreground">
             Demurrage applies to containers held inside the terminal beyond the free time. Detention (per-diem outside
             the terminal) is billed separately.
           </p>
@@ -962,7 +962,7 @@ function InsurancePanel() {
       }
       right={
         <>
-          <p className="rounded-md bg-muted/60 p-2 text-[11px] leading-relaxed text-muted-foreground">
+          <p className="rounded-md bg-muted/60 p-2 text-caption leading-relaxed text-muted-foreground">
             insured value = (cargo + freight) + 10% (CIF + 10) · premium = max(min, insured × rate%)
           </p>
           <ResultRow label="Cargo + freight (CIF)" value={money(cargoValue + freightCost)} />
@@ -971,7 +971,7 @@ function InsurancePanel() {
           <Separator />
           <ResultRow label="Premium" value={money(premium)} strong />
           {minApplied && (
-            <div className="text-right text-[11px] text-muted-foreground">(minimum premium applied)</div>
+            <div className="text-right text-caption text-muted-foreground">(minimum premium applied)</div>
           )}
           <SaveButton onSave={() => toast.success(`Insurance saved · ${money(premium)} premium`)} />
         </>
@@ -1018,7 +1018,7 @@ function CustomsPanel() {
           <ResultRow label="Brokerage" value={money(brokerageFlat)} />
           <Separator />
           <ResultRow label="Total customs cost" value={money(total)} strong />
-          <p className="rounded-md bg-muted/60 p-2 text-[11px] leading-relaxed text-muted-foreground">
+          <p className="rounded-md bg-muted/60 p-2 text-caption leading-relaxed text-muted-foreground">
             Estimate only — actual duty is HS-code dependent and may include AD/CVD or section tariffs.
           </p>
           <SaveButton onSave={() => toast.success(`Customs saved · ${money(total)} total`)} />

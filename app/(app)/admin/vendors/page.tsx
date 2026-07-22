@@ -14,14 +14,14 @@ import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { VENDORS, dataSourcesForVendor, ratesForVendor, RATE_TYPE_LABEL } from "@/lib/data";
 import type { Vendor, VendorTier } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { StatusBadge, type StatusTone } from "@/components/status-badge";
 
-const SOURCE_STATUS_STYLE: Record<string, string> = {
-  actual: "bg-emerald-100 text-emerald-700",
-  on_review: "bg-amber-100 text-amber-700",
-  in_edits: "bg-amber-100 text-amber-700",
-  additional: "bg-blue-100 text-blue-700",
-  old: "bg-slate-100 text-slate-600",
+const SOURCE_STATUS_TONE: Record<string, StatusTone> = {
+  actual: "positive",
+  on_review: "warning",
+  in_edits: "warning",
+  additional: "info",
+  old: "neutral",
 };
 
 const SOURCE_STATUS_LABEL: Record<string, string> = {
@@ -32,10 +32,10 @@ const SOURCE_STATUS_LABEL: Record<string, string> = {
   old: "Old",
 };
 
-const TIER_STYLE: Record<VendorTier, string> = {
-  1: "bg-emerald-100 text-emerald-700",
-  2: "bg-blue-100 text-blue-700",
-  3: "bg-slate-100 text-slate-700",
+const TIER_TONE: Record<VendorTier, StatusTone> = {
+  1: "positive",
+  2: "info",
+  3: "neutral",
 };
 
 const ALL_COASTS = ["East", "West", "Gulf", "Inland", "Intl"] as const;
@@ -61,7 +61,7 @@ const SERVICE_LABEL: Record<string, string> = {
 function Stars({ rating }: { rating: number }) {
   return (
     <span className="inline-flex items-center gap-1">
-      <Star className="size-4 fill-amber-400 text-amber-400" />
+      <Star className="size-4 fill-warning text-warning" />
       <span className="font-medium tabular-nums">{rating.toFixed(1)}</span>
     </span>
   );
@@ -79,9 +79,9 @@ function VendorRow({ vendor }: { vendor: Vendor }) {
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <Badge variant="secondary" className={cn("font-semibold", TIER_STYLE[vendor.tier])}>
+              <StatusBadge tone={TIER_TONE[vendor.tier]} dot={false} className="font-semibold">
                 Tier {vendor.tier}
-              </Badge>
+              </StatusBadge>
               <span className="font-medium">{vendor.name}</span>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -91,7 +91,7 @@ function VendorRow({ vendor }: { vendor: Vendor }) {
               </span>
               <span>{vendor.coast} coast</span>
               {vendor.ownsEquipment && (
-                <span className="inline-flex items-center gap-1 font-medium text-emerald-600">
+                <span className="inline-flex items-center gap-1 font-medium text-status-positive-fg">
                   <Wrench className="size-3.5" />
                   Owns equipment / crane
                 </span>
@@ -154,17 +154,17 @@ function VendorRow({ vendor }: { vendor: Vendor }) {
                             <Table2 className="size-3.5 shrink-0 text-muted-foreground" />
                             <span className="truncate font-medium">{s.name}</span>
                             {s.format && (
-                              <span className="shrink-0 rounded border px-1 text-[10px] uppercase text-muted-foreground">
+                              <span className="shrink-0 rounded border px-1 text-caption uppercase text-muted-foreground">
                                 {s.format}
                               </span>
                             )}
                           </span>
-                          <Badge
-                            variant="secondary"
-                            className={cn("shrink-0 font-normal", SOURCE_STATUS_STYLE[s.status])}
+                          <StatusBadge
+                            tone={SOURCE_STATUS_TONE[s.status] ?? "neutral"}
+                            className="shrink-0 font-normal"
                           >
                             {SOURCE_STATUS_LABEL[s.status] ?? s.status}
-                          </Badge>
+                          </StatusBadge>
                         </li>
                       ))}
                     </ul>
@@ -204,7 +204,7 @@ function VendorRow({ vendor }: { vendor: Vendor }) {
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
-              <FileWarning className="size-3.5 text-amber-600" />
+              <FileWarning className="size-3.5 text-status-warning-fg" />
               No rate source on file — request via Front
             </span>
             <Button asChild size="sm" variant="ghost" className="h-7 text-xs">
@@ -258,21 +258,21 @@ export default function VendorsPage() {
             <CardDescription>How Atlantic ranks and allocates work across the network.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border bg-emerald-50/50 p-3">
-              <Badge variant="secondary" className={cn("mb-2 font-semibold", TIER_STYLE[1])}>Tier 1</Badge>
+            <div className="rounded-lg border bg-status-positive-bg/50 p-3">
+              <StatusBadge tone={TIER_TONE[1]} dot={false} className="mb-2 font-semibold">Tier 1</StatusBadge>
               <p className="text-xs text-muted-foreground">
                 Owns equipment / crane, widest range of services, most reliable — gets the most shipments and the
                 expensive / oversized cargo.
               </p>
             </div>
-            <div className="rounded-lg border bg-blue-50/40 p-3">
-              <Badge variant="secondary" className={cn("mb-2 font-semibold", TIER_STYLE[2])}>Tier 2</Badge>
+            <div className="rounded-lg border bg-status-info-bg/40 p-3">
+              <StatusBadge tone={TIER_TONE[2]} dot={false} className="mb-2 font-semibold">Tier 2</StatusBadge>
               <p className="text-xs text-muted-foreground">
                 Solid partners with fewer services; used where Tier 1 has no coverage or for routine lanes.
               </p>
             </div>
-            <div className="rounded-lg border bg-slate-50 p-3">
-              <Badge variant="secondary" className={cn("mb-2 font-semibold", TIER_STYLE[3])}>Tier 3</Badge>
+            <div className="rounded-lg border bg-status-neutral-bg p-3">
+              <StatusBadge tone={TIER_TONE[3]} dot={false} className="mb-2 font-semibold">Tier 3</StatusBadge>
               <p className="text-xs text-muted-foreground">
                 Cheapest option; loading done by drivers, no owned crane. Used to keep costs down on simpler jobs.
               </p>

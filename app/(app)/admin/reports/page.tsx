@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge, type StatusTone } from "@/components/status-badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -38,8 +39,8 @@ function median(nums: number[]): number {
 }
 
 function TierBadge({ tier }: { tier: VendorTier }) {
-  const style = tier === 1 ? "bg-emerald-100 text-emerald-700" : tier === 2 ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-700";
-  return <Badge variant="secondary" className={style}>T{tier}</Badge>;
+  const tone: StatusTone = tier === 1 ? "positive" : tier === 2 ? "info" : "neutral";
+  return <StatusBadge tone={tone} dot={false}>T{tier}</StatusBadge>;
 }
 
 export default function ReportsPage() {
@@ -194,8 +195,8 @@ export default function ReportsPage() {
                               <span className="truncate text-sm font-medium">{r.vendor.name}</span>
                               <TierBadge tier={r.vendor.tier} />
                               <span className="text-xs text-muted-foreground">{r.vendor.coast}</span>
-                              {i === 0 && <Badge className="gap-1 bg-success/15 text-success"><Crown className="size-3" /> Best price</Badge>}
-                              {i === ranked.length - 1 && ranked.length > 1 && <Badge variant="secondary" className="bg-amber-100 text-amber-700">Premium</Badge>}
+                              {i === 0 && <Badge variant="status-positive" className="gap-1"><Crown className="size-3" /> Best price</Badge>}
+                              {i === ranked.length - 1 && ranked.length > 1 && <Badge variant="status-warning">Premium</Badge>}
                             </div>
                             <div className="mt-1.5 h-1.5 rounded-full bg-muted">
                               <div className="h-1.5 rounded-full bg-gradient-to-r from-success to-primary" style={{ width: `${barPct}%` }} />
@@ -204,8 +205,8 @@ export default function ReportsPage() {
                           <div className="text-right">
                             <div className="font-semibold tabular-nums">{money(r.rate)} <span className="text-xs font-normal text-muted-foreground">/{meta.unit === "$/mile" ? "mi" : meta.unit === "per container" ? "cntr" : "unit"}</span></div>
                             <div className="flex items-center justify-end gap-2 text-xs">
-                              <span className="inline-flex items-center gap-0.5 text-muted-foreground"><Star className="size-3 fill-amber-400 text-amber-400" /> {r.vendor.rating}</span>
-                              <span className={cn("tabular-nums", delta === 0 ? "text-success" : "text-destructive")}>{delta === 0 ? "cheapest" : `+${delta}%`}</span>
+                              <span className="inline-flex items-center gap-0.5 text-muted-foreground"><Star className="size-3 fill-warning text-warning" /> {r.vendor.rating}</span>
+                              <span className={cn("tabular-nums", delta === 0 ? "text-status-positive-fg" : "text-status-negative-fg")}>{delta === 0 ? "cheapest" : `+${delta}%`}</span>
                             </div>
                           </div>
                         </div>
@@ -239,12 +240,12 @@ export default function ReportsPage() {
                   {varianceBoard.map((row) => (
                     <div key={row.vid} className="flex items-center justify-between rounded-lg border p-2.5 text-sm">
                       <span className="truncate">{getVendor(row.vid)?.name ?? row.vid}</span>
-                      <span className={cn("font-semibold tabular-nums", row.variance > 0 ? "text-destructive" : row.variance < 0 ? "text-success" : "text-muted-foreground")}>
+                      <span className={cn("font-semibold tabular-nums", row.variance > 0 ? "text-status-negative-fg" : row.variance < 0 ? "text-status-positive-fg" : "text-muted-foreground")}>
                         {row.variance > 0 ? "+" : ""}{money(row.variance)} · {Math.round(row.pct * 100)}%
                       </span>
                     </div>
                   ))}
-                  <p className="pt-1 text-[11px] text-muted-foreground">Higher = vendor over-billed vs quoted. Feeds QuickBooks reconciliation.</p>
+                  <p className="pt-1 text-caption text-muted-foreground">Higher = vendor over-billed vs quoted. Feeds QuickBooks reconciliation.</p>
                 </CardContent>
               </Card>
             </div>
@@ -257,7 +258,7 @@ export default function ReportsPage() {
                   <div key={v.id} className="grid grid-cols-[1fr_auto] items-center gap-3">
                     <div>
                       <div className="flex items-center justify-between text-sm"><span>{v.name}</span><span className="text-xs text-muted-foreground">{fresh}/{total} actual</span></div>
-                      <div className="mt-1 h-1.5 rounded-full bg-muted"><div className={cn("h-1.5 rounded-full", pct >= 0.7 ? "bg-success" : pct >= 0.4 ? "bg-amber-400" : "bg-destructive")} style={{ width: `${Math.max(6, pct * 100)}%` }} /></div>
+                      <div className="mt-1 h-1.5 rounded-full bg-muted"><div className={cn("h-1.5 rounded-full", pct >= 0.7 ? "bg-success" : pct >= 0.4 ? "bg-warning" : "bg-destructive")} style={{ width: `${Math.max(6, pct * 100)}%` }} /></div>
                     </div>
                     <span className="w-10 text-right text-sm font-medium tabular-nums">{Math.round(pct * 100)}%</span>
                   </div>
