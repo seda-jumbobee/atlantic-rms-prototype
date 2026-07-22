@@ -77,7 +77,7 @@ function ToggleGroupItem({
           variant: context.variant || variant,
           size: context.size || size,
         }),
-        "h-auto min-w-0 rounded-md border-0 px-3 py-[5px] text-sm leading-5 text-muted-foreground data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm aria-pressed:bg-background aria-pressed:shadow-sm",
+        "h-auto min-w-0 rounded-md border-0 px-3 py-[5px] text-sm leading-5 text-muted-foreground hover:bg-background/60 hover:text-foreground data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm aria-pressed:bg-background aria-pressed:shadow-sm",
         className
       )}
       {...props}

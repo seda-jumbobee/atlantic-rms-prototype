@@ -14,6 +14,7 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-active: var(--sidebar-active);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -40,13 +41,21 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-primary-disabled: var(--primary-disabled);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-secondary-foreground: var(--brand-secondary-foreground);
+  --color-brand-secondary-hover: var(--brand-secondary-hover);
+  --color-brand-secondary-active: var(--brand-secondary-active);
+  --color-brand-secondary-disabled: var(--brand-secondary-disabled);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
 
-  /* Status scale (Figma: Foundations → "Status scale") — the single system for
-     every status/stage/source badge. Use bg-status-*-bg + text-status-*-fg. */
+  /* Status scale — the single system for every status/stage/source badge.
+     Use bg-status-*-bg + text-status-*-fg. */
   --color-status-info-bg: var(--status-info-bg);
   --color-status-info-fg: var(--status-info-fg);
   --color-status-positive-bg: var(--status-positive-bg);
@@ -72,109 +81,135 @@
   --text-caption--letter-spacing: -0.005em;
 }
 
-/* Color values mirror the Figma "RMS New" Color collection (Light) 1:1 — keep hex. */
+/* Atlantic RMS brand palette (reference board, 2026-07-22):
+   brand/primary = indigo ramp, brand/secondary = orange ramp,
+   feedback = danger/warning/success triads, neutrals gray-50..300.
+   Reference quirks resolved here:
+   - text/link hex printed as BDBDBD (dup of text/disabled) but swatch is indigo → links use brand/primary/default.
+   - border/dark hex printed as CCCCCC but swatch is dark gray → dark-surface borders use #4f4f4f (see .dark).
+   - status-warning-fg: reference has no AA-readable amber text (FF8F00 = 1.9:1);
+     #8a5300 is FF8F00 darkened to pass 4.5:1 — the one derived color. */
 :root {
-  --background: #ffffff;
-  --foreground: #1a1a1a;
-  --card: #ffffff;
-  --card-foreground: #1a1a1a;
+  --background: #fafafa; /* background/page */
+  --foreground: #121212; /* text/primary */
+  --card: #ffffff; /* background/surface */
+  --card-foreground: #121212;
   --popover: #ffffff;
-  --popover-foreground: #1a1a1a;
-  --primary: #2e5630;
-  --primary-foreground: #fafafa;
-  --secondary: #f6f6f6;
-  --secondary-foreground: #1a1a1a;
+  --popover-foreground: #121212;
+  --primary: #282aab; /* brand/primary/default */
+  --primary-foreground: #ffffff;
+  --primary-hover: #20248f; /* brand/primary/hover */
+  --primary-active: #14166d; /* brand/primary/active */
+  --primary-disabled: #dfdff3; /* brand/primary/disabled */
+  --brand-secondary: #ff4c00; /* brand/secondary/default */
+  --brand-secondary-foreground: #ffffff;
+  --brand-secondary-hover: #e64500;
+  --brand-secondary-active: #b53800;
+  --brand-secondary-disabled: #ffe4d9;
+  --secondary: #f6f6f6; /* neutral/gray-50 — shadcn subtle surface (brand/secondary orange = --brand-secondary) */
+  --secondary-foreground: #121212;
   --muted: #f6f6f6;
-  --muted-foreground: #4c4c4c;
-  --accent: #e9eee9;
-  --accent-foreground: #102a15;
-  --destructive: #c41c1c;
-  --destructive-foreground: #fafafa;
-  --success: #51bc51;
-  --success-foreground: #102a15;
-  --warning: #f09731;
-  --warning-foreground: #102a15;
-  --border: #e9e9e9;
+  --muted-foreground: #4f4f4f; /* text/secondary */
+  --accent: #dfdff3; /* brand/primary/disabled tint — menu hover/selection */
+  --accent-foreground: #14166d;
+  --destructive: #d32f2f; /* feedback/danger/default = text/error */
+  --destructive-foreground: #ffffff;
+  --success: #388e3c; /* feedback/success/default */
+  --success-foreground: #ffffff;
+  --warning: #ffa000; /* feedback/warning/default */
+  --warning-foreground: #121212;
+  --border: #e9e9e9; /* border/light */
   --input: #e9e9e9;
-  --ring: #2e5630;
-  --status-info-bg: #e9eee9;
-  --status-info-fg: #2e5630;
-  --status-positive-bg: #e3fbe3;
-  --status-positive-fg: #3f963f;
-  --status-warning-bg: #fef6ed;
-  --status-warning-fg: #a66c29;
-  --status-negative-bg: #fce4e4;
-  --status-negative-fg: #981111;
-  --status-neutral-bg: #f6f6f6;
-  --status-neutral-fg: #4c4c4c;
-  --chart-1: #2e5630;
-  --chart-2: #8faa5d;
-  --chart-3: #f09731;
-  --chart-4: #51bc51;
-  --chart-5: #4c7935;
+  --ring: #282aab;
+  --status-info-bg: #dfdff3;
+  --status-info-fg: #282aab;
+  --status-positive-bg: #c8e6c9; /* feedback/success/light */
+  --status-positive-fg: #2e7d32; /* feedback/success/dark */
+  --status-warning-bg: #ffecb3; /* feedback/warning/light */
+  --status-warning-fg: #8a5300; /* derived — see header note */
+  --status-negative-bg: #ffcdd2; /* feedback/danger/light */
+  --status-negative-fg: #c62828; /* feedback/danger/dark */
+  --status-neutral-bg: #f6f6f6; /* neutral/gray-50 */
+  --status-neutral-fg: #4f4f4f; /* text/secondary */
+  --chart-1: #282aab;
+  --chart-2: #ff4c00;
+  --chart-3: #ffa000;
+  --chart-4: #388e3c;
+  --chart-5: #4a4fcf; /* brand/primary/light */
   --radius: 0.625rem;
-  --sidebar: #102a15;
+  /* Sidebar = brand-primary surface; items walk the ramp:
+     rest = default, hover = hover, selected = active (task: Brand/Primary/Active). */
+  --sidebar: #282aab;
   --sidebar-foreground: #fafafa;
-  --sidebar-primary: #4c7935;
-  --sidebar-primary-foreground: #fafafa;
-  --sidebar-accent: #405544;
-  --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: #405544;
-  --sidebar-ring: #4c7935;
+  --sidebar-primary: #cc3f00; /* brand/secondary/dark — count badge (white text ≥4.5:1) */
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #20248f; /* hover */
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-active: #14166d; /* active/selected item */
+  --sidebar-border: #20248f;
+  --sidebar-ring: #fafafa; /* off-white — a #4a4fcf ring is invisible on the indigo surface */
 }
 
-/* Dark = Figma "Color" collection Dark mode (Foundations → Light/Dark demo).
-   Values not present in Figma are derived from the same green ramp and marked ~. */
+/* Dark theme — NOT reachable in-app yet (no ThemeProvider). The reference
+   defines no dark mode; values marked ~ are derived from the same ramps. */
 .dark {
-  --background: #0b1f10;
+  --background: #121212; /* neutral/black */
   --foreground: #fafafa;
-  --card: #102a15;
+  --card: #1e1e1e; /* ~ */
   --card-foreground: #fafafa;
-  --popover: #102a15; /* ~ = card */
+  --popover: #1e1e1e; /* ~ */
   --popover-foreground: #fafafa;
-  --primary: #4c7935;
+  --primary: #4a4fcf; /* brand/primary/light */
   --primary-foreground: #ffffff;
-  --secondary: #1a3320; /* ~ */
+  --primary-hover: #282aab; /* ~ ramp shifted */
+  --primary-active: #20248f; /* ~ */
+  --primary-disabled: #26284f; /* ~ */
+  --brand-secondary: #ff7033; /* brand/secondary/light */
+  --brand-secondary-foreground: #121212;
+  --brand-secondary-hover: #ff4c00;
+  --brand-secondary-active: #e64500;
+  --brand-secondary-disabled: #4a2a1c; /* ~ */
+  --secondary: #242424; /* ~ */
   --secondary-foreground: #fafafa;
-  --muted: #16301c; /* ~ */
-  --muted-foreground: #cccccc;
-  --accent: #405544; /* ~ = sidebar-accent */
-  --accent-foreground: #fafafa;
-  --destructive: #e05252; /* ~ lightened for contrast on dark */
-  --destructive-foreground: #fafafa;
-  --success: #51bc51;
-  --success-foreground: #102a15;
-  --warning: #f09731;
-  --warning-foreground: #102a15;
-  --border: #405544;
-  --input: #405544;
-  --ring: #4c7935;
-  /* Status scale is theme-stable per Figma (Light/Dark demo shows identical values) */
-  --status-info-bg: #e9eee9;
-  --status-info-fg: #2e5630;
-  --status-positive-bg: #e3fbe3;
-  --status-positive-fg: #3f963f;
-  --status-warning-bg: #fef6ed;
-  --status-warning-fg: #a66c29;
-  --status-negative-bg: #fce4e4;
-  --status-negative-fg: #981111;
+  --muted: #1f1f1f; /* ~ */
+  --muted-foreground: #cccccc; /* neutral/gray-300 */
+  --accent: #20248f;
+  --accent-foreground: #ffffff;
+  --destructive: #d32f2f;
+  --destructive-foreground: #ffffff;
+  --success: #388e3c;
+  --success-foreground: #ffffff;
+  --warning: #ffa000;
+  --warning-foreground: #121212;
+  --border: #4f4f4f; /* border/dark (per swatch; printed hex is a typo) */
+  --input: #4f4f4f;
+  --ring: #4a4fcf;
+  /* Status scale is theme-stable */
+  --status-info-bg: #dfdff3;
+  --status-info-fg: #282aab;
+  --status-positive-bg: #c8e6c9;
+  --status-positive-fg: #2e7d32;
+  --status-warning-bg: #ffecb3;
+  --status-warning-fg: #8a5300;
+  --status-negative-bg: #ffcdd2;
+  --status-negative-fg: #c62828;
   --status-neutral-bg: #f6f6f6;
-  --status-neutral-fg: #4c4c4c;
-  /* Brand-hued charts (doc audit item 6: don't revert to gray) — ~ reordered for dark bg */
-  --chart-1: #8faa5d;
-  --chart-2: #51bc51;
-  --chart-3: #f09731;
-  --chart-4: #a9c97e;
-  --chart-5: #6f9b57;
-  /* Sidebar is theme-stable (dark green in both modes) */
-  --sidebar: #102a15;
+  --status-neutral-fg: #4f4f4f;
+  --chart-1: #4a4fcf;
+  --chart-2: #ff7033;
+  --chart-3: #ffa000;
+  --chart-4: #388e3c;
+  --chart-5: #dfdff3;
+  /* Sidebar is theme-stable (brand surface in both modes) */
+  --sidebar: #282aab;
   --sidebar-foreground: #fafafa;
-  --sidebar-primary: #4c7935;
-  --sidebar-primary-foreground: #fafafa;
-  --sidebar-accent: #405544;
-  --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: #405544;
-  --sidebar-ring: #4c7935;
+  --sidebar-primary: #cc3f00;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #20248f;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-active: #14166d;
+  --sidebar-border: #20248f;
+  --sidebar-ring: #fafafa;
 }
 
 @layer base {

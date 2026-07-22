@@ -45,7 +45,9 @@ const ADMIN = [
   { href: "/admin/integrations", label: "Integrations & API", icon: Plug },
 ];
 
-const NAV_ITEM = "h-auto px-4 py-3";
+// Active/selected = Brand/Primary/Active; hover keeps sidebar-accent (Brand/Primary/Hover)
+const NAV_ITEM =
+  "h-auto px-4 py-3 data-[active=true]:bg-sidebar-active data-[active=true]:text-sidebar-foreground data-[active=true]:hover:bg-sidebar-active";
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -92,7 +94,11 @@ export function AppSidebar() {
                       const Icon = CALC_ICON[c.icon] ?? Calculator;
                       return (
                         <SidebarMenuSubItem key={c.id}>
-                          <SidebarMenuSubButton asChild isActive={pathname === `/calculators/${c.id}`}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={pathname === `/calculators/${c.id}`}
+                            className="data-[active=true]:bg-sidebar-active data-[active=true]:text-sidebar-foreground data-[active=true]:hover:bg-sidebar-active"
+                          >
                             <Link href={`/calculators/${c.id}`}>
                               <Icon className="size-3.5" />
                               <span>{c.name}</span>

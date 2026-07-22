@@ -5,36 +5,39 @@ Every token and component in this codebase mirrors that file 1:1. When a request
 
 ## Tokens (`app/globals.css`)
 
-### Colors — Figma "Color" collection (Light / Dark)
+### Colors — Figma "Color" collection (Light / Dark), aliasing "Brand Primitives"
+
+Brand palette (2026-07-22 reference board): **brand/primary = indigo ramp** (default `#282aab` · light `#4a4fcf` · dark/hover `#20248f` · active `#14166d` · disabled `#dfdff3`), **brand/secondary = orange ramp** (default `#ff4c00` · light `#ff7033` · dark `#cc3f00` · hover `#e64500` · active `#b53800` · disabled `#ffe4d9`).
 
 | Token | Light | Dark | Notes |
 |---|---|---|---|
-| `--background` | `#ffffff` | `#0b1f10` | |
-| `--foreground` | `#1a1a1a` | `#fafafa` | |
-| `--card` / `--popover` | `#ffffff` | `#102a15` | dark popover derived (=card) |
-| `--primary` | `#2e5630` | `#4c7935` | JumboBee green |
-| `--primary-foreground` | `#fafafa` | `#ffffff` | |
-| `--secondary` / `--muted` | `#f6f6f6` | `#1a3320` / `#16301c` (derived) | |
-| `--muted-foreground` | `#4c4c4c` | `#cccccc` | |
-| `--accent` | `#e9eee9` | `#405544` (derived) | soft green tint |
-| `--accent-foreground` | `#102a15` | `#fafafa` | |
-| `--destructive` | `#c41c1c` | `#e05252` (derived) | fg `#fafafa` |
-| `--success` | `#51bc51` | same | fg `#102a15` |
-| `--warning` | `#f09731` | same | fg `#102a15` |
-| `--border` / `--input` | `#e9e9e9` | `#405544` | |
-| `--ring` | `#2e5630` | `#4c7935` | |
-| `--chart-1…5` | `#2e5630 #8faa5d #f09731 #51bc51 #4c7935` | brand-hued (see file) | never gray in dark |
-| `--sidebar*` | `#102a15` bg · `#4c7935` primary · `#405544` accent/border · `#fafafa` fg | same | theme-stable dark green |
+| `--background` | `#fafafa` | `#121212` | background/page · neutral/black |
+| `--card` / `--popover` | `#ffffff` | `#1e1e1e` (derived) | background/surface |
+| `--foreground` | `#121212` | `#fafafa` | text/primary |
+| `--primary` (+`-hover/-active/-disabled`) | `#282aab` (`#20248f`/`#14166d`/`#dfdff3`) | `#4a4fcf` (ramp shifted) | brand/primary; also `--ring`, links |
+| `--brand-secondary` (+states) | `#ff4c00` (hover `#e64500`, active `#b53800`, disabled `#ffe4d9`) | `#ff7033` | orange; Button variant `brand-secondary` |
+| `--secondary` / `--muted` | `#f6f6f6` | `#242424`/`#1e1e1e` (derived) | neutral/gray-50 — shadcn subtle surface, NOT the orange |
+| `--muted-foreground` | `#4f4f4f` | `#cccccc` | text/secondary · gray-300 |
+| `--accent` | `#dfdff3` | `#20248f` | light-indigo tint — menu hover/selection |
+| `--accent-foreground` | `#14166d` | `#ffffff` | |
+| `--destructive` | `#d32f2f` | same | feedback/danger/default = text/error; fg white |
+| `--success` | `#388e3c` | same | fg white |
+| `--warning` | `#ffa000` | same | fg `#121212` (white on amber fails contrast) |
+| `--border` / `--input` | `#e9e9e9` | `#4f4f4f` | border/light · border/dark |
+| `--chart-1…5` | `#282aab #ff4c00 #ffa000 #388e3c #4a4fcf` | dark variants in file | indigo/orange/amber/green |
+| `--sidebar*` | bg `#282aab` · hover `#20248f` · **active `#14166d`** · badge `#cc3f00` · fg `#fafafa` · ring `#fafafa` | same | brand ramp = rest/hover/active; theme-stable |
+
+Reference-board quirks (resolved, documented in `globals.css`): `text/link` printed hex `BDBDBD` is a typo (swatch is indigo) → links use brand/primary; `border/dark` printed hex `CCCCCC` contradicts its dark swatch → `#4f4f4f`; `--status-warning-fg #8a5300` is the one derived color (reference amber `#ff8f00` reads 1.9:1 on its light tint).
 
 ### Status scale — Figma "Status scale" (`34:2`) — THE only palette for state chips
 
 | Tone | bg | fg | Typical mapping |
 |---|---|---|---|
-| `neutral` | `#f6f6f6` | `#4c4c4c` | draft, offline tariff, archived |
-| `info` | `#e9eee9` | `#2e5630` | sent, qualification, spot |
-| `positive` | `#e3fbe3` | `#3f963f` | confirmed, won, contract, active |
-| `warning` | `#fef6ed` | `#a66c29` | negotiation, expired, pending review |
-| `negative` | `#fce4e4` | `#981111` | lost, failed, overdue |
+| `neutral` | `#f6f6f6` | `#4f4f4f` | draft, offline tariff, archived |
+| `info` | `#dfdff3` | `#282aab` | sent, qualification, spot |
+| `positive` | `#c8e6c9` | `#2e7d32` | confirmed, won, contract, active |
+| `warning` | `#ffecb3` | `#8a5300` | negotiation, expired, pending review |
+| `negative` | `#ffcdd2` | `#c62828` | lost, failed, overdue |
 
 Theme-stable (same values in dark). Use `<StatusBadge tone="…">` ([components/status-badge.tsx](components/status-badge.tsx)) or `<Badge variant="status-…">`. Never raw amber/emerald/slate.
 

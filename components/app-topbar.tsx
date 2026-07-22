@@ -56,7 +56,7 @@ export function AppTopbar() {
 
       <button
         onClick={() => setOpen(true)}
-        className="flex h-9 w-full max-w-xs items-center gap-2 rounded-md border bg-muted/40 px-3 text-sm text-muted-foreground transition hover:bg-muted"
+        className="flex h-9 w-full max-w-xs items-center gap-2 rounded-md border bg-muted/40 px-3 text-sm text-muted-foreground transition outline-none hover:bg-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
       >
         <Search className="size-4" />
         <span>Search lanes, deals, carriers…</span>
@@ -69,7 +69,8 @@ export function AppTopbar() {
           <Button
             size="sm"
             variant={user?.role === "manager" ? "default" : "ghost"}
-            className="h-7 gap-1.5 px-2.5 text-xs"
+            aria-pressed={user?.role === "manager"}
+            className="h-7 gap-1.5 px-2.5 text-xs focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             onClick={() => setRole("manager")}
           >
             <UserIcon className="size-3.5" /> Manager
@@ -77,7 +78,8 @@ export function AppTopbar() {
           <Button
             size="sm"
             variant={user?.role === "admin" ? "default" : "ghost"}
-            className="h-7 gap-1.5 px-2.5 text-xs"
+            aria-pressed={user?.role === "admin"}
+            className="h-7 gap-1.5 px-2.5 text-xs focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             onClick={() => setRole("admin")}
           >
             <ShieldCheck className="size-3.5" /> Admin
