@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { CommodityKind, ContainerCode, Dimensions, ShipmentType } from "@/lib/types";
 import {
@@ -133,9 +134,9 @@ export function CommodityPicker({
   };
 
   return (
-    <div className="space-y-5">
+    <div className={sectionHeadings ? "space-y-8" : "space-y-5"}>
       <div>
-        <Label id="commodity-kind-label" className="mb-2 block">
+        <Label id="commodity-kind-label" className={cn("mb-2 block", sectionHeadings && "mb-3 text-base font-semibold")}>
           <span>Type of commodity<RequiredMark /></span>
         </Label>
         <div role="group" aria-labelledby="commodity-kind-label" className="flex flex-wrap gap-2">
@@ -240,7 +241,8 @@ export function CommodityPicker({
             </div>
           )}
 
-          {sectionHeadings && <h3 className="pt-1 text-base font-semibold">Loading & transport details</h3>}
+          {sectionHeadings && <Separator />}
+          {sectionHeadings && <h3 className="text-base font-semibold">Loading & transport details</h3>}
           <ShippingOptions value={value} onChange={onChange} />
         </div>
       )}

@@ -291,7 +291,7 @@ export function QuoteSearchWidget({
         <CardContent className="space-y-7 p-5 sm:p-6">
           {/* 1 · Route */}
           <section aria-labelledby="rq-route-heading" className="space-y-4">
-            <h3 id="rq-route-heading" className="text-base font-semibold">Route</h3>
+            <h3 id="rq-route-heading" className="text-lg font-semibold">Route</h3>
             <div ref={originAnchor} className="grid items-start gap-3 sm:grid-cols-[1fr_auto_1fr]">
               <div id="rq-origin" className="space-y-1.5">
                 <Label htmlFor="rq-origin-trigger"><span>Origin<RequiredMark /></span></Label>
@@ -332,12 +332,12 @@ export function QuoteSearchWidget({
             <section
               id="rq-commodity"
               aria-labelledby="rq-commodity-heading"
-              className="space-y-4 duration-300 animate-in fade-in slide-in-from-top-1"
+              className="space-y-6 duration-300 animate-in fade-in slide-in-from-top-1"
             >
               <Separator />
               <div>
-                <h3 id="rq-commodity-heading" className="text-base font-semibold">Commodity</h3>
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                <h3 id="rq-commodity-heading" className="text-lg font-semibold">Commodity</h3>
+                <p className="mt-1 text-xs text-muted-foreground">
                   Commodity type determines which rates and pricing formula will be used.
                 </p>
               </div>
