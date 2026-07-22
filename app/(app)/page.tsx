@@ -184,7 +184,7 @@ export default function DashboardPage() {
               </Button>
 
               <div className="mt-7 border-t border-primary/15 pt-5">
-                <h3 className="text-sm font-medium">Need to build a custom route?</h3>
+                <h3 className="text-base font-semibold">Need to build a custom route?</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Manually select transportation stages, vendors, and contracts for a complex shipment.
                 </p>
