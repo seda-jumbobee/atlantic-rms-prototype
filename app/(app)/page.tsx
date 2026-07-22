@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Sparkles, Calculator, ArrowRight, FileText, Briefcase, TrendingUp,
-  AlertCircle, LayoutTemplate, Ship, MapPin, Pencil, Send, ExternalLink, Route,
+  AlertCircle, LayoutTemplate, Pencil, Send, ExternalLink, Route,
   type LucideIcon,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -63,35 +63,31 @@ function OverviewCard({
   );
 }
 
-/* Minimal route graphic for the hero — origin → ocean leg → destination. */
-function RouteGraphic() {
+/* Subtle ocean-freight illustration for the hero — container ship on a dashed
+   route arc between two ports. Pure SVG, colored via design-system tokens. */
+function OceanGraphic() {
   return (
     <div aria-hidden className="hidden shrink-0 select-none md:block">
-      <div className="flex items-center gap-2 rounded-xl border bg-card px-5 py-4 shadow-xs">
-        <div className="flex flex-col items-center gap-1">
-          <span className="grid size-8 place-items-center rounded-full bg-accent text-accent-foreground">
-            <MapPin className="size-4" />
-          </span>
-          <span className="text-caption text-muted-foreground">Origin</span>
-        </div>
-        <span className="h-px w-8 border-t border-dashed border-muted-foreground/40" />
-        <div className="flex flex-col items-center gap-1">
-          <span className="grid size-8 place-items-center rounded-full bg-primary text-primary-foreground">
-            <Ship className="size-4" />
-          </span>
-          <span className="text-caption text-muted-foreground">Ocean</span>
-        </div>
-        <span className="h-px w-8 border-t border-dashed border-muted-foreground/40" />
-        <div className="flex flex-col items-center gap-1">
-          <span className="grid size-8 place-items-center rounded-full bg-accent text-accent-foreground">
-            <MapPin className="size-4" />
-          </span>
-          <span className="text-caption text-muted-foreground">Door</span>
-        </div>
-      </div>
-      <p className="mt-2 text-center text-caption text-muted-foreground">
-        Inland · loading · drayage · ocean — in one quote
-      </p>
+      <svg width="260" height="118" viewBox="0 0 260 118" fill="none" className="text-primary">
+        {/* route arc between ports */}
+        <path d="M14 82 C 70 26, 190 26, 246 82" stroke="currentColor" strokeOpacity="0.3" strokeWidth="1.5" strokeDasharray="2 6" strokeLinecap="round" />
+        <circle cx="14" cy="82" r="4" fill="currentColor" fillOpacity="0.45" />
+        <circle cx="246" cy="82" r="4" fill="currentColor" fillOpacity="0.45" />
+        {/* container stacks */}
+        <rect x="106" y="59" width="14" height="9" rx="1" fill="currentColor" fillOpacity="0.7" />
+        <rect x="122" y="59" width="14" height="9" rx="1" fill="currentColor" fillOpacity="0.4" />
+        <rect x="138" y="59" width="14" height="9" rx="1" fill="currentColor" fillOpacity="0.55" />
+        <rect x="114" y="49" width="14" height="9" rx="1" fill="currentColor" fillOpacity="0.5" />
+        <rect x="130" y="49" width="14" height="9" rx="1" fill="currentColor" fillOpacity="0.75" />
+        {/* bridge */}
+        <rect x="154" y="48" width="10" height="20" rx="1.5" fill="currentColor" fillOpacity="0.85" />
+        <rect x="156.5" y="52" width="5" height="3" rx="0.5" fill="var(--status-info-bg)" />
+        {/* hull */}
+        <path d="M98 69 H 168 L 159 85 H 106 Z" fill="currentColor" />
+        {/* waves */}
+        <path d="M86 93 q 8 -6 16 0 t 16 0 t 16 0 t 16 0 t 16 0 t 16 0" stroke="currentColor" strokeOpacity="0.28" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+        <path d="M104 101 q 8 -5 16 0 t 16 0 t 16 0 t 16 0" stroke="currentColor" strokeOpacity="0.16" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      </svg>
     </div>
   );
 }
@@ -100,6 +96,7 @@ const QUICK_ACTIONS = [
   { href: "/quote-master", label: "Create rate quote", icon: Sparkles },
   { href: "/templates", label: "Use template", icon: LayoutTemplate },
   { href: "/calculators", label: "Open calculators", icon: Calculator },
+  { href: "/route-builder", label: "Build custom route", icon: Route },
 ];
 
 export default function DashboardPage() {
@@ -161,7 +158,6 @@ export default function DashboardPage() {
           value={money(wonValue)}
           sub="last 90 days · won deals"
           icon={TrendingUp}
-          accent="success"
           href="/deals"
         />
         <OverviewCard
@@ -174,39 +170,30 @@ export default function DashboardPage() {
         />
       </section>
 
-      {/* 2 · Create a new quote (hero) */}
+      {/* 2 · Create a new quote (hero) — Rate Quote primary, Custom Route as the alternative */}
       <section aria-label="Create a new quote">
-        <Card className="border-primary/20">
-          <CardContent className="flex flex-col items-start gap-6 p-6 md:flex-row md:items-center md:justify-between">
-            <div className="max-w-xl space-y-2">
+        <Card className="border-primary/20 bg-status-info-bg">
+          <CardContent className="flex flex-col gap-8 p-6 sm:p-8 md:flex-row md:items-center md:justify-between">
+            <div className="max-w-xl">
               <h2 className="text-xl font-semibold tracking-tight">Create a new quote</h2>
-              <p className="text-sm text-muted-foreground">
-                Find available rates for a commodity-based quote or manually build a custom route.
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Find available rates using commodity-specific formulas and contract rates.
               </p>
-              <div className="flex flex-col gap-4 pt-2 sm:flex-row sm:gap-6">
-                <div className="space-y-1.5">
-                  <Button asChild size="lg">
-                    <Link href="/quote-master">
-                      <Sparkles className="size-4" /> Create rate quote
-                    </Link>
-                  </Button>
-                  <p className="text-caption text-muted-foreground">
-                    Use commodity formulas and available contract rates.
-                  </p>
-                </div>
-                <div className="space-y-1.5">
-                  <Button asChild variant="outline" size="lg">
-                    <Link href="/route-builder">
-                      <Route className="size-4" /> Build custom route
-                    </Link>
-                  </Button>
-                  <p className="text-caption text-muted-foreground">
-                    Select transportation stages, vendors, and contracts manually.
-                  </p>
-                </div>
+              <Button asChild size="lg" className="mt-4">
+                <Link href="/quote-master">Create rate quote</Link>
+              </Button>
+
+              <div className="mt-7 border-t border-primary/15 pt-5">
+                <h3 className="text-sm font-medium">Need to build a custom route?</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Manually select transportation stages, vendors, and contracts for a complex shipment.
+                </p>
+                <Button asChild variant="outline" size="sm" className="mt-3">
+                  <Link href="/route-builder">Build custom route</Link>
+                </Button>
               </div>
             </div>
-            <RouteGraphic />
+            <OceanGraphic />
           </CardContent>
         </Card>
       </section>
@@ -266,10 +253,10 @@ export default function DashboardPage() {
         </section>
       )}
 
-      {/* 5 · Recent activity */}
-      <div className="grid items-start gap-6 lg:grid-cols-3">
+      {/* 5 · Recent activity — balanced two-column grid */}
+      <div className="grid items-stretch gap-6 lg:grid-cols-2">
         {/* Recent quotes */}
-        <section aria-label="Recent quotes" className="min-w-0 space-y-2 lg:col-span-2">
+        <section aria-label="Recent quotes" className="flex min-w-0 flex-col gap-2">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">Recent quotes</h2>
             <Button asChild variant="ghost" size="sm" className="text-muted-foreground">
@@ -283,6 +270,7 @@ export default function DashboardPage() {
               icon={FileText}
               title="No quotes yet"
               description="Your quotes will appear here once you create your first one."
+              className="flex-1 justify-center"
               action={
                 <Button asChild size="sm">
                   <Link href="/quote-master">Create rate quote</Link>
@@ -290,7 +278,7 @@ export default function DashboardPage() {
               }
             />
           ) : (
-            <Card className="overflow-x-auto p-0">
+            <Card className="flex-1 overflow-x-auto p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -355,7 +343,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Recent calculations */}
-        <section aria-label="Recent calculations" className="min-w-0 space-y-2">
+        <section aria-label="Recent calculations" className="flex min-w-0 flex-col gap-2">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">Recent calculations</h2>
             <Button asChild variant="ghost" size="sm" className="text-muted-foreground">
@@ -369,6 +357,7 @@ export default function DashboardPage() {
               icon={Calculator}
               title="No calculations yet"
               description="Runs from the calculators will show up here."
+              className="flex-1 justify-center"
               action={
                 <Button asChild size="sm" variant="outline">
                   <Link href="/calculators">Open calculators</Link>
@@ -376,7 +365,7 @@ export default function DashboardPage() {
               }
             />
           ) : (
-            <Card className="divide-y p-0">
+            <Card className="flex-1 content-start divide-y p-0">
               {recentCalcs.map((c) => (
                 <Link
                   key={c.id}
