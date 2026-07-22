@@ -108,7 +108,7 @@ export function QuoteMaster() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-8">
       <PageHeader
         title="Rate Quote"
         description="Find available rates and create a client quote using commodity-specific formulas and contract rates."
