@@ -4,15 +4,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Sparkles, Route, Calculator, Briefcase, History,
-  Building2, Database, Inbox, Plug, ChevronRight, Ship, Truck, Forklift,
+  Building2, Database, Inbox, Plug, ChevronRight, ChevronLeft, Ship, Truck, Forklift,
   CarFront, Container, Maximize, Box, TruckElectric, Library, Users, Activity,
   LayoutTemplate, Receipt, BarChart3,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel,
   SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuBadge,
-  SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton, SidebarRail,
+  SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton, SidebarRail, useSidebar,
 } from "@/components/ui/sidebar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Logo } from "@/components/logo";
 import { useSession } from "@/components/session-provider";
@@ -24,7 +25,7 @@ const CALC_ICON: Record<string, typeof Ship> = {
 };
 
 const MAIN = [
-  { href: "/", label: "RMS Home", icon: LayoutDashboard },
+  { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/quote-master", label: "Quote Master", icon: Sparkles },
   { href: "/route-builder", label: "Route Builder", icon: Route },
   { href: "/templates", label: "Templates", icon: LayoutTemplate },
@@ -48,6 +49,29 @@ const ADMIN = [
 // Active/selected = Brand/Primary/Active; hover keeps sidebar-accent (Brand/Primary/Hover)
 const NAV_ITEM =
   "h-auto px-4 py-3 data-[active=true]:bg-sidebar-active data-[active=true]:text-sidebar-foreground data-[active=true]:hover:bg-sidebar-active";
+
+/** Jira-style expand/collapse control on the sidebar/content boundary (desktop only;
+    mobile keeps the topbar trigger + sheet). The SidebarRail below it keeps the whole
+    border clickable as a large hit area. */
+function BoundaryToggle() {
+  const { state, toggleSidebar } = useSidebar();
+  const collapsed = state === "collapsed";
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="absolute top-16 -right-3 z-30 hidden size-6 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm outline-none transition hover:text-foreground hover:shadow-md focus-visible:ring-[3px] focus-visible:ring-ring/50 md:flex"
+        >
+          {collapsed ? <ChevronRight className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="right">{collapsed ? "Expand sidebar" : "Collapse sidebar"}</TooltipContent>
+    </Tooltip>
+  );
+}
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -152,6 +176,7 @@ export function AppSidebar() {
       <SidebarFooter className="text-caption text-sidebar-foreground/50 px-3 pb-3">
         <span className="group-data-[collapsible=icon]:hidden">v0.1 · prototype · API · CLI · MCP</span>
       </SidebarFooter>
+      <BoundaryToggle />
       <SidebarRail />
     </Sidebar>
   );

@@ -1,46 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { FileText, Calculator, ExternalLink, Pencil } from "lucide-react";
 
 import { QUOTE_HISTORY, CALC_HISTORY, USERS, getUser } from "@/lib/data";
-import type { QuoteHistoryItem } from "@/lib/data";
-import type { ShipmentType } from "@/lib/types";
-import { encodeSearch } from "@/lib/search-params";
 import { money, fmtDate, relativeAge } from "@/lib/format";
 import { cn } from "@/lib/utils";
-
-// Resolve a history lane back into Quote Master search params so a saved quote can be reopened & edited.
-const PORT_BY_CITY: Record<string, string> = {
-  Shanghai: "p-cnsha", Arica: "p-clari", Alexandria: "p-egaly", "Zárate": "p-arzae",
-  Melbourne: "p-aumel", Southampton: "p-gbsou", Genoa: "p-itgoa", "Jebel Ali": "p-aedxb", Aqaba: "p-joaqj",
-  Houston: "p-ushou", Baltimore: "p-usbal", Savannah: "p-ussav", Miami: "p-usjax",
-  "Fort Lauderdale": "p-usjax", Amarillo: "p-ushou", Charleston: "p-ushou", Hutchinson: "p-ushou",
-};
-function resolvePort(loc: string): string | undefined {
-  return PORT_BY_CITY[loc.split(",")[0].trim()];
-}
-function shipmentFromLabel(s: string): ShipmentType {
-  const l = s.toLowerCase();
-  if (l.includes("roro")) return "RoRo";
-  if (l.includes("flat")) return "Flatrack";
-  if (l.includes("reefer")) return "Reefer";
-  if (l.includes("break")) return "Breakbulk";
-  if (l.includes("lcl")) return "LCL";
-  if (l.includes("air")) return "Air";
-  return "Container";
-}
-function reopenHref(q: QuoteHistoryItem): string {
-  const op = resolvePort(q.origin), dp = resolvePort(q.destination);
-  if (!op || !dp) return "/quote-master";
-  const qs = encodeSearch({
-    originPortId: op, destPortId: dp,
-    commodityKind: q.commodityKind, commodityLabel: q.commodity,
-    shipmentType: shipmentFromLabel(q.shipmentType), advancedSearch: false,
-  });
-  return `/quote-master?${qs}&edit=1`;
-}
+import { reopenHref, needsAttention } from "@/lib/quote-links";
 
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
@@ -70,7 +38,10 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
-const QUOTE_STATUSES = ["draft", "sent", "confirmed", "lost"] as const;
+const QUOTE_STATUSES = ["draft", "sent", "confirmed", "lost", "expired"] as const;
+// Composite filters used by dashboard deep links.
+const COMPOSITE_STATUSES = ["active", "attention"] as const;
+const VALID_STATUSES = new Set<string>(["all", ...QUOTE_STATUSES, ...COMPOSITE_STATUSES]);
 
 function ManagerCell({ managerId }: { managerId: string }) {
   const u = getUser(managerId);
@@ -88,16 +59,28 @@ function ManagerCell({ managerId }: { managerId: string }) {
   );
 }
 
-export default function HistoryPage() {
-  const [status, setStatus] = useState<string>("all");
-  const [quoteManager, setQuoteManager] = useState<string>("all");
-  const [calcManager, setCalcManager] = useState<string>("all");
+function HistoryContent() {
+  // Deep-linkable filters: /history?tab=calculations&status=active&manager=u-nick
+  const sp = useSearchParams();
+  const initialTab = sp.get("tab") === "calculations" ? "calculations" : "quotes";
+  const spStatus = sp.get("status") ?? "all";
+  const spManager = sp.get("manager") ?? "all";
+  const validManager = USERS.some((u) => u.id === spManager) ? spManager : "all";
+
+  const [status, setStatus] = useState<string>(VALID_STATUSES.has(spStatus) ? spStatus : "all");
+  const [quoteManager, setQuoteManager] = useState<string>(validManager);
+  const [calcManager, setCalcManager] = useState<string>(validManager);
 
   const quotes = useMemo(
     () =>
       QUOTE_HISTORY.filter(
         (q) =>
-          (status === "all" || q.status === status) &&
+          (status === "all" ||
+            (status === "active"
+              ? q.status === "draft" || q.status === "sent"
+              : status === "attention"
+                ? needsAttention(q)
+                : q.status === status)) &&
           (quoteManager === "all" || q.managerId === quoteManager)
       ),
     [status, quoteManager]
@@ -121,7 +104,7 @@ export default function HistoryPage() {
         description="Past quotes and calculator runs across the team."
       />
 
-      <Tabs defaultValue="quotes" className="space-y-6">
+      <Tabs defaultValue={initialTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="quotes" className="gap-1.5">
             <FileText className="size-4" />
@@ -160,6 +143,8 @@ export default function HistoryPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="active">Active (draft + sent)</SelectItem>
+                  <SelectItem value="attention">Needs attention</SelectItem>
                   {QUOTE_STATUSES.map((s) => (
                     <SelectItem key={s} value={s} className="capitalize">
                       {s}
@@ -380,5 +365,13 @@ export default function HistoryPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function HistoryPage() {
+  return (
+    <Suspense fallback={null}>
+      <HistoryContent />
+    </Suspense>
   );
 }

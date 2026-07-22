@@ -15,7 +15,7 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
         </div>
         <h2 className="text-lg font-semibold">Procurement access only</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          This section is restricted to the Procurement Manager. Switch to the Admin role (top bar) to preview it.
+          This section is restricted to the Procurement role. Access is assigned with your account — contact an administrator if you need it.
         </p>
       </Card>
     );

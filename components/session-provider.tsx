@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import type { User, Role } from "@/lib/types";
-import { USERS, isCorporateEmail, DEFAULT_MANAGER, DEFAULT_ADMIN } from "@/lib/data/users";
+import type { User } from "@/lib/types";
+import { USERS, isCorporateEmail, DEFAULT_MANAGER } from "@/lib/data/users";
 
 const STORAGE_KEY = "rms.session.userId";
 
@@ -12,7 +12,6 @@ interface SessionValue {
   login: (email: string) => { ok: boolean; error?: string };
   loginAs: (userId: string) => void;
   logout: () => void;
-  setRole: (role: Role) => void;
 }
 
 const SessionContext = createContext<SessionValue | null>(null);
@@ -58,16 +57,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => persist(null), [persist]);
 
-  const setRole = useCallback(
-    (role: Role) => {
-      // demo: jump to a representative user of that role, keeping context
-      persist(role === "admin" ? DEFAULT_ADMIN : DEFAULT_MANAGER);
-    },
-    [persist],
-  );
-
+  // Roles come from the (mock) user record — no in-app role switching.
   return (
-    <SessionContext.Provider value={{ user, ready, login, loginAs, logout, setRole }}>
+    <SessionContext.Provider value={{ user, ready, login, loginAs, logout }}>
       {children}
     </SessionContext.Provider>
   );

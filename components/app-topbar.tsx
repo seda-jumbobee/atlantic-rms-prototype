@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, LogOut, UserCog, ChevronsUpDown, ShieldCheck, User as UserIcon } from "lucide-react";
+import { Search, LogOut, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
@@ -21,7 +21,7 @@ import { DEALS } from "@/lib/data/deals";
 import { CALCULATORS } from "@/lib/data/calculators";
 
 const NAV = [
-  { label: "RMS Home", href: "/" },
+  { label: "Dashboard", href: "/" },
   { label: "Quote Master", href: "/quote-master" },
   { label: "Route Builder", href: "/route-builder" },
   { label: "Deals & CRM", href: "/deals" },
@@ -29,7 +29,7 @@ const NAV = [
 ];
 
 export function AppTopbar() {
-  const { user, logout, setRole } = useSession();
+  const { user, logout } = useSession();
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -51,8 +51,9 @@ export function AppTopbar() {
 
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur">
-      <SidebarTrigger className="text-muted-foreground" />
-      <Separator orientation="vertical" className="mr-1 h-5" />
+      {/* Mobile-only: desktop collapse lives on the sidebar boundary */}
+      <SidebarTrigger className="text-muted-foreground md:hidden" />
+      <Separator orientation="vertical" className="mr-1 h-5 md:hidden" />
 
       <button
         onClick={() => setOpen(true)}
@@ -64,28 +65,6 @@ export function AppTopbar() {
       </button>
 
       <div className="ml-auto flex items-center gap-2">
-        {/* Demo role switch */}
-        <div className="hidden items-center rounded-md border p-0.5 sm:flex">
-          <Button
-            size="sm"
-            variant={user?.role === "manager" ? "default" : "ghost"}
-            aria-pressed={user?.role === "manager"}
-            className="h-7 gap-1.5 px-2.5 text-xs focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            onClick={() => setRole("manager")}
-          >
-            <UserIcon className="size-3.5" /> Manager
-          </Button>
-          <Button
-            size="sm"
-            variant={user?.role === "admin" ? "default" : "ghost"}
-            aria-pressed={user?.role === "admin"}
-            className="h-7 gap-1.5 px-2.5 text-xs focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            onClick={() => setRole("admin")}
-          >
-            <ShieldCheck className="size-3.5" /> Admin
-          </Button>
-        </div>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-9 gap-2 px-2">
@@ -108,10 +87,6 @@ export function AppTopbar() {
                 {user?.role === "admin" ? "Procurement" : "Manager"}
               </Badge>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setRole(user?.role === "admin" ? "manager" : "admin")}>
-              <UserCog className="size-4" /> View as {user?.role === "admin" ? "Manager" : "Admin"}
-            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => { logout(); router.push("/login"); }}>
               <LogOut className="size-4" /> Log out
