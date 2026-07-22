@@ -68,7 +68,7 @@ function OverviewCard({
 function OceanGraphic() {
   return (
     <div aria-hidden className="hidden shrink-0 select-none md:block">
-      <svg width="260" height="118" viewBox="0 0 260 118" fill="none" className="text-primary">
+      <svg viewBox="0 0 260 118" fill="none" className="h-auto w-[320px] text-primary lg:w-[420px] xl:w-[480px]">
         {/* route arc between ports */}
         <path d="M14 82 C 70 26, 190 26, 246 82" stroke="currentColor" strokeOpacity="0.3" strokeWidth="1.5" strokeDasharray="2 6" strokeLinecap="round" />
         <circle cx="14" cy="82" r="4" fill="currentColor" fillOpacity="0.45" />
@@ -188,7 +188,7 @@ export default function DashboardPage() {
                 <p className="mt-1 text-sm text-muted-foreground">
                   Manually select transportation stages, vendors, and contracts for a complex shipment.
                 </p>
-                <Button asChild variant="outline" size="sm" className="mt-3">
+                <Button asChild variant="outline" className="mt-3">
                   <Link href="/route-builder">Build custom route</Link>
                 </Button>
               </div>
