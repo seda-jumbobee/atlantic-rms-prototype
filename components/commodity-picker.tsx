@@ -151,8 +151,8 @@ export function CommodityPicker({
                   "rounded-md border px-3.5 py-2 text-sm transition outline-none",
                   "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
                   active
-                    ? "border-brand-secondary bg-brand-secondary-disabled font-medium text-brand-secondary-active shadow-xs"
-                    : "border-border bg-background text-foreground hover:border-brand-secondary/50 hover:bg-brand-secondary-disabled/40",
+                    ? "border-primary bg-accent font-medium text-primary shadow-xs"
+                    : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-accent/60",
                 )}
               >
                 {k.label}

@@ -71,9 +71,9 @@ function flagEmoji(v?: LocationValue): string | null {
 function LocationRow({ label, value }: { label: string; value: LocationValue }) {
   const Icon = value.kind === "port" ? Anchor : MapPin;
   return (
-    <div className="flex items-center gap-2 text-sm">
-      <dt className="w-20 shrink-0 text-muted-foreground">{label}</dt>
-      <dd className="flex min-w-0 items-center gap-1.5 font-medium">
+    <div className="flex items-center justify-between gap-3 text-sm">
+      <dt className="shrink-0 text-muted-foreground">{label}</dt>
+      <dd className="flex min-w-0 items-center justify-end gap-1.5 text-right font-medium">
         <Icon aria-hidden className="size-3.5 shrink-0 text-primary" />
         {flagEmoji(value) && <span aria-hidden className="shrink-0 text-sm leading-none">{flagEmoji(value)}</span>}
         <span className="truncate">{value.label}</span>
