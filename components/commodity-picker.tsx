@@ -136,9 +136,14 @@ export function CommodityPicker({
   return (
     <div className={sectionHeadings ? "space-y-8" : "space-y-5"}>
       <div>
-        <Label id="commodity-kind-label" className={cn("mb-2 block", sectionHeadings && "mb-3 text-base font-semibold")}>
+        <Label id="commodity-kind-label" className={cn("block", sectionHeadings ? "text-base font-semibold" : "mb-2")}>
           <span>Type of commodity<RequiredMark /></span>
         </Label>
+        {sectionHeadings && (
+          <p className="mt-1 mb-3 text-xs text-muted-foreground">
+            Choose the closest match — you&apos;ll add the details next.
+          </p>
+        )}
         <div role="group" aria-labelledby="commodity-kind-label" className="flex flex-wrap gap-2">
           {KINDS.map((k) => {
             const active = value?.kind === k.value;
@@ -168,7 +173,14 @@ export function CommodityPicker({
 
       {value && (
         <div id="rq-details" className="space-y-5 duration-300 animate-in fade-in slide-in-from-top-1">
-          {sectionHeadings && <h3 className="text-base font-semibold">Cargo details</h3>}
+          {sectionHeadings && (
+            <div>
+              <h3 className="text-base font-semibold">Cargo details</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                The specifics we price against — key specs auto-fill where available.
+              </p>
+            </div>
+          )}
           {value.kind === "equipment" ? (
             <div className="space-y-5">
               <div className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
@@ -242,7 +254,14 @@ export function CommodityPicker({
           )}
 
           {sectionHeadings && <Separator />}
-          {sectionHeadings && <h3 className="text-base font-semibold">Loading & transport details</h3>}
+          {sectionHeadings && (
+            <div>
+              <h3 className="text-base font-semibold">Loading & transport details</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                How the cargo is loaded and shipped; defaults come from the commodity.
+              </p>
+            </div>
+          )}
           <ShippingOptions value={value} onChange={onChange} />
         </div>
       )}

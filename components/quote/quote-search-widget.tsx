@@ -26,8 +26,6 @@ import type { SearchInput } from "@/lib/quote-engine";
 import { encodeSearch } from "@/lib/search-params";
 import { cn } from "@/lib/utils";
 
-const DRAFT_KEY = "rms.rate-quote.draft";
-
 function buildInput(
   origin: LocationValue, dest: LocationValue, commodity: CommoditySelection,
   advanced: boolean, loadingDate: string,
@@ -192,27 +190,9 @@ export function QuoteSearchWidget({
   const snapshot = JSON.stringify({ o: origin, d: dest, c: commodity, a: advanced, l: loadingDate });
   const editedSinceSeed = initialSnapshotRef.current === null || snapshot !== initialSnapshotRef.current;
 
-  // Session-local draft (no backend persistence in this prototype): restore once, save on change.
-  useEffect(() => {
-    if (initial) return;
-    try {
-      const raw = sessionStorage.getItem(DRAFT_KEY);
-      if (!raw) return;
-      const d = JSON.parse(raw);
-      if (d.origin) setOrigin(d.origin);
-      if (d.dest) setDest(d.dest);
-      if (d.commodity) setCommodity(d.commodity);
-      if (d.advanced) setAdvanced(d.advanced);
-      if (d.loadingDate) setLoadingDate(d.loadingDate);
-    } catch { /* corrupt draft — start clean */ }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  useEffect(() => {
-    if (!dirty || !editedSinceSeed) return; // never clobber a fresh-form draft with untouched seeded values
-    try {
-      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ origin, dest, commodity, advanced, loadingDate }));
-    } catch { /* storage full/unavailable */ }
-  }, [origin, dest, commodity, advanced, loadingDate, dirty, editedSinceSeed]);
+  // No cross-visit persistence: opening the flow fresh always starts blank, like a
+  // first-time user. Values are only restored from the URL when returning from
+  // results/editing (the `initial` prop), never from a previous session's draft.
 
   // Warn before leaving the page with unsaved criteria (skipped right after submit
   // and on a prefilled form the user hasn't touched).
@@ -279,7 +259,6 @@ export function QuoteSearchWidget({
     setAdvanced(false);
     setLoadingDate("");
     setErrors({});
-    try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* noop */ }
   };
 
   const routeComplete = !!(origin && dest);
@@ -291,7 +270,12 @@ export function QuoteSearchWidget({
         <CardContent className="space-y-7 p-5 sm:p-6">
           {/* 1 · Route */}
           <section aria-labelledby="rq-route-heading" className="space-y-4">
-            <h3 id="rq-route-heading" className="text-lg font-semibold">Route</h3>
+            <div>
+              <h3 id="rq-route-heading" className="text-lg font-semibold">Route</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Where the shipment starts and ends — pick a port or a door address for each.
+              </p>
+            </div>
             <div ref={originAnchor} className="grid items-start gap-3 sm:grid-cols-[1fr_auto_1fr]">
               <div id="rq-origin" className="space-y-1.5">
                 <Label htmlFor="rq-origin-trigger"><span>Origin<RequiredMark /></span></Label>
