@@ -145,7 +145,7 @@
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #20248f; /* hover */
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-active: #14166d; /* active/selected item */
+  --sidebar-active: #4a4fcf; /* active/selected item — brand/primary/light, lighter than the menu surface */
   --sidebar-border: #20248f;
   --sidebar-ring: #fafafa; /* off-white — a #4a4fcf ring is invisible on the indigo surface */
 }
@@ -207,7 +207,7 @@
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #20248f;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-active: #14166d;
+  --sidebar-active: #4a4fcf;
   --sidebar-border: #20248f;
   --sidebar-ring: #fafafa;
 }
