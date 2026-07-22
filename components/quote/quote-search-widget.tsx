@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Anchor, ArrowLeftRight, CalendarDays, MapPin, RotateCcw, Search, Sparkles } from "lucide-react";
+import { Anchor, ArrowLeftRight, CalendarDays, Info, MapPin, RotateCcw, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -362,18 +362,36 @@ export function QuoteSearchWidget({
             <section aria-label="Schedule and rate sources" className="space-y-4 duration-300 animate-in fade-in slide-in-from-top-1">
               <Separator />
               <div className="flex flex-col gap-3 rounded-lg border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between">
-                <label className="flex items-center gap-2.5">
-                  <Switch checked={advanced} onCheckedChange={setAdvanced} />
-                  <span className="flex items-center gap-1.5 text-sm font-medium">
-                    <Sparkles className="size-4 text-primary" /> Extended search
-                    <span className="font-normal text-muted-foreground">(Shipping Line APIs & spot sources)</span>
-                  </span>
-                </label>
                 <div className="flex items-center gap-2">
-                  <CalendarDays className="size-4 text-muted-foreground" />
-                  <Label htmlFor="rq-loading-date" className="text-sm text-muted-foreground">Loading date</Label>
-                  <Input id="rq-loading-date" type="date" value={loadingDate} onChange={(e) => setLoadingDate(e.target.value)} className="h-9 w-auto" />
+                  <label className="flex items-center gap-2.5">
+                    <Switch checked={advanced} onCheckedChange={setAdvanced} />
+                    <span className="flex items-center gap-1.5 text-sm font-medium">
+                      <Sparkles className="size-4 text-primary" /> Extended search
+                    </span>
+                  </label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="What is extended search?"
+                        className="rounded-full text-muted-foreground outline-none transition hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                      >
+                        <Info className="size-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      Also searches live Shipping Line APIs and spot-market sources for more rate
+                      options, on top of your contract and offline tariff rates.
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
+                {advanced && (
+                  <div className="flex items-center gap-2 duration-300 animate-in fade-in slide-in-from-right-1">
+                    <CalendarDays className="size-4 text-muted-foreground" />
+                    <Label htmlFor="rq-loading-date" className="text-sm text-muted-foreground">Loading date</Label>
+                    <Input id="rq-loading-date" type="date" value={loadingDate} onChange={(e) => setLoadingDate(e.target.value)} className="h-9 w-auto" />
+                  </div>
+                )}
               </div>
             </section>
           )}
