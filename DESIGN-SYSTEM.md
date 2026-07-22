@@ -25,7 +25,7 @@ Brand palette (2026-07-22 reference board): **brand/primary = indigo ramp** (def
 | `--warning` | `#ffa000` | same | fg `#121212` (white on amber fails contrast) |
 | `--border` / `--input` | `#e9e9e9` | `#4f4f4f` | border/light · border/dark |
 | `--chart-1…5` | `#282aab #ff4c00 #ffa000 #388e3c #4a4fcf` | dark variants in file | indigo/orange/amber/green |
-| `--sidebar*` | bg `#282aab` · hover = `status-info-fg` (`#282aab`, = surface) · **active `#4a4fcf`** (lighter than surface) · badge `#cc3f00` · fg `#fafafa` · ring `#fafafa` | same | selected pops lighter; theme-stable |
+| `--sidebar*` | bg = `sidebar-border` (`#20248f`) · hover = `status-info-fg` (`#282aab`, lighter) · **active `#4a4fcf`** (lightest) · badge `#cc3f00` · fg `#fafafa` · ring `#fafafa` | same | rest < hover < active; theme-stable |
 
 Reference-board quirks (resolved, documented in `globals.css`): `text/link` printed hex `BDBDBD` is a typo (swatch is indigo) → links use brand/primary; `border/dark` printed hex `CCCCCC` contradicts its dark swatch → `#4f4f4f`; `--status-warning-fg #8a5300` is the one derived color (reference amber `#ff8f00` reads 1.9:1 on its light tint).
 
