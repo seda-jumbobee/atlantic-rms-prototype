@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Save, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Save, Search, Copy, LayoutTemplate } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,11 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { LocationCombobox, type LocationValue } from "@/components/location-combobox";
 import { RateResultCard } from "@/components/quote/rate-result-card";
 import { CarrierLogo } from "@/components/carrier-logo";
@@ -77,24 +82,91 @@ function ResultRow({ label, value, strong, muted }: { label: string; value: stri
   );
 }
 
-function SaveButton({ onSave }: { onSave: () => void }) {
+/** Consistent post-calculation actions shared by every calculator: save the
+    completed calculation to My History, copy the result, or save the setup as a
+    reusable template. (Add-to-quote / add-to-route transfer is not wired — the
+    current architecture has no cross-workflow value hand-off; see summary.) */
+function ResultActions({ calcName, summary }: { calcName: string; summary: string }) {
+  const router = useRouter();
+  const [tplOpen, setTplOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
+  const titleErr = !title.trim() ? "Enter a template title" : null;
+
+  const copy = () => {
+    navigator.clipboard?.writeText(`${calcName}: ${summary}`);
+    toast.success("Result copied");
+  };
+  const saveHistory = () =>
+    toast.success("Calculation saved to My History", { description: `${calcName} · ${summary}` });
+
   return (
-    <Button variant="outline" className="w-full gap-2" onClick={onSave}>
-      <Save className="size-4" /> Save calculation
-    </Button>
+    <div className="space-y-2 pt-1">
+      <Button variant="outline" className="w-full gap-2" onClick={saveHistory}>
+        <Save className="size-4" /> Save to My History
+      </Button>
+      <div className="flex gap-2">
+        <Button variant="ghost" size="sm" className="flex-1 gap-1.5" onClick={copy}>
+          <Copy className="size-4" /> Copy result
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex-1 gap-1.5"
+          onClick={() => { setTitle(`${calcName} setup`); setDesc(""); setTplOpen(true); }}
+        >
+          <LayoutTemplate className="size-4" /> Save as template
+        </Button>
+      </div>
+
+      <Dialog open={tplOpen} onOpenChange={setTplOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Save as template</DialogTitle>
+            <DialogDescription>Save this {calcName} setup to reuse the inputs from Templates.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="calc-tpl-name"><span>Template title<span aria-hidden className="ml-0.5 text-sidebar-primary">*</span></span></Label>
+              <Input id="calc-tpl-name" value={title} onChange={(e) => setTitle(e.target.value)} aria-invalid={!!titleErr} aria-describedby={titleErr ? "calc-tpl-err" : undefined} />
+              {titleErr && <p id="calc-tpl-err" role="alert" className="text-xs font-medium text-destructive">{titleErr}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="calc-tpl-desc">Description <span className="font-normal text-muted-foreground">(optional)</span></Label>
+              <Textarea id="calc-tpl-desc" value={desc} onChange={(e) => setDesc(e.target.value)} rows={2} placeholder="When to use this template…" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTplOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!!titleErr}
+              onClick={() => {
+                setTplOpen(false);
+                toast.success("Template saved", {
+                  description: `“${title.trim()}” is ready to reuse from Templates.`,
+                  action: { label: "View template", onClick: () => router.push("/templates") },
+                });
+              }}
+            >
+              <LayoutTemplate className="size-4" /> Save template
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 
 function TwoCol({ left, right }: { left: React.ReactNode; right: React.ReactNode }) {
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
-      <Card>
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_1fr]">
+      <Card className="min-w-0">
         <CardHeader>
           <CardTitle className="text-base">Inputs</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">{left}</CardContent>
       </Card>
-      <Card className="border-primary/20">
+      <Card className="min-w-0 border-primary/20">
         <CardHeader>
           <CardTitle className="text-base">Result</CardTitle>
         </CardHeader>
@@ -177,7 +249,7 @@ function TruckingPanel() {
             <ResultRow label="Distance" value={`${miles} mi`} />
             <Separator />
             <ResultRow label="Total trucking" value={money(total)} strong />
-            <SaveButton onSave={() => toast.success(`Trucking saved · ${money(total)} (Type #${matched.type})`)} />
+            <ResultActions calcName="US / Canada Trucking" summary={`${money(total)} · Type #${matched.type}`} />
           </>
         ) : (
           <p className="text-sm text-muted-foreground">No matching trucking type.</p>
@@ -248,7 +320,7 @@ function RoRoPanel() {
           <ResultRow label="Margin" value={money(margin)} />
           <Separator />
           <ResultRow label="All-in total" value={money(total)} strong />
-          <SaveButton onSave={() => toast.success(`RoRo saved · ${money(total)} (${cbm} CBM)`)} />
+          <ResultActions calcName="RoRo Calculator" summary={`${money(total)} · ${cbm} CBM`} />
         </>
       }
     />
@@ -314,7 +386,7 @@ function LoadingPanel() {
           )}
           <Separator />
           <ResultRow label="Total" value={money(total)} strong />
-          <SaveButton onSave={() => toast.success(`Loading saved · ${money(total)} (${rule.loadType})`)} />
+          <ResultActions calcName="Loading Calculator" summary={`${money(total)} · ${rule.loadType}`} />
         </>
       }
     />
@@ -394,7 +466,7 @@ function DrayagePanel() {
           <ResultRow label="× containers" value={String(count)} muted />
           <Separator />
           <ResultRow label="Total drayage" value={money(total)} strong />
-          <SaveButton onSave={() => toast.success(`Drayage saved · ${money(total)} (${cfs.name})`)} />
+          <ResultActions calcName="Drayage Calculator" summary={`${money(total)} · ${cfs.name}`} />
         </>
       }
     />
@@ -481,7 +553,7 @@ function OceanFreightPanel() {
           <ResultRow label="× containers" value={String(count)} muted />
           <Separator />
           <ResultRow label="Ocean total" value={money(total)} strong />
-          <SaveButton onSave={() => toast.success(`Ocean freight saved · ${money(total)}`)} />
+          <ResultActions calcName="Ocean Freight Calculator" summary={money(total)} />
         </>
       }
     />
@@ -504,6 +576,10 @@ function ShippingLinesPanel() {
   function search() {
     if (!origin || !dest) {
       toast.error("Pick both an origin and a destination.");
+      return;
+    }
+    if (origin.id === dest.id) {
+      toast.error("Origin and destination must be different locations.");
       return;
     }
     const input: SearchInput = {
@@ -533,11 +609,11 @@ function ShippingLinesPanel() {
           <div className="grid items-end gap-3 md:grid-cols-[1fr_1fr_auto_auto]">
             <div className="space-y-1.5">
               <Label className="text-xs">Origin</Label>
-              <LocationCombobox value={origin} onChange={setOrigin} placeholder="Origin port / address…" />
+              <LocationCombobox value={origin} onChange={setOrigin} disabledId={dest?.id} disabledReason="Selected as destination" menuAlign="start" placeholder="Origin port / address…" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Destination</Label>
-              <LocationCombobox value={dest} onChange={setDest} placeholder="Destination port / address…" />
+              <LocationCombobox value={dest} onChange={setDest} disabledId={origin?.id} disabledReason="Selected as origin" menuAlign="end" placeholder="Destination port / address…" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Container</Label>
@@ -555,7 +631,7 @@ function ShippingLinesPanel() {
               </Select>
             </div>
             <Button className="gap-2" onClick={search}>
-              <Search className="size-4" /> Search
+              <Search className="size-4" /> Find rates
             </Button>
           </div>
         </CardContent>
@@ -620,7 +696,7 @@ function OogPanel() {
             lostSlots = ceil(({cargoWidthCm} + {overLeftCm} + {overRightCm}) / {FR_WIDTH_CM}) ={" "}
             {Math.ceil(occupied / FR_WIDTH_CM)}; the rack itself is one slot, so {blocked} extra slot(s) are billed.
           </p>
-          <SaveButton onSave={() => toast.success(`OOG saved · ${lostSlots} slots (${blocked} lost)`)} />
+          <ResultActions calcName="OOG / Lost-Slot Calculator" summary={`${lostSlots} lost TEU slots`} />
         </>
       }
     />
@@ -676,9 +752,7 @@ function CbmPanel() {
           <ResultRow label={`${spec.label} capacity`} value={`${spec.capacityCbm} m³`} />
           <ResultRow label="Units fit per container" value={String(unitsFit)} />
           <ResultRow label="Containers needed" value={String(containersNeeded)} />
-          <SaveButton
-            onSave={() => toast.success(`CBM saved · ${totalCbm.toFixed(2)} m³ · ${containersNeeded}× ${spec.code}`)}
-          />
+          <ResultActions calcName="CBM & Container Fit" summary={`${totalCbm.toFixed(2)} m³ · ${containersNeeded}× ${spec.code}`} />
         </>
       }
     />
@@ -797,11 +871,7 @@ function EquipmentDimsPanel() {
                   {selected.loadingNotes}
                 </p>
               )}
-              <SaveButton
-                onSave={() =>
-                  toast.success(`Saved ${selected.make} ${selected.model} · ${CONTAINER_LABEL[selected.container]}`)
-                }
-              />
+              <ResultActions calcName="Equipment Dimension Lookup" summary={`${selected.make} ${selected.model} · ${CONTAINER_LABEL[selected.container]}`} />
             </>
           ) : (
             <p className="text-sm text-muted-foreground">Select a model to view its full spec.</p>
@@ -859,7 +929,7 @@ function AirFreightPanel() {
           <Separator />
           <ResultRow label={`${chargeableKg.toFixed(1)} kg × ${money(ratePerKg)}`} value={money(total)} />
           <ResultRow label="Air freight total" value={money(total)} strong />
-          <SaveButton onSave={() => toast.success(`Air freight saved · ${money(total)} (${chargeableKg.toFixed(0)} kg)`)} />
+          <ResultActions calcName="Air Freight (Chargeable Weight)" summary={`${money(total)} · ${chargeableKg.toFixed(0)} kg chargeable`} />
         </>
       }
     />
@@ -929,7 +999,7 @@ function DemurragePanel() {
             Demurrage applies to containers held inside the terminal beyond the free time. Detention (per-diem outside
             the terminal) is billed separately.
           </p>
-          <SaveButton onSave={() => toast.success(`Demurrage saved · ${money(cost)} (${daysOver} days over)`)} />
+          <ResultActions calcName="Demurrage & Detention" summary={`${money(cost)} · ${daysOver} days over`} />
         </>
       }
     />
@@ -972,7 +1042,7 @@ function InsurancePanel() {
           {minApplied && (
             <div className="text-right text-caption text-muted-foreground">(minimum premium applied)</div>
           )}
-          <SaveButton onSave={() => toast.success(`Insurance saved · ${money(premium)} premium`)} />
+          <ResultActions calcName="Cargo Insurance" summary={`${money(premium)} premium`} />
         </>
       }
     />
@@ -1020,7 +1090,7 @@ function CustomsPanel() {
           <p className="rounded-md bg-muted/60 p-2 text-caption leading-relaxed text-muted-foreground">
             Estimate only — actual duty is HS-code dependent and may include AD/CVD or section tariffs.
           </p>
-          <SaveButton onSave={() => toast.success(`Customs saved · ${money(total)} total`)} />
+          <ResultActions calcName="Customs / Import Duty" summary={`${money(total)} total`} />
         </>
       }
     />

@@ -485,6 +485,9 @@ export type CalculatorId =
   | "insurance"
   | "customs";
 
+export type CalculatorCategory = "freight-routing" | "cargo-equipment" | "costs-compliance";
+export type CalculatorToolType = "calculator" | "rate-search";
+
 export interface CalculatorMeta {
   id: CalculatorId;
   name: string;
@@ -492,6 +495,8 @@ export interface CalculatorMeta {
   icon: string; // lucide icon name
   unit: string; // primary cost driver
   region?: string;
+  category: CalculatorCategory;
+  toolType: CalculatorToolType;
 }
 
 // ── Route builder ────────────────────────────────────────────────────────────
