@@ -97,7 +97,10 @@ export function ResultsView({
       setPriceError("Enter valid, non-negative prices."); return;
     }
     if (lo > hi) { setPriceError("Min price cannot exceed max price."); return; }
-    const clamped: [number, number] = [Math.max(minP, lo), Math.min(maxP, hi)];
+    // clamp each bound into the available range, then re-order so the range can never invert
+    const loC = Math.min(Math.max(lo, minP), maxP);
+    const hiC = Math.min(Math.max(hi, minP), maxP);
+    const clamped: [number, number] = [Math.min(loC, hiC), Math.max(loC, hiC)];
     setPriceRange(clamped);
     setMinText(String(clamped[0])); setMaxText(String(clamped[1]));
     setPriceError(null);
@@ -146,6 +149,7 @@ export function ResultsView({
           step={Math.max(1, Math.round((maxP - minP) / 100) || 1)}
           value={priceRange}
           onValueChange={onSlider}
+          thumbLabels={["Minimum price", "Maximum price"]}
         />
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
@@ -180,7 +184,7 @@ export function ResultsView({
           <span className="font-medium">Max transit</span>
           <span className="tabular-nums text-foreground">≤ {maxTransitVal} days</span>
         </div>
-        <Slider min={0} max={maxTransit} step={1} value={[maxTransitVal]} onValueChange={(v) => setMaxTransitVal(v[0])} />
+        <Slider min={0} max={maxTransit} step={1} value={[maxTransitVal]} onValueChange={(v) => setMaxTransitVal(v[0])} thumbLabels={["Maximum transit days"]} />
       </div>
 
       <Separator className="my-3" />
@@ -201,7 +205,7 @@ export function ResultsView({
           <div className="mb-2 text-xs font-medium text-muted-foreground">Routing</div>
           <div className="flex gap-1.5">
             {(["all", "direct"] as const).map((m) => (
-              <button key={m} type="button" onClick={() => setViaMode(m)}
+              <button key={m} type="button" onClick={() => setViaMode(m)} aria-pressed={viaMode === m}
                 className={[
                   "flex-1 rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
                   viaMode === m ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted",
@@ -229,7 +233,7 @@ export function ResultsView({
       <Separator className="my-3" />
       <label className="flex items-center justify-between text-sm">
         <span>Show expired rates</span>
-        <Switch checked={showExpired} onCheckedChange={setShowExpired} />
+        <Switch checked={showExpired} onCheckedChange={setShowExpired} aria-label="Show expired rates" />
       </label>
     </Card>
   );

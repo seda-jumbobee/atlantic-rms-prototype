@@ -139,11 +139,11 @@ export function ReviewStep({
             <div className="text-caption font-medium uppercase tracking-wide text-muted-foreground">Client display options</div>
             <label className="flex items-center justify-between text-sm">
               <span>All-in price only <span className="text-muted-foreground">— hide the per-service breakdown</span></span>
-              <Switch checked={model.allInOnly} onCheckedChange={model.setAllInOnly} />
+              <Switch checked={model.allInOnly} onCheckedChange={model.setAllInOnly} aria-label="All-in price only" />
             </label>
             <label className="flex items-center justify-between text-sm">
               <span>Show carrier name</span>
-              <Switch checked={model.showCarrier} onCheckedChange={model.setShowCarrier} />
+              <Switch checked={model.showCarrier} onCheckedChange={model.setShowCarrier} aria-label="Show carrier name" />
             </label>
           </div>
         </Card>

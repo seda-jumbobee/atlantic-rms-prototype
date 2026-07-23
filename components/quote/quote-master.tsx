@@ -97,7 +97,11 @@ export function QuoteMaster() {
   useEffect(() => {
     setEditingSearch(false);
     setReviewing(false);
-  }, [spString]);
+    // A genuinely new search (or landing on the blank form) must drop any rate
+    // picked for a previous lane, so we never render pricing for a mismatched
+    // shipment. Skip only for the ?edit=1 deep-link, whose effect sets `selected`.
+    if (!editFlag) setSelected(null);
+  }, [spString, editFlag]);
 
   const showSearch = !input || editingSearch;
   const stepIndex = showSearch ? 0 : selected ? (reviewing ? 3 : 2) : 1;
@@ -107,7 +111,7 @@ export function QuoteMaster() {
 
   const goToStep = (i: number) => {
     if (i >= stepIndex) return;
-    if (i <= 1) setReviewing(false);
+    if (i <= 2) setReviewing(false); // leaving Review to any earlier step
     if (i === 0) setEditingSearch(true);
     if (i === 1) setSelected(null);
   };
@@ -252,19 +256,24 @@ export function QuoteMaster() {
         )
       )}
 
-      {!showSearch && selected && input && (
-        <QuotePricingFlow
-          key={selected.id}
-          rate={selected}
-          quoteId={quoteId}
-          origin={origin}
-          destination={destination}
-          commodityLabel={input.commodityLabel || input.commodityKind}
-          shipmentType={input.shipmentType}
-          reviewing={reviewing}
-          onReview={() => setReviewing(true)}
-          onBackToPricing={() => setReviewing(false)}
-        />
+      {/* Kept mounted (just hidden) while editing shipment details, so pricing work
+          survives an unchanged edit round-trip; a changed search clears `selected`
+          above, which unmounts and resets it. */}
+      {selected && input && (
+        <div className={showSearch ? "hidden" : undefined}>
+          <QuotePricingFlow
+            key={selected.id}
+            rate={selected}
+            quoteId={quoteId}
+            origin={origin}
+            destination={destination}
+            commodityLabel={input.commodityLabel || input.commodityKind}
+            shipmentType={input.shipmentType}
+            reviewing={reviewing}
+            onReview={() => setReviewing(true)}
+            onBackToPricing={() => setReviewing(false)}
+          />
+        </div>
       )}
     </div>
   );

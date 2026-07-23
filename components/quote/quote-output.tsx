@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { CarrierLogo } from "@/components/carrier-logo";
 import { LogoMark } from "@/components/logo";
+import { getCarrier } from "@/lib/data/carriers";
 import { money, fmtDate } from "@/lib/format";
 import type { QuoteRef } from "@/lib/types";
 import type { ClientLine } from "@/lib/pricing";
@@ -38,8 +39,12 @@ function textSummary(p: OutputPayload): string {
     `${p.ref.origin} → ${p.ref.destination}`,
     `Commodity: ${p.ref.commodityLabel} (${p.ref.shipmentType})`,
     `Transit: ~${p.transitDays} days · Valid to ${fmtDate(p.validTo)}`,
-    ``,
   ];
+  if (p.showCarrier && p.carrierId) {
+    const c = getCarrier(p.carrierId);
+    if (c) lines.push(`Carrier: ${c.name}`);
+  }
+  lines.push(``);
   if (!p.allInOnly) {
     for (const l of p.lines) lines.push(`• ${l.title}: ${money(l.amount)}`);
     lines.push("");
@@ -125,9 +130,11 @@ export function PdfPreview({ payload: p, trigger }: { payload: OutputPayload; tr
 }
 
 export function SendViaFrontDialog({ payload: p, trigger }: { payload: OutputPayload; trigger?: React.ReactNode }) {
-  const [body, setBody] = useState(textSummary(p));
+  const [open, setOpen] = useState(false);
+  // rebuild the draft each time the dialog opens so it reflects the current pricing / display options
+  const [body, setBody] = useState("");
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) setBody(textSummary(p)); }}>
       <DialogTrigger asChild>
         {trigger ?? <Button className="gap-1.5"><Send className="size-4" /> Send via Front</Button>}
       </DialogTrigger>
