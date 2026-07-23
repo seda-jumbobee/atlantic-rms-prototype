@@ -191,25 +191,28 @@ export function AiSourcing({
 
   return (
     <>
-      {ai.phase === "searching" ? (
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground" aria-live="polite">
-          <Loader2 className="size-4 animate-spin text-primary" /> Searching available sources…
-        </span>
-      ) : ai.phase === "empty" ? (
-        <div className="flex flex-wrap items-center gap-2" role="status">
-          <span className="text-xs text-status-warning-fg">No matching source found. Try another vendor or enter the rate manually.</span>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={search}><RefreshCw className="size-3.5" /> Try again</Button>
-        </div>
-      ) : ai.phase === "failed" ? (
-        <div className="flex flex-wrap items-center gap-2" role="status">
-          <span className="text-xs text-destructive">Search failed. You can retry or enter the rate manually.</span>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={search}><RefreshCw className="size-3.5" /> Retry</Button>
-        </div>
-      ) : (
-        <Button variant={alreadyAi ? "ghost" : "outline"} size="sm" className="gap-1.5" onClick={search}>
-          <Sparkles className="size-4" /> {alreadyAi ? "Re-source with AI" : label}
-        </Button>
-      )}
+      {/* persistent live region so AI-state transitions are announced to assistive tech */}
+      <span role="status" aria-live="polite" className="inline-flex flex-wrap items-center gap-2">
+        {ai.phase === "searching" ? (
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <Loader2 className="size-4 animate-spin text-primary" /> Searching available sources…
+          </span>
+        ) : ai.phase === "empty" ? (
+          <>
+            <span className="text-xs text-status-warning-fg">No matching source found. Try another vendor or enter the rate manually.</span>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={search}><RefreshCw className="size-3.5" /> Try again</Button>
+          </>
+        ) : ai.phase === "failed" ? (
+          <>
+            <span className="text-xs text-destructive">Search failed. You can retry or enter the rate manually.</span>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={search}><RefreshCw className="size-3.5" /> Retry</Button>
+          </>
+        ) : (
+          <Button variant={alreadyAi ? "ghost" : "outline"} size="sm" className="gap-1.5" onClick={search}>
+            <Sparkles className="size-4" /> {alreadyAi ? "Re-source with AI" : label}
+          </Button>
+        )}
+      </span>
 
       <Sheet open={ai.phase === "suggestions"} onOpenChange={(o) => { if (!o) onAiChange(IDLE_AI); }}>
         <SheetContent className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-md">

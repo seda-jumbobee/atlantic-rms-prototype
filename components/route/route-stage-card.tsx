@@ -54,7 +54,7 @@ function StageStatusBadge({ step, aiPhase }: { step: RouteStep; aiPhase: AiState
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className="inline-flex"><StatusBadge tone={meta.tone}>{meta.label}</StatusBadge></span>
+        <span tabIndex={0} role="note" aria-label={`Status: ${meta.label}. ${meta.help}`} className="inline-flex rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"><StatusBadge tone={meta.tone}>{meta.label}</StatusBadge></span>
       </TooltipTrigger>
       <TooltipContent className="max-w-56">{meta.help}</TooltipContent>
     </Tooltip>
@@ -67,7 +67,7 @@ function ProvenanceBadge({ step }: { step: RouteStep }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className="inline-flex items-center gap-1">
+        <span tabIndex={0} role="note" aria-label={`Rate source: ${p.label}`} className="inline-flex items-center gap-1 rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
           <StatusBadge tone={p.tone} dot={false}>{p.ai && <Sparkles className="size-3" />}{p.label}</StatusBadge>
         </span>
       </TooltipTrigger>
@@ -151,7 +151,8 @@ export function RouteStageCard({
     else patch.provenance = "manual";
     onPatch(patch);
   };
-  const editSource = (id: string) => onPatch({ dataSourceId: id, provenance: provenanceForSource(id), edited: aiApplied ? true : step.edited });
+  // Choosing a rate source sets a fresh authoritative rate — clear any prior "edited" flag.
+  const editSource = (id: string) => onPatch({ dataSourceId: id, provenance: provenanceForSource(id), edited: false });
 
   const isFirst = index === 0;
   const isLast = index === total - 1;
@@ -266,40 +267,41 @@ export function RouteStageCard({
             {step.kind === "ocean" ? (
               <div className="space-y-1"><Label className="text-xs text-muted-foreground">Carrier</Label>
                 <Select value={step.carrierId} onValueChange={(v) => onPatch({ carrierId: v, edited: aiApplied ? true : step.edited })}>
-                  <SelectTrigger size="sm"><SelectValue placeholder="Select carrier" /></SelectTrigger>
+                  <SelectTrigger size="sm" aria-label="Carrier"><SelectValue placeholder="Select carrier" /></SelectTrigger>
                   <SelectContent>{CARRIERS.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             ) : (
               <div className="space-y-1"><Label className="text-xs text-muted-foreground">Vendor</Label>
                 <Select value={step.vendorId} onValueChange={(v) => onPatch({ vendorId: v, edited: aiApplied ? true : step.edited })}>
-                  <SelectTrigger size="sm"><SelectValue placeholder="Select vendor" /></SelectTrigger>
+                  <SelectTrigger size="sm" aria-label="Vendor"><SelectValue placeholder="Select vendor" /></SelectTrigger>
                   <SelectContent>{vendors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name} · T{v.tier}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             )}
             <div className="space-y-1"><Label className="text-xs text-muted-foreground">Rate source</Label>
               <Select value={step.dataSourceId} onValueChange={editSource}>
-                <SelectTrigger size="sm"><SelectValue placeholder="Select source" /></SelectTrigger>
+                <SelectTrigger size="sm" aria-label="Rate source"><SelectValue placeholder="Select source" /></SelectTrigger>
                 <SelectContent>{DATA_SOURCES.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
           </div>
 
-          {/* AI-assisted sourcing */}
+          {/* Sourcing: ocean legs use the shipping-line search; other legs use AI vendor+rate sourcing */}
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-dashed bg-muted/20 p-2.5">
-            <AiSourcing
-              step={step}
-              vendors={vendors}
-              baseCost={Number(step.cost) || 0}
-              baseDays={Number(step.durationDays) || 0}
-              label={aiLabel}
-              ai={ai}
-              onAiChange={onAiChange}
-              onApply={onPatch}
-            />
-            {step.kind === "ocean" && (
+            {step.kind === "ocean" ? (
               <Button variant="outline" size="sm" className="gap-1.5" onClick={onSearchOcean}><Ship className="size-4" /> Search shipping lines</Button>
+            ) : (
+              <AiSourcing
+                step={step}
+                vendors={vendors}
+                baseCost={Number(step.cost) || 0}
+                baseDays={Number(step.durationDays) || 0}
+                label={aiLabel}
+                ai={ai}
+                onAiChange={onAiChange}
+                onApply={onPatch}
+              />
             )}
           </div>
 
@@ -335,7 +337,8 @@ export function RouteStageCard({
                 </button>
               </CollapsibleTrigger>
               <CollapsibleContent className="pt-2">
-                <ChargeTable charges={step.charges!} onChange={(charges) => onPatch({ charges, cost: sumCharges(charges) })} />
+                {/* Hand-editing surcharges alters the sourced cost → flag it so the stage no longer reads as a clean firm rate */}
+                <ChargeTable charges={step.charges!} onChange={(charges) => onPatch({ charges, cost: sumCharges(charges), edited: true })} />
               </CollapsibleContent>
             </Collapsible>
           )}

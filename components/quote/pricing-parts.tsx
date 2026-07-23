@@ -60,9 +60,10 @@ export interface PricingModel {
   allInOnly: boolean;
   setAllInOnly: (v: boolean) => void;
   calc: PricingCalc;
-  /** Reset legs + pricing settings from a fresh set of legs (used when the
-      underlying route changes in Custom Route). */
-  reseed: (legs: QuoteLeg[]) => void;
+  /** Refresh the priced legs from a fresh set (used when the underlying route
+      changes in Custom Route) while PRESERVING the manager's profit settings —
+      per-service profit is keyed by leg id, so it survives renames/reorders. */
+  syncLegs: (legs: QuoteLeg[]) => void;
 }
 
 const cloneLegs = (legs: QuoteLeg[]) => JSON.parse(JSON.stringify(legs)) as QuoteLeg[];
@@ -82,16 +83,7 @@ export function usePricingModel(initialLegs: QuoteLeg[]): PricingModel {
     [legs, mode, wholeMethod, wholeValue, serviceMethod, serviceValue],
   );
 
-  const reseed = useCallback((nextLegs: QuoteLeg[]) => {
-    setLegs(cloneLegs(nextLegs));
-    setMode("whole");
-    setWholeMethod("markup");
-    setWholeValue(DEFAULT_SERVICE_VALUE);
-    setServiceMethodMap({});
-    setServiceValueMap({});
-    setShowCarrier(true);
-    setAllInOnly(false);
-  }, []);
+  const syncLegs = useCallback((nextLegs: QuoteLeg[]) => setLegs(cloneLegs(nextLegs)), []);
 
   return {
     legs,
@@ -111,7 +103,7 @@ export function usePricingModel(initialLegs: QuoteLeg[]): PricingModel {
     allInOnly,
     setAllInOnly,
     calc,
-    reseed,
+    syncLegs,
   };
 }
 

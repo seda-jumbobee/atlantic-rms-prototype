@@ -47,7 +47,10 @@ export function RouteBuilder() {
     })),
     [steps],
   );
-  const routeSig = useMemo(() => steps.map((s) => `${s.id}:${Number(s.cost) || 0}`).join("|"), [steps]);
+  // Signature over the full priceable content (id, title, endpoints, vendor/carrier,
+  // and charge costs) so ANY route edit — not just a cost change — refreshes the
+  // priced legs when re-entering pricing.
+  const routeSig = useMemo(() => JSON.stringify(routeQuoteLegs), [routeQuoteLegs]);
 
   const model = usePricingModel(routeQuoteLegs);
   const pricedSigRef = useRef<string>("");
@@ -76,11 +79,13 @@ export function RouteBuilder() {
 
   const saveDraft = () => toast.success("Draft saved", { description: `${quoteId} · ${meta.origin} → ${meta.destination} saved to history.` });
 
-  // Enter pricing — reseed the pricing model only if the route changed since it was
-  // last priced, so profit settings survive a pricing↔review round-trip.
+  // Enter pricing — refresh the priced legs whenever the route changed since it was
+  // last priced. syncLegs preserves the manager's profit settings, so a
+  // pricing↔review round-trip (or a rename/reorder) keeps profit while still
+  // reflecting the current stages, costs, and labels.
   const goToPricing = () => {
     if (routeSig !== pricedSigRef.current) {
-      model.reseed(routeQuoteLegs);
+      model.syncLegs(routeQuoteLegs);
       pricedSigRef.current = routeSig;
     }
     setStep(2);

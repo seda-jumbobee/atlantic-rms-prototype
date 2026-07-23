@@ -86,13 +86,13 @@ export function RouteShipmentStep({
             <div className="grid items-start gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="cr-origin"><span>Origin<RequiredMark /></span></Label>
-                <LocationCombobox id="cr-origin" value={origin} onChange={applyOrigin} disabledId={destination?.id} disabledReason="Selected as destination" menuAlign="start" placeholder="Port or pickup address…" />
-                {errors.origin && <p role="alert" className="text-xs font-medium text-destructive">{errors.origin}</p>}
+                <LocationCombobox id="cr-origin" value={origin} onChange={applyOrigin} disabledId={destination?.id} disabledReason="Selected as destination" menuAlign="start" placeholder="Port or pickup address…" describedBy={errors.origin ? "cr-origin-err" : undefined} invalid={!!errors.origin} />
+                {errors.origin && <p id="cr-origin-err" role="alert" className="text-xs font-medium text-destructive">{errors.origin}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="cr-dest"><span>Final destination<RequiredMark /></span></Label>
-                <LocationCombobox id="cr-dest" value={destination} onChange={applyDest} disabledId={origin?.id} disabledReason="Selected as origin" menuAlign="end" placeholder="Port or delivery address…" />
-                {errors.dest && <p role="alert" className="text-xs font-medium text-destructive">{errors.dest}</p>}
+                <LocationCombobox id="cr-dest" value={destination} onChange={applyDest} disabledId={origin?.id} disabledReason="Selected as origin" menuAlign="end" placeholder="Port or delivery address…" describedBy={errors.dest ? "cr-dest-err" : undefined} invalid={!!errors.dest} />
+                {errors.dest && <p id="cr-dest-err" role="alert" className="text-xs font-medium text-destructive">{errors.dest}</p>}
               </div>
             </div>
           </section>

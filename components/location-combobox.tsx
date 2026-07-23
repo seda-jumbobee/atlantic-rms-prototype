@@ -45,11 +45,17 @@ export function LocationCombobox({
   disabledId,
   disabledReason,
   menuAlign = "start",
+  describedBy,
+  invalid,
 }: {
   value?: LocationValue;
   onChange: (v: LocationValue) => void;
   placeholder?: string;
   id?: string;
+  /** id of an error message describing this field (aria-describedby). */
+  describedBy?: string;
+  /** mark the trigger invalid for assistive tech. */
+  invalid?: boolean;
   /** Keep this location id in the list but disabled (it's already chosen on the
       other end of the route). Compared by unique id, so only the exact port /
       address is disabled — not others in the same city. */
@@ -80,7 +86,7 @@ export function LocationCombobox({
       >
         <TooltipTrigger asChild>
           <PopoverTrigger asChild>
-            <Button id={id} variant="outline" role="combobox" className="h-10 w-full justify-between font-normal">
+            <Button id={id} variant="outline" role="combobox" aria-describedby={describedBy} aria-invalid={invalid || undefined} className="h-10 w-full justify-between font-normal">
               {value ? (
                 <span className="flex min-w-0 flex-1 items-center gap-2">
                   {value.kind === "port" ? <Anchor className="size-4 shrink-0 text-primary" /> : <MapPin className="size-4 shrink-0 text-status-info-fg" />}

@@ -145,10 +145,11 @@ export function SendViaFrontDialog({ payload: p, trigger }: { payload: OutputPay
         </DialogHeader>
         <div className="space-y-3">
           <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 text-sm">
-            <Label>To</Label><Input defaultValue="customer@client.com" />
-            <Label>Subject</Label><Input defaultValue={`Atlantic Project Cargo — Quote ${p.quoteId} (${p.ref.origin} → ${p.ref.destination})`} />
+            <Label htmlFor="qo-to">To</Label><Input id="qo-to" defaultValue="customer@client.com" />
+            <Label htmlFor="qo-subject">Subject</Label><Input id="qo-subject" defaultValue={`Atlantic Project Cargo — Quote ${p.quoteId} (${p.ref.origin} → ${p.ref.destination})`} />
           </div>
-          <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={10} className="text-xs" />
+          <Label htmlFor="qo-body" className="sr-only">Message</Label>
+          <Textarea id="qo-body" value={body} onChange={(e) => setBody(e.target.value)} rows={10} className="text-xs" />
           <Badge variant="secondary" className="gap-1"><FileDown className="size-3" /> {p.quoteId}.pdf attached</Badge>
         </div>
         <DialogFooter>
