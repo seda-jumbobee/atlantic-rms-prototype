@@ -138,15 +138,16 @@
   --chart-5: #4a4fcf; /* brand/primary/light */
   --radius: 0.625rem;
   /* Sidebar = brand-primary surface. */
-  --sidebar: var(--sidebar-border); /* menu surface = sidebar-border per request (= #20248f) */
+  /* Sidebar (nav) surface + states — dark navy, theme-stable (2026-07-22). */
+  --sidebar: #0f1245; /* background — expanded + collapsed */
   --sidebar-foreground: #fafafa;
   --sidebar-primary: #cc3f00; /* brand/secondary/dark — count badge (white text ≥4.5:1) */
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: var(--status-info-fg); /* hover — replaced per request (= #282aab) */
+  --sidebar-accent: #14166d; /* hovered item (own value; not aliased to status-info-fg) */
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-active: #4a4fcf; /* active/selected item — brand/primary/light, lighter than the menu surface */
-  --sidebar-border: #20248f;
-  --sidebar-ring: #fafafa; /* off-white — a #4a4fcf ring is invisible on the indigo surface */
+  --sidebar-active: #1d2080; /* selected/active item */
+  --sidebar-border: #20248f; /* subtle seam against the darker surface */
+  --sidebar-ring: #fafafa; /* off-white focus ring, readable on navy */
 }
 
 /* Dark theme — NOT reachable in-app yet (no ThemeProvider). The reference
@@ -200,13 +201,13 @@
   --chart-4: #388e3c;
   --chart-5: #f3f3f8;
   /* Sidebar is theme-stable (brand surface in both modes) */
-  --sidebar: var(--sidebar-border);
+  --sidebar: #0f1245;
   --sidebar-foreground: #fafafa;
   --sidebar-primary: #cc3f00;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: var(--status-info-fg);
+  --sidebar-accent: #14166d;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-active: #4a4fcf;
+  --sidebar-active: #1d2080;
   --sidebar-border: #20248f;
   --sidebar-ring: #fafafa;
 }
