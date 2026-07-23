@@ -19,13 +19,19 @@ export function LocationCombobox({
   onChange,
   placeholder = "Search port or address…",
   id,
+  excludeId,
 }: {
   value?: LocationValue;
   onChange: (v: LocationValue) => void;
   placeholder?: string;
   id?: string;
+  /** Hide this location id from the list (e.g. the other end of the route,
+      so origin and destination can never be the same). */
+  excludeId?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const ports = PORTS.filter((p) => p.id !== excludeId);
+  const addresses = ADDRESSES.filter((a) => a.id !== excludeId);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -48,7 +54,7 @@ export function LocationCombobox({
           <CommandList>
             <CommandEmpty>No location found.</CommandEmpty>
             <CommandGroup heading="Ports (UN/LOCODE)">
-              {PORTS.map((p) => {
+              {ports.map((p) => {
                 const label = `${p.name}, ${p.country} · ${p.locode}`;
                 return (
                   <CommandItem
@@ -66,7 +72,7 @@ export function LocationCombobox({
               })}
             </CommandGroup>
             <CommandGroup heading="Addresses (door)">
-              {ADDRESSES.map((a) => (
+              {addresses.map((a) => (
                 <CommandItem
                   key={a.id}
                   value={a.label}

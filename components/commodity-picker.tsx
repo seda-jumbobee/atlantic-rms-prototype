@@ -50,6 +50,14 @@ const KINDS: { value: CommodityKind; label: string }[] = [
   { value: "parcel", label: "General / Parcel" },
 ];
 
+// Friendlier display labels for the equipment-industry dropdown. Keys are the
+// underlying data values (used by the category cascade) — only the label changes.
+const INDUSTRY_LABEL: Record<string, string> = {
+  Farm: "Farm Equipment",
+  Construction: "Construction Equipment",
+};
+const industryLabel = (i: string) => INDUSTRY_LABEL[i] ?? i;
+
 export const COMMODITY_KIND_LABEL: Record<CommodityKind, string> = Object.fromEntries(
   KINDS.map((k) => [k.value, k.label]),
 ) as Record<CommodityKind, string>;
@@ -187,7 +195,7 @@ export function CommodityPicker({
                 <Field label="Industry" required htmlFor="cp-industry">
                   <Select value={value.industry} onValueChange={(v) => onChange({ ...value, industry: v, category: undefined, make: undefined, equipmentId: undefined })}>
                     <SelectTrigger id="cp-industry" aria-invalid={!!errors?.details && !value.industry} aria-describedby={errors?.details ? "cp-details-error" : undefined}><SelectValue placeholder="Select industry" /></SelectTrigger>
-                    <SelectContent>{industries.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
+                    <SelectContent>{industries.map((i) => <SelectItem key={i} value={i}>{industryLabel(i)}</SelectItem>)}</SelectContent>
                   </Select>
                 </Field>
                 <Field label="Category" required htmlFor="cp-category">

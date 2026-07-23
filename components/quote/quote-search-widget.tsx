@@ -279,7 +279,7 @@ export function QuoteSearchWidget({
             <div ref={originAnchor} className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
               <div id="rq-origin" className="space-y-1.5">
                 <Label htmlFor="rq-origin-trigger"><span>Origin<RequiredMark /></span></Label>
-                <LocationCombobox id="rq-origin-trigger" value={origin} onChange={setOrigin} placeholder="Port or pickup address…" />
+                <LocationCombobox id="rq-origin-trigger" value={origin} onChange={setOrigin} excludeId={dest?.id} placeholder="Port or pickup address…" />
                 {errors.origin && <p role="alert" className="text-xs font-medium text-destructive">{errors.origin}</p>}
               </div>
               <Tooltip>
@@ -298,7 +298,7 @@ export function QuoteSearchWidget({
               </Tooltip>
               <div id="rq-dest" className="space-y-1.5">
                 <Label htmlFor="rq-dest-trigger"><span>Destination<RequiredMark /></span></Label>
-                <LocationCombobox id="rq-dest-trigger" value={dest} onChange={setDest} placeholder="Port or delivery address…" />
+                <LocationCombobox id="rq-dest-trigger" value={dest} onChange={setDest} excludeId={origin?.id} placeholder="Port or delivery address…" />
                 {errors.dest && <p role="alert" className="text-xs font-medium text-destructive">{errors.dest}</p>}
               </div>
             </div>
