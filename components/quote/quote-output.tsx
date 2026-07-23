@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileDown, Mail, MessageSquareText, Send, Copy, Check, Anchor } from "lucide-react";
+import { FileDown, Mail, MessageSquareText, Send, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,25 +11,24 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { LegStages } from "@/components/quote/leg-stages";
 import { CarrierLogo } from "@/components/carrier-logo";
 import { LogoMark } from "@/components/logo";
 import { money, fmtDate } from "@/lib/format";
-import { legTotal, chargeTotal } from "@/lib/quote-engine";
-import type { QuoteLeg, QuoteRef } from "@/lib/types";
+import type { QuoteRef } from "@/lib/types";
+import type { ClientLine } from "@/lib/pricing";
 
+// Client-facing payload only — deliberately carries NO internal cost, profit,
+// margin, vendor, or surcharge data so nothing internal can leak to the client.
 export interface OutputPayload {
   quoteId: string;
   ref: QuoteRef;
-  legs: QuoteLeg[];
-  buy: number;
-  sell: number;
-  margin: number;
+  clientTotal: number;
+  lines: ClientLine[]; // client amounts per included service
   currency: string;
   validTo: string;
   transitDays: number;
   carrierId?: string;
-  showLineNames: boolean;
+  showCarrier: boolean;
   allInOnly: boolean;
 }
 
@@ -42,10 +41,10 @@ function textSummary(p: OutputPayload): string {
     ``,
   ];
   if (!p.allInOnly) {
-    for (const leg of p.legs.filter((l) => l.included)) lines.push(`• ${leg.title}: ${money(legTotal(leg))}`);
+    for (const l of p.lines) lines.push(`• ${l.title}: ${money(l.amount)}`);
     lines.push("");
   }
-  lines.push(`ALL-IN PRICE: ${money(p.sell)} ${p.currency}`);
+  lines.push(`ALL-IN PRICE: ${money(p.clientTotal)} ${p.currency}`);
   lines.push(`(subject to space & equipment availability)`);
   return lines.join("\n");
 }
@@ -54,22 +53,21 @@ export function QuoteOutput({ payload }: { payload: OutputPayload }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <PdfPreview payload={payload} />
-      <EmailDialog payload={payload} />
+      <SendViaFrontDialog payload={payload} />
       <TextDialog payload={payload} />
     </div>
   );
 }
 
-function PdfPreview({ payload: p }: { payload: OutputPayload }) {
-  const included = p.legs.filter((l) => l.included);
+export function PdfPreview({ payload: p, trigger }: { payload: OutputPayload; trigger?: React.ReactNode }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-1.5"><FileDown className="size-4" /> Preview PDF</Button>
+        {trigger ?? <Button variant="outline" className="gap-1.5"><FileDown className="size-4" /> Preview PDF</Button>}
       </DialogTrigger>
       <DialogContent className="max-h-[88vh] max-w-2xl overflow-y-auto">
         <DialogHeader className="sr-only"><DialogTitle>Quote PDF preview</DialogTitle></DialogHeader>
-        {/* document */}
+        {/* client document */}
         <div className="space-y-4 rounded-lg border bg-card p-6 text-sm text-card-foreground">
           <div className="flex items-start justify-between border-b pb-3">
             <div>
@@ -84,26 +82,24 @@ function PdfPreview({ payload: p }: { payload: OutputPayload }) {
             <span><b>Commodity:</b> {p.ref.commodityLabel}</span>
             <span><b>Mode:</b> {p.ref.shipmentType}</span>
             <span><b>Transit:</b> ~{p.transitDays} days</span>
-            {p.showLineNames && p.carrierId && <span className="inline-flex items-center gap-1"><b>Carrier:</b> <CarrierLogo carrierId={p.carrierId} size="sm" /></span>}
+            {p.showCarrier && p.carrierId && <span className="inline-flex items-center gap-1"><b>Carrier:</b> <CarrierLogo carrierId={p.carrierId} size="sm" /></span>}
           </div>
-
-          <LegStages legs={p.legs} showPrices={!p.allInOnly} />
 
           {!p.allInOnly ? (
             <>
-              {/* Client-facing: one all-in line per service — ocean surcharges consolidated, never itemized */}
+              {/* Client-facing: one price per service — surcharges consolidated, never itemized */}
               <table className="w-full border-t text-xs">
                 <thead className="text-muted-foreground"><tr><th className="py-1 text-left">Service</th><th className="py-1 text-right">Amount</th></tr></thead>
                 <tbody>
-                  {included.map((leg) => (
-                    <tr key={leg.id} className="border-t">
-                      <td className="py-1 font-medium">{leg.kind === "ocean" ? "Ocean Freight (all-in)" : leg.title}</td>
-                      <td className="py-1 text-right tabular-nums">{money(legTotal(leg))}</td>
+                  {p.lines.map((l) => (
+                    <tr key={l.id} className="border-t">
+                      <td className="py-1 font-medium">{l.title}</td>
+                      <td className="py-1 text-right tabular-nums">{money(l.amount)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <p className="text-caption text-muted-foreground">Surcharges are consolidated into each service line. Full carrier breakdown is internal to Atlantic Project Cargo.</p>
+              <p className="text-caption text-muted-foreground">Each service is quoted all-in. Carrier surcharges are included in the service price.</p>
             </>
           ) : (
             <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">All-in price only — itemized breakdown hidden for the client.</p>
@@ -111,7 +107,7 @@ function PdfPreview({ payload: p }: { payload: OutputPayload }) {
 
           <div className="flex items-center justify-between border-t pt-3">
             <span className="text-sm font-medium">All-in price</span>
-            <span className="text-xl font-bold">{money(p.sell)} {p.currency}</span>
+            <span className="text-xl font-bold">{money(p.clientTotal)} {p.currency}</span>
           </div>
           <p className="text-caption leading-relaxed text-muted-foreground">
             Rates subject to space & equipment availability at time of booking. Surcharges valid as of issue date.
@@ -128,12 +124,12 @@ function PdfPreview({ payload: p }: { payload: OutputPayload }) {
   );
 }
 
-function EmailDialog({ payload: p }: { payload: OutputPayload }) {
+export function SendViaFrontDialog({ payload: p, trigger }: { payload: OutputPayload; trigger?: React.ReactNode }) {
   const [body, setBody] = useState(textSummary(p));
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="gap-1.5"><Mail className="size-4" /> Email via Front</Button>
+        {trigger ?? <Button className="gap-1.5"><Send className="size-4" /> Send via Front</Button>}
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
@@ -158,13 +154,13 @@ function EmailDialog({ payload: p }: { payload: OutputPayload }) {
   );
 }
 
-function TextDialog({ payload: p }: { payload: OutputPayload }) {
+export function TextDialog({ payload: p, trigger }: { payload: OutputPayload; trigger?: React.ReactNode }) {
   const [copied, setCopied] = useState(false);
   const text = textSummary(p);
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-1.5"><MessageSquareText className="size-4" /> Text message</Button>
+        {trigger ?? <Button variant="outline" className="gap-1.5"><MessageSquareText className="size-4" /> Text message</Button>}
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>

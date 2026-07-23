@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { QuoteSearchWidget } from "@/components/quote/quote-search-widget";
 import { ResultsView } from "@/components/quote/results-view";
-import { QuoteEditor } from "@/components/quote/quote-editor";
+import { QuotePricingFlow } from "@/components/quote/quote-pricing-flow";
 import { ShipmentSummary } from "@/components/quote/shipment-summary";
 import type { LocationValue } from "@/components/location-combobox";
 import type { CommoditySelection } from "@/components/commodity-picker";
@@ -73,6 +73,8 @@ export function QuoteMaster() {
   const router = useRouter();
   const input = useMemo(() => decodeSearch(sp), [sp]);
   const [selected, setSelected] = useState<RateOption | null>(null);
+  // Set pricing → Review & send (the pricing state itself lives in QuotePricingFlow).
+  const [reviewing, setReviewing] = useState(false);
   // Revisit the search form while results already exist (values pre-filled).
   const [editingSearch, setEditingSearch] = useState(false);
 
@@ -94,16 +96,18 @@ export function QuoteMaster() {
   const spString = sp.toString();
   useEffect(() => {
     setEditingSearch(false);
+    setReviewing(false);
   }, [spString]);
 
   const showSearch = !input || editingSearch;
-  const stepIndex = showSearch ? 0 : selected ? 2 : 1;
+  const stepIndex = showSearch ? 0 : selected ? (reviewing ? 3 : 2) : 1;
   const origin = input ? locLabel(input.originPortId, input.originAddressId) : "";
   const destination = input ? locLabel(input.destPortId, input.destAddressId) : "";
   const quoteId = input ? `Q-${190600 + Math.floor(seeded(JSON.stringify(input)) * 380)}` : "Q-190600";
 
   const goToStep = (i: number) => {
     if (i >= stepIndex) return;
+    if (i <= 1) setReviewing(false);
     if (i === 0) setEditingSearch(true);
     if (i === 1) setSelected(null);
   };
@@ -114,7 +118,9 @@ export function QuoteMaster() {
       ? { label: "Back to shipment details", onClick: () => setEditingSearch(true) }
       : stepIndex === 2
         ? { label: "Back to rates", onClick: () => setSelected(null) }
-        : null;
+        : stepIndex === 3
+          ? { label: "Back to pricing", onClick: () => setReviewing(false) }
+          : null;
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
@@ -206,7 +212,12 @@ export function QuoteMaster() {
                   // Unchanged criteria → back to the existing results; changed → new search.
                   const q = encodeSearch(next);
                   if (q === encodeSearch(input)) setEditingSearch(false);
-                  else router.push(`/quote-master?${q}`);
+                  else {
+                    // a different lane/commodity invalidates the picked rate & pricing
+                    setSelected(null);
+                    setReviewing(false);
+                    router.push(`/quote-master?${q}`);
+                  }
                 }
               : undefined
           }
@@ -241,16 +252,18 @@ export function QuoteMaster() {
         )
       )}
 
-      {!showSearch && stepIndex === 2 && selected && input && (
-        <QuoteEditor
+      {!showSearch && selected && input && (
+        <QuotePricingFlow
+          key={selected.id}
           rate={selected}
           quoteId={quoteId}
           origin={origin}
           destination={destination}
           commodityLabel={input.commodityLabel || input.commodityKind}
           shipmentType={input.shipmentType}
-          onBack={() => setSelected(null)}
-          hideBack
+          reviewing={reviewing}
+          onReview={() => setReviewing(true)}
+          onBackToPricing={() => setReviewing(false)}
         />
       )}
     </div>

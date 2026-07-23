@@ -24,6 +24,7 @@ import { MapPreview, type MapPoint } from "@/components/map-preview";
 import { LocationCombobox, type LocationValue } from "@/components/location-combobox";
 import { CommodityPicker, type CommoditySelection, defaultCommodity } from "@/components/commodity-picker";
 import { QuoteOutput, type OutputPayload } from "@/components/quote/quote-output";
+import { computePricing, clientLines } from "@/lib/pricing";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -200,6 +201,13 @@ export function RouteBuilder() {
   // ── route → quote payload ──────────────────────────────────────────────────────
   const oceanLeg = legs.find((l) => l.kind === "ocean");
   const quoteId = `Q-${190700 + Math.floor(seeded(commodity.label + (origin?.id ?? "") + (destination?.id ?? "")) * 200)}`;
+  const quoteLegs = legs.map((s): QuoteLeg => ({
+    id: s.id, kind: LEG_TO_QUOTE[s.kind], title: s.title, from: s.location ?? "", to: s.toLocation ?? s.location ?? "",
+    vendorId: s.vendorId, carrierId: s.carrierId, dataSourceId: s.dataSourceId, included: true,
+    charges: [{ id: `c-${s.id}`, name: s.title, basis: "Flat", qty: 1, currency: "USD", unitCost: Number(s.cost) || 0 }],
+  }));
+  // client price = 12% markup on the built cost (unchanged behavior), via the shared pricing model
+  const routeCalc = computePricing({ legs: quoteLegs, mode: "whole", wholeMethod: "markup", wholeValue: 12, serviceMethod: {}, serviceValue: {} });
   const payload: OutputPayload = {
     quoteId,
     ref: {
@@ -207,14 +215,9 @@ export function RouteBuilder() {
       commodityLabel: commodity.label || commodity.kind, commodityKind: commodity.kind,
       shipmentType: commodity.shipmentType, container: commodity.container,
     },
-    legs: legs.map((s): QuoteLeg => ({
-      id: s.id, kind: LEG_TO_QUOTE[s.kind], title: s.title, from: s.location ?? "", to: s.toLocation ?? s.location ?? "",
-      vendorId: s.vendorId, carrierId: s.carrierId, dataSourceId: s.dataSourceId, included: true,
-      charges: [{ id: `c-${s.id}`, name: s.title, basis: "Flat", qty: 1, currency: "USD", unitCost: Number(s.cost) || 0 }],
-    })),
-    buy: totalPrice, sell: Math.round(totalPrice * 1.12), margin: Math.round(totalPrice * 0.12),
+    clientTotal: routeCalc.clientPrice, lines: clientLines(routeCalc),
     currency: "USD", validTo: "2026-09-30", transitDays: totalDays, carrierId: oceanLeg?.carrierId,
-    showLineNames: true, allInOnly: false,
+    showCarrier: true, allInOnly: false,
   };
 
   return (

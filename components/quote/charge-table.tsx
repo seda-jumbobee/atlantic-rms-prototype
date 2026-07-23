@@ -86,7 +86,7 @@ export function ChargeTable({
         </tbody>
         <tfoot>
           <tr className="border-t bg-muted/30 text-sm font-medium">
-            <td colSpan={editable ? 5 : 5} className="px-2 py-1.5 text-right">Leg subtotal</td>
+            <td colSpan={5} className="px-2 py-1.5 text-right">Service subtotal</td>
             <td className="px-2 py-1.5 text-right tabular-nums">{money(subtotal)}</td>
             {editable && <td />}
           </tr>
