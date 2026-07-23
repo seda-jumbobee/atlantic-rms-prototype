@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -98,6 +98,7 @@ export default function TemplatesPage() {
   const [dupTarget, setDupTarget] = useState<QuoteTemplate | null>(null);
   const [delTarget, setDelTarget] = useState<QuoteTemplate | null>(null);
   const [detailsTarget, setDetailsTarget] = useState<QuoteTemplate | null>(null);
+  const dupSeq = useRef(0); // monotonic — unique copy ids even after deletes
 
   const counts = useMemo(() => ({
     all: templates.length,
@@ -130,7 +131,7 @@ export default function TemplatesPage() {
     toast.success("Template renamed");
   };
   const doDuplicate = (orig: QuoteTemplate, name: string) => {
-    const copy: QuoteTemplate = { ...orig, id: `${orig.id}-copy-${templates.length}`, name: name.trim(), usageCount: 0 };
+    const copy: QuoteTemplate = { ...orig, id: `${orig.id}-copy-${++dupSeq.current}`, name: name.trim(), usageCount: 0 };
     setTemplates((prev) => [copy, ...prev]);
     toast.success("Template duplicated");
   };
@@ -201,6 +202,9 @@ export default function TemplatesPage() {
           </div>
         </div>
       </div>
+
+      {/* announce result changes to assistive tech */}
+      <p className="sr-only" role="status" aria-live="polite">{filtered.length} {filtered.length === 1 ? "template" : "templates"} shown</p>
 
       {/* Grid / empty states */}
       {filtered.length > 0 ? (
@@ -301,7 +305,7 @@ function TemplateCard({
         </button>
         <Tooltip>
           <TooltipTrigger asChild>
-            <p className="line-clamp-2 text-sm text-muted-foreground">{t.description}</p>
+            <p tabIndex={0} className="line-clamp-2 rounded text-sm text-muted-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">{t.description}</p>
           </TooltipTrigger>
           <TooltipContent className="max-w-xs">{t.description}</TooltipContent>
         </Tooltip>
@@ -363,8 +367,8 @@ function RenameDialog({ target, onClose, nameExists, onSave }: {
         <DialogHeader><DialogTitle>Rename template</DialogTitle></DialogHeader>
         <div className="space-y-1.5">
           <Label htmlFor="rename-input">Template title</Label>
-          <Input id="rename-input" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!err} autoFocus />
-          {err && <p role="alert" className="text-xs font-medium text-destructive">{err}</p>}
+          <Input id="rename-input" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!err} aria-describedby={err ? "rename-err" : undefined} autoFocus />
+          {err && <p id="rename-err" role="alert" className="text-xs font-medium text-destructive">{err}</p>}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
@@ -392,8 +396,8 @@ function DuplicateDialog({ target, onClose, nameExists, onSave }: {
         </DialogHeader>
         <div className="space-y-1.5">
           <Label htmlFor="dup-input">New template title</Label>
-          <Input id="dup-input" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!err} autoFocus />
-          {err && <p role="alert" className="text-xs font-medium text-destructive">{err}</p>}
+          <Input id="dup-input" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!err} aria-describedby={err ? "dup-err" : undefined} autoFocus />
+          {err && <p id="dup-err" role="alert" className="text-xs font-medium text-destructive">{err}</p>}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
