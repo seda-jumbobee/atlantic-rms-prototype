@@ -82,6 +82,39 @@ function ProvenanceBadge({ step }: { step: RouteStep }) {
   );
 }
 
+function DragHandle({ title, dragHandleProps }: { title: string; dragHandleProps?: HTMLAttributes<HTMLButtonElement> & { draggable?: boolean } }) {
+  return (
+    <button
+      type="button"
+      aria-label={`Drag to reorder ${title}`}
+      className="shrink-0 cursor-grab rounded text-muted-foreground/60 outline-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 active:cursor-grabbing"
+      {...dragHandleProps}
+    >
+      <GripVertical className="size-4" />
+    </button>
+  );
+}
+
+function StageMenu({ title, isFirst, isLast, onMoveUp, onMoveDown, onDeleteRequest }: {
+  title: string; isFirst: boolean; isLast: boolean; onMoveUp: () => void; onMoveDown: () => void; onDeleteRequest: () => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="size-7 shrink-0" aria-label={`More actions for ${title}`}><MoreVertical className="size-4" /></Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuItem disabled={isFirst} onClick={onMoveUp}><ArrowUp className="size-4" /> Move up</DropdownMenuItem>
+        <DropdownMenuItem disabled={isLast} onClick={onMoveDown}><ArrowDown className="size-4" /> Move down</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" onSelect={(e) => { e.preventDefault(); onDeleteRequest(); }}>
+          <Trash2 className="size-4" /> Delete stage
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export function RouteStageCard({
   step, index, total, collapsed, canCollapse, onToggleCollapse,
   vendors, onPatch, onRemove, onMoveUp, onMoveDown, onSearchOcean,
@@ -123,34 +156,66 @@ export function RouteStageCard({
   const isFirst = index === 0;
   const isLast = index === total - 1;
 
+  const menu = (
+    <StageMenu title={step.title} isFirst={isFirst} isLast={isLast} onMoveUp={onMoveUp} onMoveDown={onMoveDown} onDeleteRequest={() => setConfirmDelete(true)} />
+  );
+
+  const deleteDialog = (
+    <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete this stage?</AlertDialogTitle>
+          <AlertDialogDescription>
+            “{step.title}” and its rate, vendor, and duration will be removed from the route. This cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={onRemove} className="bg-destructive text-white hover:bg-destructive/90">Delete stage</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   // ── collapsed (completed) summary ──
   if (collapsed) {
     return (
-      <Card className={cn("flex flex-row items-center gap-3 p-3", dragging && "opacity-50 ring-2 ring-primary/40")}>
-        <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold tabular-nums text-muted-foreground">{index + 1}</span>
-        <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><Icon className="size-4" /></div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="truncate text-sm font-medium">{step.title}</span>
-            <StageStatusBadge step={step} aiPhase={ai.phase} />
-          </div>
-          <div className="truncate text-xs text-muted-foreground">
-            {step.location}{step.toLocation ? ` → ${step.toLocation}` : ""}{vendorName ? ` · ${vendorName}` : ""}
-          </div>
-        </div>
-        <div className="shrink-0 text-right">
-          <div className="text-sm font-semibold tabular-nums">{money(step.cost)}</div>
-          <div className="text-caption text-muted-foreground">{step.durationDays} d</div>
-        </div>
-        <Button variant="ghost" size="sm" className="shrink-0 gap-1 text-muted-foreground" onClick={onToggleCollapse} aria-expanded={false}>
-          Edit <ChevronDown className="size-4" />
-        </Button>
-      </Card>
+      <>
+        <Card className={cn("flex flex-row items-center gap-2 p-3", dragging && "opacity-50 ring-2 ring-primary/40")}>
+          <DragHandle title={step.title} dragHandleProps={dragHandleProps} />
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            aria-expanded={false}
+            aria-label={`Expand ${step.title}`}
+            className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          >
+            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold tabular-nums text-muted-foreground">{index + 1}</span>
+            <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><Icon className="size-4" /></div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="truncate text-sm font-medium">{step.title}</span>
+                <StageStatusBadge step={step} aiPhase={ai.phase} />
+              </div>
+              <div className="truncate text-xs text-muted-foreground">
+                {step.location}{step.toLocation ? ` → ${step.toLocation}` : ""}{vendorName ? ` · ${vendorName}` : ""}
+              </div>
+            </div>
+            <div className="shrink-0 pr-1 text-right">
+              <div className="text-sm font-semibold tabular-nums">{money(step.cost)}</div>
+              <div className="text-caption text-muted-foreground">{step.durationDays} d</div>
+            </div>
+          </button>
+          {menu}
+        </Card>
+        {deleteDialog}
+      </>
     );
   }
 
   // ── expanded (editable) ──
   return (
+    <>
     <Card className={cn("p-4", dragging && "opacity-50 ring-2 ring-primary/40")}>
       <div className="flex items-start gap-3">
         {/* rail: drag handle + number + icon */}
@@ -187,19 +252,7 @@ export function RouteStageCard({
                   Collapse
                 </Button>
               )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="size-7" aria-label={`More actions for ${step.title}`}><MoreVertical className="size-4" /></Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuItem disabled={isFirst} onClick={onMoveUp}><ArrowUp className="size-4" /> Move up</DropdownMenuItem>
-                  <DropdownMenuItem disabled={isLast} onClick={onMoveDown}><ArrowDown className="size-4" /> Move down</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem variant="destructive" onSelect={(e) => { e.preventDefault(); setConfirmDelete(true); }}>
-                    <Trash2 className="size-4" /> Delete stage
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {menu}
             </div>
           </div>
 
@@ -288,21 +341,8 @@ export function RouteStageCard({
           )}
         </div>
       </div>
-
-      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this stage?</AlertDialogTitle>
-            <AlertDialogDescription>
-              “{step.title}” and its rate, vendor, and duration will be removed from the route. This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={onRemove} className="bg-destructive text-white hover:bg-destructive/90">Delete stage</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Card>
+    {deleteDialog}
+    </>
   );
 }
