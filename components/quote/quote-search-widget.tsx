@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Anchor, ArrowLeftRight, Info, MapPin, RotateCcw, Search } from "lucide-react";
+import { Anchor, ArrowLeftRight, Info, MapPin, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -390,9 +390,7 @@ export function QuoteSearchWidget({
                   <Spinner className="size-4" /> Checking available rates…
                 </>
               ) : (
-                <>
-                  <Search className="size-4" /> {ctaLabel}
-                </>
+                ctaLabel
               )}
             </Button>
             {dirty && !loading && (
