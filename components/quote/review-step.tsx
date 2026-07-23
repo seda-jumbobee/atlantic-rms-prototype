@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import {
   Send, FileDown, MessageSquareText, Save, LayoutTemplate, Briefcase,
   EyeOff, ChevronDown, Pencil, ShieldCheck,
@@ -23,16 +24,20 @@ import { CreateDealDialog } from "@/components/deals/create-deal-dialog";
 import { PdfPreview, SendViaFrontDialog, TextDialog, type OutputPayload } from "@/components/quote/quote-output";
 import { getCarrier } from "@/lib/data/carriers";
 import { getVendor } from "@/lib/data/vendors";
+import { QUOTE_TEMPLATES } from "@/lib/data/templates";
 import { money, fmtDate } from "@/lib/format";
 import { clientLines } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import { pct, type PricingModel, type QuoteMeta } from "@/components/quote/pricing-parts";
 
-function SaveTemplateDialog({ defaultName, kindLabel }: { defaultName: string; kindLabel: string }) {
+function SaveTemplateDialog({ defaultName, kindLabel, savedSummary }: { defaultName: string; kindLabel: string; savedSummary: ReactNode }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(defaultName);
   const [description, setDescription] = useState("");
-  const valid = name.trim().length > 0;
+  const trimmed = name.trim();
+  const duplicate = QUOTE_TEMPLATES.some((t) => t.name.trim().toLowerCase() === trimmed.toLowerCase());
+  const err = !trimmed ? "Enter a template title" : duplicate ? "A template with this name already exists" : null;
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setName(defaultName); setDescription(""); } }}>
       <DialogTrigger asChild>
@@ -48,19 +53,30 @@ function SaveTemplateDialog({ defaultName, kindLabel }: { defaultName: string; k
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="tpl-name"><span>Template title<span aria-hidden className="ml-0.5 text-sidebar-primary">*</span></span></Label>
-            <Input id="tpl-name" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!valid} placeholder="e.g. Combine · US Gulf → Poti" />
-            {!valid && <p className="text-xs font-medium text-destructive">Enter a template title.</p>}
+            <Input id="tpl-name" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!err} placeholder="e.g. Combine · US Gulf → Poti" />
+            {err && <p role="alert" className="text-xs font-medium text-destructive">{err}</p>}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="tpl-desc">Description <span className="font-normal text-muted-foreground">(optional)</span></Label>
             <Textarea id="tpl-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="When to use this template…" />
           </div>
+          {/* what will be saved — reusable config only, no client price / sent status */}
+          <div className="space-y-1 rounded-md border bg-muted/40 p-3">
+            <div className="text-caption font-medium uppercase tracking-wide text-muted-foreground">Saved in this template</div>
+            {savedSummary}
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
           <Button
-            disabled={!valid}
-            onClick={() => { setOpen(false); toast.success("Saved as template", { description: `“${name.trim()}” is ready to reuse from Templates.` }); }}
+            disabled={!!err}
+            onClick={() => {
+              setOpen(false);
+              toast.success("Template saved", {
+                description: `“${trimmed}” is ready to reuse from Templates.`,
+                action: { label: "View template", onClick: () => router.push("/templates") },
+              });
+            }}
           >
             <LayoutTemplate className="size-4" /> Save template
           </Button>
@@ -240,7 +256,17 @@ export function ReviewStep({
               onClick={() => toast.success("Quote saved", { description: `${meta.quoteId} saved to history.` })}>
               <Save className="size-4" /> Save quote
             </Button>
-            <SaveTemplateDialog defaultName={`${meta.commodityLabel} · ${meta.origin} → ${meta.destination}`} kindLabel={templateKindLabel} />
+            <SaveTemplateDialog
+              defaultName={`${meta.commodityLabel} · ${meta.origin} → ${meta.destination}`}
+              kindLabel={templateKindLabel}
+              savedSummary={
+                <ul className="space-y-0.5 text-xs text-muted-foreground">
+                  <li><span className="text-foreground">Lane:</span> {meta.origin} → {meta.destination}</li>
+                  <li><span className="text-foreground">Commodity:</span> {meta.commodityLabel} · {meta.shipmentType}</li>
+                  <li><span className="text-foreground">Services:</span> {calc.included.length} {calc.included.length === 1 ? "service" : "services"} (no prices — profit is set each time)</li>
+                </ul>
+              }
+            />
             <CreateDealDialog trigger={
               <Button variant="ghost" size="sm" className="w-full justify-start gap-2"><Briefcase className="size-4" /> Create deal</Button>
             } />
