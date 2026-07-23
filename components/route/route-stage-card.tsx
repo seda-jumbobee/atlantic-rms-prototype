@@ -126,7 +126,7 @@ export function RouteStageCard({
   // ── collapsed (completed) summary ──
   if (collapsed) {
     return (
-      <Card className={cn("flex items-center gap-3 p-3", dragging && "opacity-50 ring-2 ring-primary/40")}>
+      <Card className={cn("flex flex-row items-center gap-3 p-3", dragging && "opacity-50 ring-2 ring-primary/40")}>
         <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold tabular-nums text-muted-foreground">{index + 1}</span>
         <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><Icon className="size-4" /></div>
         <div className="min-w-0 flex-1">

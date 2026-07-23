@@ -124,7 +124,7 @@ export function RouteBuilder() {
   );
 
   const reviewReminder = (
-    <Card className="flex items-center gap-2 p-3 text-xs text-muted-foreground">
+    <Card className="flex flex-row items-center gap-2 p-3 text-xs text-muted-foreground">
       <Route className="size-4 shrink-0 text-primary" /> Custom route · {steps.length} stage{steps.length === 1 ? "" : "s"} · {totalDays} days
     </Card>
   );

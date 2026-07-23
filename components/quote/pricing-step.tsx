@@ -145,7 +145,7 @@ export function PricingStep({
 
       {/* sticky action bar */}
       <div className="sticky bottom-4 z-10">
-        <Card className="flex flex-wrap items-center justify-between gap-3 p-3 shadow-lg">
+        <Card className="flex flex-row flex-wrap items-center justify-between gap-3 p-3 shadow-lg">
           <div className="text-sm">
             <span className="text-muted-foreground">Client price</span>{" "}
             <span className="font-semibold tabular-nums">{money(calc.clientPrice)}</span>

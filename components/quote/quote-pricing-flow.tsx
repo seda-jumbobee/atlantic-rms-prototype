@@ -59,7 +59,7 @@ export function QuotePricingFlow({
   );
 
   const reminder = (
-    <Card className="flex items-center gap-2 p-3 text-xs text-muted-foreground">
+    <Card className="flex flex-row items-center gap-2 p-3 text-xs text-muted-foreground">
       <CarrierLogo carrierId={rate.carrierId} size="sm" />
       <span className="truncate">{getCarrier(rate.carrierId)?.name}</span>
       <SourceBadge source={rate.sourceType} />
