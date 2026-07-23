@@ -90,7 +90,12 @@ function validateForm(
   const e: FieldErrors = {};
   if (!origin) e.origin = "Select an origin";
   if (!dest) e.dest = "Select a destination";
-  if (origin && dest && origin.id === dest.id) e.dest = "Origin and destination must be different";
+  // Safety net (templates, restored drafts, imported/stale/URL state): the UI
+  // disables the duplicate option, but guard against identical values anyway.
+  if (origin && dest && origin.id === dest.id) {
+    e.origin = "Origin and destination must be different locations.";
+    e.dest = "Origin and destination must be different locations.";
+  }
   if (!commodity) {
     e.kind = "Choose a commodity type";
     return e;
@@ -279,7 +284,7 @@ export function QuoteSearchWidget({
             <div ref={originAnchor} className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
               <div id="rq-origin" className="space-y-1.5">
                 <Label htmlFor="rq-origin-trigger"><span>Origin<RequiredMark /></span></Label>
-                <LocationCombobox id="rq-origin-trigger" value={origin} onChange={setOrigin} excludeId={dest?.id} placeholder="Port or pickup address…" />
+                <LocationCombobox id="rq-origin-trigger" value={origin} onChange={setOrigin} disabledId={dest?.id} disabledReason="Selected as destination" placeholder="Port or pickup address…" />
                 {errors.origin && <p role="alert" className="text-xs font-medium text-destructive">{errors.origin}</p>}
               </div>
               <Tooltip>
@@ -298,7 +303,7 @@ export function QuoteSearchWidget({
               </Tooltip>
               <div id="rq-dest" className="space-y-1.5">
                 <Label htmlFor="rq-dest-trigger"><span>Destination<RequiredMark /></span></Label>
-                <LocationCombobox id="rq-dest-trigger" value={dest} onChange={setDest} excludeId={origin?.id} placeholder="Port or delivery address…" />
+                <LocationCombobox id="rq-dest-trigger" value={dest} onChange={setDest} disabledId={origin?.id} disabledReason="Selected as origin" placeholder="Port or delivery address…" />
                 {errors.dest && <p role="alert" className="text-xs font-medium text-destructive">{errors.dest}</p>}
               </div>
             </div>

@@ -19,19 +19,23 @@ export function LocationCombobox({
   onChange,
   placeholder = "Search port or address…",
   id,
-  excludeId,
+  disabledId,
+  disabledReason,
 }: {
   value?: LocationValue;
   onChange: (v: LocationValue) => void;
   placeholder?: string;
   id?: string;
-  /** Hide this location id from the list (e.g. the other end of the route,
-      so origin and destination can never be the same). */
-  excludeId?: string;
+  /** Keep this location id in the list but disabled (it's already chosen on the
+      other end of the route). Compared by unique id, so only the exact port /
+      address is disabled — not others in the same city. */
+  disabledId?: string;
+  /** Inline note shown on the disabled option, e.g. "Selected as origin". */
+  disabledReason?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const ports = PORTS.filter((p) => p.id !== excludeId);
-  const addresses = ADDRESSES.filter((a) => a.id !== excludeId);
+  const disabledCls =
+    "data-[disabled=true]:pointer-events-auto data-[disabled=true]:cursor-not-allowed data-[disabled=true]:opacity-100 data-[disabled=true]:text-muted-foreground";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -54,35 +58,52 @@ export function LocationCombobox({
           <CommandList>
             <CommandEmpty>No location found.</CommandEmpty>
             <CommandGroup heading="Ports (UN/LOCODE)">
-              {ports.map((p) => {
+              {PORTS.map((p) => {
                 const label = `${p.name}, ${p.country} · ${p.locode}`;
+                const disabled = p.id === disabledId;
                 return (
                   <CommandItem
                     key={p.id}
                     value={label}
-                    onSelect={() => { onChange({ kind: "port", id: p.id, label }); setOpen(false); }}
-                    className="[&>svg:last-child]:hidden"
+                    disabled={disabled}
+                    onSelect={disabled ? undefined : () => { onChange({ kind: "port", id: p.id, label }); setOpen(false); }}
+                    className={cn("[&>svg:last-child]:hidden", disabled && disabledCls)}
                   >
                     <Anchor className="size-4 shrink-0 text-primary" />
                     <span className="min-w-0 flex-1 truncate">{p.name}, {p.country}</span>
-                    {value?.id === p.id && <Check className="size-4 shrink-0" />}
-                    <span className="shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground">{p.locode}</span>
+                    {disabled ? (
+                      <span className="shrink-0 text-xs text-muted-foreground">{disabledReason}</span>
+                    ) : (
+                      <>
+                        {value?.id === p.id && <Check className="size-4 shrink-0" />}
+                        <span className="shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground">{p.locode}</span>
+                      </>
+                    )}
                   </CommandItem>
                 );
               })}
             </CommandGroup>
             <CommandGroup heading="Addresses (door)">
-              {addresses.map((a) => (
-                <CommandItem
-                  key={a.id}
-                  value={a.label}
-                  onSelect={() => { onChange({ kind: "address", id: a.id, label: a.label }); setOpen(false); }}
-                >
-                  <MapPin className="size-4 shrink-0 text-status-info-fg" />
-                  <span className="min-w-0 flex-1 truncate">{a.label}</span>
-                  {value?.id === a.id && <Check className="size-4 shrink-0" />}
-                </CommandItem>
-              ))}
+              {ADDRESSES.map((a) => {
+                const disabled = a.id === disabledId;
+                return (
+                  <CommandItem
+                    key={a.id}
+                    value={a.label}
+                    disabled={disabled}
+                    onSelect={disabled ? undefined : () => { onChange({ kind: "address", id: a.id, label: a.label }); setOpen(false); }}
+                    className={cn("[&>svg:last-child]:hidden", disabled && disabledCls)}
+                  >
+                    <MapPin className="size-4 shrink-0 text-status-info-fg" />
+                    <span className="min-w-0 flex-1 truncate">{a.label}</span>
+                    {disabled ? (
+                      <span className="shrink-0 text-xs text-muted-foreground">{disabledReason}</span>
+                    ) : (
+                      value?.id === a.id && <Check className="size-4 shrink-0" />
+                    )}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           </CommandList>
         </Command>
