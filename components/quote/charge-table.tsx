@@ -29,7 +29,8 @@ export function ChargeTable({
 
   return (
     <div className="overflow-hidden rounded-lg border">
-      <table className="w-full text-sm">
+      <div className="overflow-x-auto">
+      <table className="w-full min-w-[440px] text-sm">
         <thead className="bg-muted/50 text-xs text-muted-foreground">
           <tr>
             <th className="w-16 px-2 py-1.5 text-left font-medium">Code</th>
@@ -92,6 +93,7 @@ export function ChargeTable({
           </tr>
         </tfoot>
       </table>
+      </div>
       {editable && (
         <button onClick={add} className="flex w-full items-center justify-center gap-1.5 border-t py-1.5 text-xs text-muted-foreground transition hover:bg-muted/50 hover:text-foreground">
           <Plus className="size-3.5" /> Add charge

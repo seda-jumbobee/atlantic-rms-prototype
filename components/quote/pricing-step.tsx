@@ -266,7 +266,7 @@ export function PricingStep({
 
       <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
         {/* left: services */}
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold">Services</h3>
             <span className="text-xs text-muted-foreground">{calc.included.length} of {model.legs.length} included</span>
@@ -275,7 +275,7 @@ export function PricingStep({
         </div>
 
         {/* right: pricing summary */}
-        <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+        <div className="min-w-0 space-y-4 lg:sticky lg:top-20 lg:self-start">
           <Card className="space-y-3 p-4">
             <div className="text-sm font-semibold">Quote pricing</div>
 
@@ -325,7 +325,7 @@ export function PricingStep({
 
       {/* sticky action bar */}
       <div className="sticky bottom-4 z-10">
-        <Card className="flex items-center justify-between gap-3 p-3 shadow-lg">
+        <Card className="flex flex-wrap items-center justify-between gap-3 p-3 shadow-lg">
           <div className="text-sm">
             <span className="text-muted-foreground">Client price</span>{" "}
             <span className="font-semibold tabular-nums">{money(calc.clientPrice)}</span>

@@ -93,7 +93,7 @@ export function ReviewStep({
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
       {/* left: client preview + internal summary */}
-      <div className="space-y-4">
+      <div className="min-w-0 space-y-4">
         {/* Client preview */}
         <Card className="gap-0 overflow-hidden p-0">
           <div className="flex items-center justify-between gap-2 border-b bg-muted/30 px-4 py-3">
@@ -168,8 +168,8 @@ export function ReviewStep({
                 </div>
 
                 {/* per-service breakdown */}
-                <div className="overflow-hidden rounded-lg border">
-                  <table className="w-full text-sm">
+                <div className="overflow-x-auto rounded-lg border">
+                  <table className="w-full min-w-[440px] text-sm">
                     <thead className="bg-muted/50 text-xs text-muted-foreground">
                       <tr>
                         <th className="px-3 py-1.5 text-left font-medium">Service</th>
@@ -206,7 +206,7 @@ export function ReviewStep({
       </div>
 
       {/* right: send actions */}
-      <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+      <div className="min-w-0 space-y-4 lg:sticky lg:top-20 lg:self-start">
         <Card className="space-y-3 p-4">
           <div className="text-sm font-semibold">Send quote</div>
           <p className="flex items-start gap-1.5 rounded-md bg-status-positive-bg/60 p-2 text-caption text-status-positive-fg">
