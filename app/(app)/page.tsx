@@ -177,7 +177,7 @@ export default function DashboardPage() {
             <div className="max-w-xl">
               <h2 className="text-xl font-semibold tracking-tight">Create a new quote</h2>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                Find available rates using commodity-specific formulas and contract rates.
+                Check available rates using commodity-specific formulas and contract rates.
               </p>
               <Button asChild size="lg" className="mt-4">
                 <Link href="/quote-master">Create rate quote</Link>

@@ -231,7 +231,7 @@ export function QuoteSearchWidget({
     () => (origin && dest && commodity ? encodeSearch(buildInput(origin, dest, commodity, advanced, loadingDate)) : null),
     [origin, dest, commodity, advanced, loadingDate],
   );
-  const ctaLabel = existingQuery && candidateQuery && candidateQuery !== existingQuery ? "Update rates" : "Find rates";
+  const ctaLabel = existingQuery && candidateQuery && candidateQuery !== existingQuery ? "Update rates" : "Check rates";
 
   const focusSection = useCallback((id: string) => {
     const el = document.getElementById(id);
@@ -387,7 +387,7 @@ export function QuoteSearchWidget({
             <Button size="lg" className="w-full gap-2" onClick={submit} disabled={loading} aria-busy={loading}>
               {loading ? (
                 <>
-                  <Spinner className="size-4" /> Finding available rates…
+                  <Spinner className="size-4" /> Checking available rates…
                 </>
               ) : (
                 <>
