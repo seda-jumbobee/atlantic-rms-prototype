@@ -3,13 +3,14 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check, Search, ListChecks, Calculator, Send, SearchX, Route } from "lucide-react";
+import { Check, Search, ListChecks, Calculator, Send, SearchX, Route, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { QuoteSearchWidget } from "@/components/quote/quote-search-widget";
 import { ResultsView } from "@/components/quote/results-view";
 import { QuoteEditor } from "@/components/quote/quote-editor";
+import { ShipmentSummary } from "@/components/quote/shipment-summary";
 import type { LocationValue } from "@/components/location-combobox";
 import type { CommoditySelection } from "@/components/commodity-picker";
 import { decodeSearch, encodeSearch } from "@/lib/search-params";
@@ -107,22 +108,39 @@ export function QuoteMaster() {
     if (i === 1) setSelected(null);
   };
 
+  // Per-step back navigation (kept in the same place across all steps).
+  const back =
+    stepIndex === 1
+      ? { label: "Back to shipment details", onClick: () => setEditingSearch(true) }
+      : stepIndex === 2
+        ? { label: "Back to rates", onClick: () => setSelected(null) }
+        : null;
+
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <PageHeader
         title="Rate Quote"
         description="Find available rates and create a client quote using commodity-specific formulas and contract rates."
-      >
-        {input && !showSearch && (
-          <div className="hidden text-sm text-muted-foreground sm:block">
-            <span className="font-medium text-foreground">{origin}</span> → <span className="font-medium text-foreground">{destination}</span>
-            <span className="mx-1.5">·</span>{input.commodityLabel || input.commodityKind}
-          </div>
-        )}
-      </PageHeader>
+      />
 
-      {/* Progress — full main-content width. "Review & send" activates inside the editor
-          flow; it is shown so the Manager can see the whole journey. */}
+      {/* Shared back navigation + shipment summary — consistent across Choose rate,
+          Set pricing, and Review & send so the Manager always knows the context. */}
+      {input && !showSearch && (
+        <div className="space-y-4">
+          {back && (
+            <button
+              type="button"
+              onClick={back.onClick}
+              className="inline-flex items-center gap-1.5 rounded text-sm font-medium text-primary outline-none transition hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            >
+              <ArrowLeft className="size-4" /> {back.label}
+            </button>
+          )}
+          <ShipmentSummary input={input} onEdit={() => setEditingSearch(true)} />
+        </div>
+      )}
+
+      {/* Progress — full main-content width. */}
       <nav aria-label="Quote progress" className="w-full">
         <ol className="flex w-full items-center gap-2 sm:gap-3">
           {STEPS.map((s, i) => {
@@ -231,6 +249,7 @@ export function QuoteMaster() {
           commodityLabel={input.commodityLabel || input.commodityKind}
           shipmentType={input.shipmentType}
           onBack={() => setSelected(null)}
+          hideBack
         />
       )}
     </div>

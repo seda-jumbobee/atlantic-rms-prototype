@@ -32,7 +32,7 @@ const LEG_ICON: Record<LegKind, typeof Truck> = {
 };
 
 export function QuoteEditor({
-  rate, quoteId, origin, destination, commodityLabel, shipmentType, onBack,
+  rate, quoteId, origin, destination, commodityLabel, shipmentType, onBack, hideBack = false,
 }: {
   rate: RateOption;
   quoteId: string;
@@ -41,6 +41,7 @@ export function QuoteEditor({
   commodityLabel: string;
   shipmentType: string;
   onBack: () => void;
+  hideBack?: boolean;
 }) {
   const isAdmin = useIsAdmin();
   const [legs, setLegs] = useState<QuoteLeg[]>(() => JSON.parse(JSON.stringify(rate.legs)) as QuoteLeg[]);
@@ -84,7 +85,9 @@ export function QuoteEditor({
       {/* left: legs */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Button variant="ghost" size="sm" className="gap-1.5" onClick={onBack}><ArrowLeft className="size-4" /> Back to rates</Button>
+          {hideBack ? <span /> : (
+            <Button variant="ghost" size="sm" className="gap-1.5" onClick={onBack}><ArrowLeft className="size-4" /> Back to rates</Button>
+          )}
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <CarrierLogo carrierId={rate.carrierId} size="sm" />
             {rate.transitDays} days · valid to {new Date(rate.validTo).toLocaleDateString()}
