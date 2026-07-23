@@ -572,8 +572,7 @@ function ShippingLinesPanel() {
             <RateResultCard
               key={r.id}
               rate={r}
-              onChoose={(rate) => toast.success(`Chose ${rate.carrierId} · ${money(rate.total)}`)}
-              onDetails={() => toast("Opening rate details…")}
+              onSelect={(rate) => toast.success(`Chose ${rate.carrierId} · ${money(rate.total)}`)}
             />
           ))}
         </div>

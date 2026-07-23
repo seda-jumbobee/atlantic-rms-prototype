@@ -220,7 +220,8 @@ export function QuoteMaster() {
             requirements={requirements}
             lane={`${origin} → ${destination}`}
             advanced={input.advancedSearch}
-            onChoose={setSelected}
+            onSelect={setSelected}
+            onEditShipment={() => setEditingSearch(true)}
           />
         ) : (
           <EmptyState
