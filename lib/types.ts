@@ -523,6 +523,11 @@ export interface RouteStep {
   durationDays: number;
   status: "set" | "pending_ai" | "quoted";
   icon: string;
+  /** UI-only: how the current rate was obtained — drives the source / AI badge and
+      the stage status. Not persisted to any backend. */
+  provenance?: "manual" | "contract" | "api" | "ai_suggestion" | "ai_quote" | "ai_estimate";
+  /** UI-only: cost/vendor was manually changed after a rate had been applied. */
+  edited?: boolean;
   /** itemized breakdown (e.g. ocean base + surcharges); cost derives from sum when present */
   charges?: ChargeLine[];
   vessel?: string;

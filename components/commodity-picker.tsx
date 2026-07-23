@@ -101,6 +101,7 @@ export function CommodityPicker({
   onChange,
   errors,
   sectionHeadings = false,
+  showDetails = true,
 }: {
   /** Omit to start with no commodity type selected (type-first disclosure). */
   value?: CommoditySelection;
@@ -109,6 +110,9 @@ export function CommodityPicker({
   errors?: { kind?: string; details?: string; dims?: string };
   /** Render "Cargo details" / "Loading & transport details" group headings. */
   sectionHeadings?: boolean;
+  /** Defer the cargo-detail + shipment fields until upstream info is complete
+      (progressive disclosure). The type buttons are always shown. */
+  showDetails?: boolean;
 }) {
   const eq = getEquipment(value?.equipmentId);
   const industries = EQUIPMENT_INDUSTRIES;
@@ -179,7 +183,7 @@ export function CommodityPicker({
         )}
       </div>
 
-      {value && (
+      {value && showDetails && (
         <div id="rq-details" className="space-y-5 duration-300 animate-in fade-in slide-in-from-top-1">
           {sectionHeadings && (
             <div>

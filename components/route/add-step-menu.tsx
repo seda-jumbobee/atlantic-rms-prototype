@@ -62,11 +62,11 @@ export function AddStepMenu({ onAdd, kinds }: { onAdd: (kind: RouteStepKind) => 
       <DropdownMenuTrigger asChild>
         <Button>
           <Plus className="size-4" />
-          Add leg
+          Add route stage
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel>Add a route leg</DropdownMenuLabel>
+        <DropdownMenuLabel>Add a route stage</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {catalog.map((s) => {
           const Icon = s.icon;
