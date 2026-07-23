@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Send, FileDown, MessageSquareText, Save, LayoutTemplate, Briefcase,
   EyeOff, ChevronDown, Pencil, ShieldCheck,
@@ -12,13 +12,13 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { CarrierLogo } from "@/components/carrier-logo";
-import { SourceBadge } from "@/components/status-badge";
 import { CreateDealDialog } from "@/components/deals/create-deal-dialog";
 import { PdfPreview, SendViaFrontDialog, TextDialog, type OutputPayload } from "@/components/quote/quote-output";
 import { getCarrier } from "@/lib/data/carriers";
@@ -26,19 +26,15 @@ import { getVendor } from "@/lib/data/vendors";
 import { money, fmtDate } from "@/lib/format";
 import { clientLines } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
-import type { QuotePricingContext, PricingModel } from "@/components/quote/quote-pricing-flow";
+import { pct, type PricingModel, type QuoteMeta } from "@/components/quote/pricing-parts";
 
-function pct(n: number): string {
-  const r = Math.round(n * 10) / 10;
-  return (Number.isInteger(r) ? r.toFixed(0) : r.toFixed(1)) + "%";
-}
-
-function SaveTemplateDialog({ defaultName }: { defaultName: string }) {
+function SaveTemplateDialog({ defaultName, kindLabel }: { defaultName: string; kindLabel: string }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(defaultName);
+  const [description, setDescription] = useState("");
   const valid = name.trim().length > 0;
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) setName(defaultName); }}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setName(defaultName); setDescription(""); } }}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
           <LayoutTemplate className="size-4" /> Save as template
@@ -47,12 +43,18 @@ function SaveTemplateDialog({ defaultName }: { defaultName: string }) {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Save as template</DialogTitle>
-          <DialogDescription>Reuse this pricing setup for similar shipments from Templates.</DialogDescription>
+          <DialogDescription>Save this {kindLabel} to reuse for similar shipments from Templates.</DialogDescription>
         </DialogHeader>
-        <div className="space-y-1.5">
-          <Label htmlFor="tpl-name">Template name</Label>
-          <Input id="tpl-name" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!valid} placeholder="e.g. Combine · US Gulf → Poti" />
-          {!valid && <p className="text-xs font-medium text-destructive">Enter a template name.</p>}
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="tpl-name"><span>Template title<span aria-hidden className="ml-0.5 text-sidebar-primary">*</span></span></Label>
+            <Input id="tpl-name" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!valid} placeholder="e.g. Combine · US Gulf → Poti" />
+            {!valid && <p className="text-xs font-medium text-destructive">Enter a template title.</p>}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="tpl-desc">Description <span className="font-normal text-muted-foreground">(optional)</span></Label>
+            <Textarea id="tpl-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="When to use this template…" />
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
@@ -69,21 +71,27 @@ function SaveTemplateDialog({ defaultName }: { defaultName: string }) {
 }
 
 export function ReviewStep({
-  model, onBackToPricing, rate, quoteId, origin, destination, commodityLabel, shipmentType,
-}: QuotePricingContext & { model: PricingModel; onBackToPricing: () => void }) {
+  model, meta, onBackToPricing, reminder, templateKindLabel = "pricing setup",
+}: {
+  model: PricingModel;
+  meta: QuoteMeta;
+  onBackToPricing: () => void;
+  /** Small context card shown under the send actions (selected rate / route recap). */
+  reminder?: ReactNode;
+  templateKindLabel?: string;
+}) {
   const { calc } = model;
   const lines = clientLines(calc);
-  const carrierName = getCarrier(rate.carrierId)?.name;
 
   const payload: OutputPayload = {
-    quoteId,
-    ref: { origin, destination, commodityLabel, commodityKind: "equipment", shipmentType },
+    quoteId: meta.quoteId,
+    ref: { origin: meta.origin, destination: meta.destination, commodityLabel: meta.commodityLabel, commodityKind: meta.commodityKind, shipmentType: meta.shipmentType },
     clientTotal: calc.clientPrice,
     lines,
-    currency: rate.currency,
-    validTo: rate.validTo,
-    transitDays: rate.transitDays,
-    carrierId: rate.carrierId,
+    currency: meta.currency,
+    validTo: meta.validTo,
+    transitDays: meta.transitDays,
+    carrierId: meta.carrierId,
     showCarrier: model.showCarrier,
     allInOnly: model.allInOnly,
   };
@@ -102,13 +110,14 @@ export function ReviewStep({
           </div>
           <div className="space-y-4 p-5">
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
-              <span><b className="text-foreground">Lane:</b> {origin} → {destination}</span>
-              <span><b className="text-foreground">Commodity:</b> {commodityLabel}</span>
-              <span><b className="text-foreground">Mode:</b> {shipmentType}</span>
-              <span><b className="text-foreground">Transit:</b> ~{rate.transitDays} days</span>
-              <span><b className="text-foreground">Valid to:</b> {fmtDate(rate.validTo)}</span>
-              {model.showCarrier && rate.carrierId && (
-                <span className="inline-flex items-center gap-1"><b className="text-foreground">Carrier:</b> <CarrierLogo carrierId={rate.carrierId} size="sm" /></span>
+              <span><b className="text-foreground">Quote:</b> {meta.quoteId}</span>
+              <span><b className="text-foreground">Lane:</b> {meta.origin} → {meta.destination}</span>
+              <span><b className="text-foreground">Commodity:</b> {meta.commodityLabel}</span>
+              <span><b className="text-foreground">Mode:</b> {meta.shipmentType}</span>
+              <span><b className="text-foreground">Transit:</b> ~{meta.transitDays} days</span>
+              <span><b className="text-foreground">Valid to:</b> {fmtDate(meta.validTo)}</span>
+              {model.showCarrier && meta.carrierId && (
+                <span className="inline-flex items-center gap-1"><b className="text-foreground">Carrier:</b> <CarrierLogo carrierId={meta.carrierId} size="sm" /></span>
               )}
             </div>
 
@@ -130,7 +139,7 @@ export function ReviewStep({
 
             <div className="flex items-center justify-between border-t pt-3">
               <span className="text-sm font-medium">All-in price</span>
-              <span className="text-2xl font-bold tabular-nums text-primary">{money(calc.clientPrice)} <span className="text-sm font-normal text-muted-foreground">{rate.currency}</span></span>
+              <span className="text-2xl font-bold tabular-nums text-primary">{money(calc.clientPrice)} <span className="text-sm font-normal text-muted-foreground">{meta.currency}</span></span>
             </div>
           </div>
 
@@ -228,22 +237,17 @@ export function ReviewStep({
               <Button variant="ghost" size="sm" className="w-full justify-start gap-2"><MessageSquareText className="size-4" /> Text message</Button>
             } />
             <Button variant="ghost" size="sm" className="w-full justify-start gap-2"
-              onClick={() => toast.success("Quote saved", { description: `${quoteId} saved to history.` })}>
+              onClick={() => toast.success("Quote saved", { description: `${meta.quoteId} saved to history.` })}>
               <Save className="size-4" /> Save quote
             </Button>
-            <SaveTemplateDialog defaultName={`${commodityLabel} · ${origin} → ${destination}`} />
+            <SaveTemplateDialog defaultName={`${meta.commodityLabel} · ${meta.origin} → ${meta.destination}`} kindLabel={templateKindLabel} />
             <CreateDealDialog trigger={
               <Button variant="ghost" size="sm" className="w-full justify-start gap-2"><Briefcase className="size-4" /> Create deal</Button>
             } />
           </div>
         </Card>
 
-        {/* selected rate reminder */}
-        <Card className="flex items-center gap-2 p-3 text-xs text-muted-foreground">
-          <CarrierLogo carrierId={rate.carrierId} size="sm" />
-          <span className="truncate">{carrierName}</span>
-          <SourceBadge source={rate.sourceType} />
-        </Card>
+        {reminder}
       </div>
     </div>
   );

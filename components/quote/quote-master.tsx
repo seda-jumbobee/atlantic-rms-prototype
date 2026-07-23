@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check, Search, ListChecks, Calculator, Send, SearchX, Route, ArrowLeft } from "lucide-react";
+import { SearchX, Route, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
@@ -11,6 +11,7 @@ import { QuoteSearchWidget } from "@/components/quote/quote-search-widget";
 import { ResultsView } from "@/components/quote/results-view";
 import { QuotePricingFlow } from "@/components/quote/quote-pricing-flow";
 import { ShipmentSummary } from "@/components/quote/shipment-summary";
+import { FlowProgress, type FlowStep } from "@/components/quote/flow-progress";
 import type { LocationValue } from "@/components/location-combobox";
 import type { CommoditySelection } from "@/components/commodity-picker";
 import { decodeSearch, encodeSearch } from "@/lib/search-params";
@@ -18,7 +19,6 @@ import { buildRateOptions, destinationRequirements, type SearchInput } from "@/l
 import { getPort, getAddress } from "@/lib/data/ports";
 import { getEquipment } from "@/lib/data/equipment";
 import { seeded } from "@/lib/format";
-import { cn } from "@/lib/utils";
 import type { RateOption } from "@/lib/types";
 
 function locLabel(portId?: string, addrId?: string): string {
@@ -61,11 +61,11 @@ function widgetInitialFromInput(input: SearchInput) {
   };
 }
 
-const STEPS = [
-  { key: "search", label: "Shipment details", icon: Search },
-  { key: "choose", label: "Choose rate", icon: ListChecks },
-  { key: "pricing", label: "Set pricing", icon: Calculator },
-  { key: "review", label: "Review & send", icon: Send },
+const STEPS: FlowStep[] = [
+  { key: "search", label: "Shipment details" },
+  { key: "choose", label: "Choose rate" },
+  { key: "pricing", label: "Set pricing" },
+  { key: "review", label: "Review & send" },
 ];
 
 export function QuoteMaster() {
@@ -151,59 +151,7 @@ export function QuoteMaster() {
       )}
 
       {/* Progress — full main-content width. */}
-      <nav aria-label="Quote progress" className="w-full">
-        <ol className="flex w-full items-center gap-2 sm:gap-3">
-          {STEPS.map((s, i) => {
-            const state = i === stepIndex ? "active" : i < stepIndex ? "done" : "upcoming";
-            const clickable = state === "done";
-            const Inner = (
-              <>
-                <span
-                  className={cn(
-                    "grid size-7 shrink-0 place-items-center rounded-full text-xs font-medium transition",
-                    state === "active" && "bg-primary text-primary-foreground",
-                    state === "done" && "bg-primary/15 text-primary",
-                    state === "upcoming" && "bg-muted text-muted-foreground",
-                  )}
-                >
-                  {state === "done" ? <Check className="size-4" /> : i + 1}
-                </span>
-                <span
-                  className={cn(
-                    "hidden whitespace-nowrap text-sm md:inline",
-                    state === "active" && "font-semibold text-foreground",
-                    state === "done" && "font-medium text-foreground",
-                    state === "upcoming" && "text-muted-foreground",
-                  )}
-                >
-                  {s.label}
-                </span>
-              </>
-            );
-            return (
-              <li key={s.key} className={cn("flex min-w-0 items-center gap-2 sm:gap-3", i < STEPS.length - 1 && "flex-1")}>
-                {clickable ? (
-                  <button
-                    type="button"
-                    onClick={() => goToStep(i)}
-                    className="flex items-center gap-2 rounded-full outline-none transition hover:opacity-80 focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                    aria-label={`Back to ${s.label}`}
-                  >
-                    {Inner}
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2" aria-current={state === "active" ? "step" : undefined}>
-                    {Inner}
-                  </div>
-                )}
-                {i < STEPS.length - 1 && (
-                  <span aria-hidden className={cn("h-0.5 min-w-4 flex-1 rounded-full", i < stepIndex ? "bg-primary" : "bg-border")} />
-                )}
-              </li>
-            );
-          })}
-        </ol>
-      </nav>
+      <FlowProgress steps={STEPS} current={stepIndex} onStepClick={goToStep} ariaLabel="Quote progress" />
 
       {showSearch && (
         <QuoteSearchWidget
@@ -268,6 +216,7 @@ export function QuoteMaster() {
             origin={origin}
             destination={destination}
             commodityLabel={input.commodityLabel || input.commodityKind}
+            commodityKind={input.commodityKind}
             shipmentType={input.shipmentType}
             reviewing={reviewing}
             onReview={() => setReviewing(true)}

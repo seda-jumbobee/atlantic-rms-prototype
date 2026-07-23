@@ -1,39 +1,14 @@
 "use client";
 
-import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { Card } from "@/components/ui/card";
+import { CarrierLogo } from "@/components/carrier-logo";
+import { SourceBadge } from "@/components/status-badge";
 import { PricingStep } from "@/components/quote/pricing-step";
 import { ReviewStep } from "@/components/quote/review-step";
-import {
-  computePricing,
-  DEFAULT_SERVICE_METHOD,
-  DEFAULT_SERVICE_VALUE,
-  type PricingCalc,
-  type PricingMethod,
-  type PricingMode,
-} from "@/lib/pricing";
-import type { QuoteLeg, RateOption, ShipmentType } from "@/lib/types";
-
-/** Everything the pricing + review steps read and mutate. Kept in one object so
-    state survives navigation between Set pricing and Review & send. */
-export interface PricingModel {
-  legs: QuoteLeg[];
-  setLegs: Dispatch<SetStateAction<QuoteLeg[]>>;
-  mode: PricingMode;
-  setMode: (m: PricingMode) => void;
-  wholeMethod: PricingMethod;
-  setWholeMethod: (m: PricingMethod) => void;
-  wholeValue: number;
-  setWholeValue: (v: number) => void;
-  serviceMethod: Record<string, PricingMethod>;
-  setServiceMethod: (id: string, m: PricingMethod) => void;
-  serviceValue: Record<string, number>;
-  setServiceValue: (id: string, v: number) => void;
-  showCarrier: boolean;
-  setShowCarrier: (v: boolean) => void;
-  allInOnly: boolean;
-  setAllInOnly: (v: boolean) => void;
-  calc: PricingCalc;
-}
+import { usePricingModel, type QuoteMeta } from "@/components/quote/pricing-parts";
+import { getCarrier } from "@/lib/data/carriers";
+import { money, fmtDate } from "@/lib/format";
+import type { CommodityKind, RateOption, ShipmentType } from "@/lib/types";
 
 export interface QuotePricingContext {
   rate: RateOption;
@@ -41,59 +16,59 @@ export interface QuotePricingContext {
   origin: string;
   destination: string;
   commodityLabel: string;
+  commodityKind: CommodityKind;
   shipmentType: ShipmentType;
 }
 
 export function QuotePricingFlow({
-  reviewing,
-  onReview,
-  onBackToPricing,
-  ...ctx
+  rate, quoteId, origin, destination, commodityLabel, commodityKind, shipmentType,
+  reviewing, onReview, onBackToPricing,
 }: QuotePricingContext & {
   reviewing: boolean;
   onReview: () => void;
   onBackToPricing: () => void;
 }) {
-  const [legs, setLegs] = useState<QuoteLeg[]>(() => JSON.parse(JSON.stringify(ctx.rate.legs)) as QuoteLeg[]);
-  const [mode, setMode] = useState<PricingMode>("whole");
-  const [wholeMethod, setWholeMethod] = useState<PricingMethod>("markup");
-  const [wholeValue, setWholeValue] = useState(DEFAULT_SERVICE_VALUE);
-  const [serviceMethod, setServiceMethodMap] = useState<Record<string, PricingMethod>>({});
-  const [serviceValue, setServiceValueMap] = useState<Record<string, number>>({});
-  const [showCarrier, setShowCarrier] = useState(true);
-  const [allInOnly, setAllInOnly] = useState(false);
+  const model = usePricingModel(rate.legs);
 
-  const calc = useMemo(
-    () => computePricing({ legs, mode, wholeMethod, wholeValue, serviceMethod, serviceValue }),
-    [legs, mode, wholeMethod, wholeValue, serviceMethod, serviceValue],
-  );
-
-  const model: PricingModel = {
-    legs,
-    setLegs,
-    mode,
-    setMode,
-    wholeMethod,
-    setWholeMethod,
-    wholeValue,
-    setWholeValue,
-    serviceMethod,
-    setServiceMethod: (id, m) => setServiceMethodMap((prev) => ({ ...prev, [id]: m })),
-    serviceValue,
-    setServiceValue: (id, v) => setServiceValueMap((prev) => ({ ...prev, [id]: v })),
-    showCarrier,
-    setShowCarrier,
-    allInOnly,
-    setAllInOnly,
-    calc,
+  const meta: QuoteMeta = {
+    quoteId, origin, destination, commodityLabel, commodityKind, shipmentType,
+    currency: rate.currency, validTo: rate.validTo, transitDays: rate.transitDays, carrierId: rate.carrierId,
   };
 
+  // Rate-Quote-specific context card shown atop Set pricing.
+  const summary = (
+    <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0 space-y-1.5">
+        <div className="text-caption font-medium uppercase tracking-wide text-muted-foreground">Selected rate</div>
+        <div className="flex flex-wrap items-center gap-2">
+          <CarrierLogo carrierId={rate.carrierId} showName />
+          <SourceBadge source={rate.sourceType} />
+        </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+          <span>{rate.transitDays} days transit</span>
+          <span>Valid to {fmtDate(rate.validTo)}</span>
+          {rate.contractNo && <span>Contract <span className="font-mono text-foreground">{rate.contractNo}</span></span>}
+        </div>
+      </div>
+      <div className="shrink-0 text-left sm:text-right">
+        <div className="text-caption uppercase tracking-wide text-muted-foreground">Internal cost</div>
+        <div className="text-xl font-bold tabular-nums">{money(model.calc.internalCost)}</div>
+        <div className="text-caption text-muted-foreground">Before profit · {rate.currency}</div>
+      </div>
+    </Card>
+  );
+
+  const reminder = (
+    <Card className="flex items-center gap-2 p-3 text-xs text-muted-foreground">
+      <CarrierLogo carrierId={rate.carrierId} size="sm" />
+      <span className="truncate">{getCarrier(rate.carrierId)?.name}</span>
+      <SourceBadge source={rate.sourceType} />
+    </Card>
+  );
+
   return reviewing ? (
-    <ReviewStep model={model} onBackToPricing={onBackToPricing} {...ctx} />
+    <ReviewStep model={model} meta={meta} reminder={reminder} onBackToPricing={onBackToPricing} templateKindLabel="pricing setup" />
   ) : (
-    <PricingStep model={model} onReview={onReview} {...ctx} />
+    <PricingStep model={model} meta={meta} summary={summary} onReview={onReview} />
   );
 }
-
-// re-exported so callers can seed sensible defaults if needed
-export { DEFAULT_SERVICE_METHOD, DEFAULT_SERVICE_VALUE };
