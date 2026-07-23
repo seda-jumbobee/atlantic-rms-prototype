@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -249,10 +249,10 @@ export function CommodityPicker({
               )}
               <div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">
-                  <Dim id="cp-dim-l" label="Length (in)" v={value.dimensions?.lengthIn} invalid={!!errors?.dims} onChange={(n) => onChange({ ...value, dimensions: { ...(value.dimensions ?? blankDims()), lengthIn: n } })} />
-                  <Dim id="cp-dim-w" label="Width (in)" v={value.dimensions?.widthIn} invalid={!!errors?.dims} onChange={(n) => onChange({ ...value, dimensions: { ...(value.dimensions ?? blankDims()), widthIn: n } })} />
-                  <Dim id="cp-dim-h" label="Height (in)" v={value.dimensions?.heightIn} invalid={!!errors?.dims} onChange={(n) => onChange({ ...value, dimensions: { ...(value.dimensions ?? blankDims()), heightIn: n } })} />
-                  <Dim id="cp-dim-wt" label="Weight (lb)" v={value.dimensions?.weightLb} invalid={!!errors?.dims} onChange={(n) => onChange({ ...value, dimensions: { ...(value.dimensions ?? blankDims()), weightLb: n } })} />
+                  <DimField id="cp-dim-l" label="Length" kind="linear" canonical={value.dimensions?.lengthIn} invalid={!!errors?.dims} onChange={(n) => onChange({ ...value, dimensions: { ...(value.dimensions ?? blankDims()), lengthIn: n } })} />
+                  <DimField id="cp-dim-w" label="Width" kind="linear" canonical={value.dimensions?.widthIn} invalid={!!errors?.dims} onChange={(n) => onChange({ ...value, dimensions: { ...(value.dimensions ?? blankDims()), widthIn: n } })} />
+                  <DimField id="cp-dim-h" label="Height" kind="linear" canonical={value.dimensions?.heightIn} invalid={!!errors?.dims} onChange={(n) => onChange({ ...value, dimensions: { ...(value.dimensions ?? blankDims()), heightIn: n } })} />
+                  <DimField id="cp-dim-wt" label="Weight" kind="mass" canonical={value.dimensions?.weightLb} invalid={!!errors?.dims} onChange={(n) => onChange({ ...value, dimensions: { ...(value.dimensions ?? blankDims()), weightLb: n } })} />
                 </div>
                 {errors?.dims && (
                   <p id="cp-dims-error" role="alert" className="mt-2 text-xs font-medium text-destructive">{errors.dims}</p>
@@ -348,13 +348,62 @@ function Field({ label, required, htmlFor, children }: { label: string; required
 function Spec({ k, v }: { k: string; v: string }) {
   return <div><span className="block text-caption uppercase tracking-wide">{k}</span><span className="font-medium text-foreground">{v}</span></div>;
 }
-function Dim({ id, label, v, invalid, onChange }: { id: string; label: string; v?: number; invalid?: boolean; onChange: (n: number) => void }) {
+// Canonical storage stays in inches / lb (the pricing engine + auto-fill depend
+// on it). The unit toggle is display-only: it converts on input and display while
+// the stored value never leaves its canonical unit.
+const DIM_UNITS = {
+  linear: { base: "in", alt: "cm", altPerBase: 2.54 },
+  mass: { base: "lb", alt: "kg", altPerBase: 0.453592 },
+} as const;
+
+function fmtDim(n: number): string {
+  const r = Math.round(n * 10) / 10;
+  return String(r);
+}
+
+function DimField({
+  id, label, kind, canonical, invalid, onChange,
+}: {
+  id: string;
+  label: string;
+  kind: keyof typeof DIM_UNITS;
+  canonical?: number; // always in the base unit (in / lb)
+  invalid?: boolean;
+  onChange: (canonical: number) => void;
+}) {
+  const { base, alt, altPerBase } = DIM_UNITS[kind];
+  const [showAlt, setShowAlt] = useState(false);
+  const unit = showAlt ? alt : base;
+  const display = !canonical ? "" : fmtDim(showAlt ? canonical * altPerBase : canonical);
+  const handleInput = (raw: string) => {
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < 0) return onChange(0);
+    onChange(showAlt ? n / altPerBase : n);
+  };
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id} className="text-xs">{label}</Label>
-      <Input id={id} type="number" min={0} value={v || ""} aria-invalid={invalid || undefined}
-        aria-describedby={invalid ? "cp-dims-error" : undefined}
-        onChange={(e) => onChange(Number(e.target.value))} />
+      <div className="relative">
+        <Input
+          id={id}
+          type="number"
+          min={0}
+          inputMode="decimal"
+          value={display}
+          aria-invalid={invalid || undefined}
+          aria-describedby={invalid ? "cp-dims-error" : undefined}
+          onChange={(e) => handleInput(e.target.value)}
+          className="pr-11 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        />
+        <button
+          type="button"
+          onClick={() => setShowAlt((v) => !v)}
+          aria-label={`Unit: ${unit}. Switch to ${showAlt ? base : alt}.`}
+          className="absolute inset-y-1 right-1 grid w-8 place-items-center rounded-md text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        >
+          {unit}
+        </button>
+      </div>
     </div>
   );
 }
