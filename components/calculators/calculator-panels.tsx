@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Search, Copy, LayoutTemplate } from "lucide-react";
 import { toast } from "sonner";
@@ -49,11 +49,13 @@ function NumberField({
   step?: number;
   suffix?: string;
 }) {
+  const id = useId();
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs">{label}</Label>
+      <Label htmlFor={id} className="text-xs">{label}</Label>
       <div className="relative">
         <Input
+          id={id}
           type="number"
           inputMode="decimal"
           step={step ?? "any"}
@@ -218,7 +220,7 @@ function TruckingPanel() {
           <div className="space-y-1.5">
             <Label className="text-xs">Trucking type</Label>
             <Select value={override} onValueChange={setOverride}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Trucking type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -346,7 +348,7 @@ function LoadingPanel() {
           <div className="space-y-1.5">
             <Label className="text-xs">Loading / commodity type</Label>
             <Select value={loadType} onValueChange={setLoadType}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Loading / commodity type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -418,7 +420,7 @@ function DrayagePanel() {
           <div className="space-y-1.5">
             <Label className="text-xs">CFS facility</Label>
             <Select value={cfsId} onValueChange={setCfsId}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="CFS facility">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -497,7 +499,7 @@ function OceanFreightPanel() {
           <div className="space-y-1.5">
             <Label className="text-xs">Carrier (context)</Label>
             <Select value={carrierId} onValueChange={setCarrierId}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Carrier">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -608,17 +610,17 @@ function ShippingLinesPanel() {
         <CardContent>
           <div className="grid items-end gap-3 md:grid-cols-[1fr_1fr_auto_auto]">
             <div className="space-y-1.5">
-              <Label className="text-xs">Origin</Label>
-              <LocationCombobox value={origin} onChange={setOrigin} disabledId={dest?.id} disabledReason="Selected as destination" menuAlign="start" placeholder="Origin port / address…" />
+              <Label htmlFor="sl-origin" className="text-xs">Origin</Label>
+              <LocationCombobox id="sl-origin" value={origin} onChange={setOrigin} disabledId={dest?.id} disabledReason="Selected as destination" menuAlign="start" placeholder="Origin port / address…" />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Destination</Label>
-              <LocationCombobox value={dest} onChange={setDest} disabledId={origin?.id} disabledReason="Selected as origin" menuAlign="end" placeholder="Destination port / address…" />
+              <Label htmlFor="sl-dest" className="text-xs">Destination</Label>
+              <LocationCombobox id="sl-dest" value={dest} onChange={setDest} disabledId={origin?.id} disabledReason="Selected as origin" menuAlign="end" placeholder="Destination port / address…" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Container</Label>
               <Select value={container} onValueChange={(v) => setContainer(v as ContainerCode)}>
-                <SelectTrigger className="min-w-44">
+                <SelectTrigger className="min-w-44" aria-label="Container">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -696,7 +698,7 @@ function OogPanel() {
             lostSlots = ceil(({cargoWidthCm} + {overLeftCm} + {overRightCm}) / {FR_WIDTH_CM}) ={" "}
             {Math.ceil(occupied / FR_WIDTH_CM)}; the rack itself is one slot, so {blocked} extra slot(s) are billed.
           </p>
-          <ResultActions calcName="OOG / Lost-Slot Calculator" summary={`${lostSlots} lost TEU slots`} />
+          <ResultActions calcName="OOG / Lost-Slot Calculator" summary={`${blocked} lost TEU slots`} />
         </>
       }
     />
@@ -730,7 +732,7 @@ function CbmPanel() {
           <div className="space-y-1.5">
             <Label className="text-xs">Container</Label>
             <Select value={code} onValueChange={(v) => setCode(v as ContainerCode)}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Container">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -963,7 +965,7 @@ function DemurragePanel() {
           <div className="space-y-1.5">
             <Label className="text-xs">Port (POL / POD)</Label>
             <Select value={port} onValueChange={setPort}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Port (POL / POD)">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
