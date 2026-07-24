@@ -918,8 +918,11 @@ function QuoteDetailsSheet({ quote: q, onClose }: { quote: QuoteHistoryItem | nu
 
 // ── calculation details drawer ───────────────────────────────────────────────
 function CalcDetailsSheet({ calc: c, onClose, onOpenQuote }: { calc: CalcHistoryItem | null; onClose: () => void; onOpenQuote: (q: QuoteHistoryItem) => void }) {
+  const { user } = useSession();
   const [tplOpen, setTplOpen] = useState(false);
-  const related = getQuoteHistoryItem(c?.relatedQuoteId);
+  // ownership gate: never surface a related quote the manager doesn't own
+  const relatedRaw = getQuoteHistoryItem(c?.relatedQuoteId);
+  const related = relatedRaw && relatedRaw.managerId === user?.id ? relatedRaw : undefined;
   const copy = () => { if (c) { navigator.clipboard?.writeText(`${c.calculator}: ${c.summary} → ${calcResult(c)}`); toast.success("Result copied"); } };
 
   return (
