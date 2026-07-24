@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle, Clock, MailCheck } from "lucide-react";
@@ -36,7 +36,7 @@ function emailError(v: string): string | null {
   return null;
 }
 
-export default function LoginPage() {
+function LoginInner() {
   const { loginAs } = useSession();
   const router = useRouter();
   const sp = useSearchParams();
@@ -226,5 +226,13 @@ export default function LoginPage() {
         </Button>
       </form>
     </AuthShell>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<AuthShell title="Log in to Atlantic RMS" description="Use your corporate email and password to continue."><div className="h-40" /></AuthShell>}>
+      <LoginInner />
+    </Suspense>
   );
 }

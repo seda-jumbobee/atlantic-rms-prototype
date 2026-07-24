@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Users,
   UserPlus,
@@ -10,8 +11,7 @@ import {
   Check,
   Mail,
   Building2,
-  MailCheck,
-  MailX,
+  FlaskConical,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminGate } from "@/components/admin-gate";
@@ -55,14 +55,28 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import {
   USERS,
   ACCOUNTS,
   PERMISSIONS,
-  PENDING_REGISTRATIONS,
   roleHas,
-  type PendingRegistration,
   type Permission,
 } from "@/lib/data";
+import { companyById } from "@/lib/auth/companies";
+import {
+  getRequests, approveRequest, rejectRequest, type AccessRequest, type AccessStatus,
+} from "@/lib/auth/access-store";
+import { useSession } from "@/components/session-provider";
 import type { Role } from "@/lib/types";
 import { fmtDate, relativeAge } from "@/lib/format";
 import { StatusBadge, type StatusTone } from "@/components/status-badge";
@@ -85,12 +99,29 @@ function RoleBadge({ role }: { role: Role }) {
 
 const AREAS: Permission["area"][] = ["Quotes", "Rates & Vendors", "Deals & CRM", "Admin"];
 
+const REQUEST_STATUS_TONE: Record<AccessStatus, StatusTone> = {
+  pending: "warning", approved: "info", rejected: "negative", activated: "positive", expired: "neutral", deactivated: "neutral",
+};
+const REQUEST_STATUS_LABEL: Record<AccessStatus, string> = {
+  pending: "Pending", approved: "Approved", rejected: "Rejected", activated: "Activated", expired: "Expired", deactivated: "Deactivated",
+};
+
 export default function UsersPage() {
-  const [pending, setPending] = useState<PendingRegistration[]>(PENDING_REGISTRATIONS);
+  const { user } = useSession();
+  const adminName = user?.name ?? "Administrator";
+  const [requests, setRequests] = useState<AccessRequest[]>([]);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<Role>("manager");
 
+  const [approveTarget, setApproveTarget] = useState<AccessRequest | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<AccessRequest | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+
+  useEffect(() => setRequests(getRequests()), []);
+  const refresh = () => setRequests(getRequests());
+
+  const pendingCount = requests.filter((r) => r.status === "pending").length;
   const activeCount = useMemo(() => ACCOUNTS.filter((a) => a.status === "active").length, []);
   const adminCount = useMemo(() => USERS.filter((u) => u.role === "admin").length, []);
 
@@ -99,14 +130,25 @@ export default function UsersPage() {
     [],
   );
 
-  function approve(reg: PendingRegistration) {
-    setPending((p) => p.filter((r) => r.id !== reg.id));
-    toast.success(`Approved ${reg.name}`, { description: `${reg.email} can now sign in as ${ROLE_LABEL[reg.requestedRole]}.` });
+  function confirmApprove() {
+    if (!approveTarget) return;
+    approveRequest(approveTarget.id, adminName);
+    refresh();
+    toast.success(`Approved ${approveTarget.name}`, {
+      // Honest: no email provider — the setup email is queued to the dev preview, not delivered.
+      description: "Setup email queued to the development preview.",
+      action: { label: "View email", onClick: () => window.open("/dev/email-preview", "_blank") },
+    });
+    setApproveTarget(null);
   }
 
-  function reject(reg: PendingRegistration) {
-    setPending((p) => p.filter((r) => r.id !== reg.id));
-    toast(`Rejected ${reg.name}`, { description: reg.email });
+  function confirmReject() {
+    if (!rejectTarget) return;
+    rejectRequest(rejectTarget.id, adminName, rejectReason);
+    refresh();
+    toast(`Rejected ${rejectTarget.name}`, { description: "Rejection email queued to the development preview." });
+    setRejectTarget(null);
+    setRejectReason("");
   }
 
   function sendInvite() {
@@ -182,7 +224,7 @@ export default function UsersPage() {
           <StatCard label="Active users" value={activeCount} icon={Users} accent="success" />
           <StatCard
             label="Pending approvals"
-            value={pending.length}
+            value={pendingCount}
             sub="awaiting review"
             icon={Clock}
             accent="warning"
@@ -276,61 +318,59 @@ export default function UsersPage() {
         </Card>
 
         <div className="space-y-3">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight">Pending registrations</h2>
-            <p className="text-sm text-muted-foreground">
-              Closed registration — corporate-domain sign-ups awaiting approval.
-            </p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">Access requests</h2>
+              <p className="text-sm text-muted-foreground">
+                Closed registration — corporate-domain requests awaiting review.
+              </p>
+            </div>
+            <Button asChild variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
+              <Link href="/dev/email-preview" target="_blank"><FlaskConical className="size-4" /> Email preview (dev)</Link>
+            </Button>
           </div>
-          {pending.length === 0 ? (
+          {requests.length === 0 ? (
             <Card>
               <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                No pending registrations.
+                No access requests.
               </CardContent>
             </Card>
           ) : (
             <div className="grid gap-3 lg:grid-cols-3">
-              {pending.map((reg) => (
+              {[...requests].sort((a, b) => (a.status === "pending" ? -1 : 1) - (b.status === "pending" ? -1 : 1) || b.submittedAt.localeCompare(a.submittedAt)).map((reg) => (
                 <Card key={reg.id}>
-                  <CardContent className="flex flex-col gap-3 p-4">
+                  <CardContent className="flex h-full flex-col gap-3 p-4">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-medium">{reg.name}</span>
-                        {reg.emailConfirmed ? (
-                          <Badge variant="status-positive">
-                            <MailCheck className="size-3.5" />
-                            Confirmed
-                          </Badge>
-                        ) : (
-                          <Badge variant="status-warning">
-                            <MailX className="size-3.5" />
-                            Unconfirmed
-                          </Badge>
-                        )}
+                        <StatusBadge tone={REQUEST_STATUS_TONE[reg.status]} dot={false}>{REQUEST_STATUS_LABEL[reg.status]}</StatusBadge>
                       </div>
                       <div className="space-y-1 text-xs text-muted-foreground">
-                        <div className="inline-flex items-center gap-1">
-                          <Mail className="size-3.5" />
-                          {reg.email}
-                        </div>
-                        <div className="inline-flex items-center gap-1">
-                          <Building2 className="size-3.5" />
-                          {reg.company}
-                        </div>
+                        <div className="inline-flex items-center gap-1"><Mail className="size-3.5" />{reg.email}</div>
+                        <div className="inline-flex items-center gap-1"><Building2 className="size-3.5" />{companyById(reg.companyId)?.name ?? "—"}</div>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <RoleBadge role={reg.requestedRole} />
-                      <span className="text-muted-foreground">{fmtDate(reg.requestedAt)}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" className="flex-1" onClick={() => approve(reg)}>
-                        <Check className="size-4" />
-                        Approve
-                      </Button>
-                      <Button size="sm" variant="outline" className="flex-1" onClick={() => reject(reg)}>
-                        Reject
-                      </Button>
+                    <div className="mt-auto space-y-2 text-xs text-muted-foreground">
+                      <div className="flex items-center justify-between">
+                        <span>Submitted</span><span>{fmtDate(reg.submittedAt)}</span>
+                      </div>
+                      {reg.reviewedAt && (
+                        <div className="flex items-center justify-between">
+                          <span>Reviewed</span><span>{fmtDate(reg.reviewedAt)}{reg.reviewedBy ? ` · ${reg.reviewedBy}` : ""}</span>
+                        </div>
+                      )}
+                      {reg.status === "pending" ? (
+                        <div className="flex gap-2 pt-1">
+                          <Button size="sm" className="flex-1" onClick={() => setApproveTarget(reg)}>
+                            <Check className="size-4" /> Approve
+                          </Button>
+                          <Button size="sm" variant="outline" className="flex-1" onClick={() => { setRejectTarget(reg); setRejectReason(""); }}>
+                            Reject
+                          </Button>
+                        </div>
+                      ) : reg.status === "approved" ? (
+                        <p className="rounded-md bg-muted/60 p-2">Awaiting the user to create a password.</p>
+                      ) : null}
                     </div>
                   </CardContent>
                 </Card>
@@ -338,6 +378,39 @@ export default function UsersPage() {
             </div>
           )}
         </div>
+
+        <AlertDialog open={!!approveTarget} onOpenChange={(o) => !o && setApproveTarget(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Approve access request?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {approveTarget?.name} will receive an email with a secure link to create a password and activate their Atlantic RMS account.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmApprove}>Approve and send email</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={!!rejectTarget} onOpenChange={(o) => { if (!o) { setRejectTarget(null); setRejectReason(""); } }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reject access request?</AlertDialogTitle>
+              <AlertDialogDescription>{rejectTarget?.name} will be notified that their request was not approved.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="space-y-1.5">
+              <Label htmlFor="reject-reason">Reason for rejection</Label>
+              <Textarea id="reject-reason" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={2} placeholder="Optional" />
+              <p className="text-xs text-muted-foreground">This reason may be included in the email if company policy allows it.</p>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmReject} className="bg-destructive text-white hover:bg-destructive/90">Reject request</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <Card>
           <CardHeader>
