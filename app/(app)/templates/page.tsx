@@ -337,7 +337,7 @@ function TemplateCard({
           <div className="tabular-nums text-foreground">Used {t.usageCount} times</div>
           <div>Last used {relativeAge(t.lastUsed)}</div>
         </div>
-        <Button size="sm" className="shrink-0 gap-1.5" onClick={onUse}><Wand2 className="size-4" /> Use template</Button>
+        <Button size="sm" variant="secondary" className="shrink-0" onClick={onUse}>Use template</Button>
       </div>
     </Card>
   );
