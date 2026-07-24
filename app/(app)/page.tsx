@@ -260,7 +260,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">Recent quotes</h2>
             <Button asChild variant="ghost" size="sm" className="text-muted-foreground">
-              <Link href={historyHref({})}>
+              <Link href={historyHref({ tab: "quotes" })}>
                 View all <ArrowRight className="size-4" />
               </Link>
             </Button>

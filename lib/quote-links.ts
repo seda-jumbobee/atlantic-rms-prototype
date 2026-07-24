@@ -26,16 +26,29 @@ function shipmentFromLabel(s: string): ShipmentType {
   return "Container";
 }
 
-/** Deep link that reopens a saved quote in the Quote Master flow for editing. */
-export function reopenHref(q: QuoteHistoryItem): string {
+function quoteSearchQs(q: QuoteHistoryItem): string | null {
   const op = resolvePort(q.origin), dp = resolvePort(q.destination);
-  if (!op || !dp) return "/quote-master";
-  const qs = encodeSearch({
+  if (!op || !dp) return null;
+  return encodeSearch({
     originPortId: op, destPortId: dp,
     commodityKind: q.commodityKind, commodityLabel: q.commodity,
     shipmentType: shipmentFromLabel(q.shipmentType), advancedSearch: false,
   });
-  return `/quote-master?${qs}&edit=1`;
+}
+
+/** Deep link that reopens a saved quote in the Quote Master flow for editing.
+    NOTE: the mock data stores no rate/pricing snapshot, so this PREFILLS the
+    flow from the saved lane/commodity rather than restoring an exact snapshot. */
+export function reopenHref(q: QuoteHistoryItem): string {
+  const qs = quoteSearchQs(q);
+  return qs ? `/quote-master?${qs}&edit=1` : "/quote-master";
+}
+
+/** Start a NEW quote prefilled from a historical one (duplicate) — lands on the
+    rate list without auto-selecting a rate; the original record is untouched. */
+export function duplicateHref(q: QuoteHistoryItem): string {
+  const qs = quoteSearchQs(q);
+  return qs ? `/quote-master?${qs}` : "/quote-master";
 }
 
 /** Link to the calculator a history run was made with (inputs are not persisted in mock data). */
