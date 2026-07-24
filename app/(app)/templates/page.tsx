@@ -140,7 +140,7 @@ export default function TemplatesPage() {
     toast.success("Template deleted");
   };
 
-  const useTemplate = (t: QuoteTemplate) => router.push(templateHref(t));
+  const openTemplate = (t: QuoteTemplate) => router.push(templateHref(t));
   const editTemplate = (t: QuoteTemplate) => router.push(templateHref(t)); // opens the workflow with the saved data
 
   return (
@@ -213,7 +213,7 @@ export default function TemplatesPage() {
             <TemplateCard
               key={t.id}
               t={t}
-              onUse={() => useTemplate(t)}
+              onUse={() => openTemplate(t)}
               onEdit={() => editTemplate(t)}
               onRename={() => setRenameTarget(t)}
               onDuplicate={() => setDupTarget(t)}
@@ -257,7 +257,7 @@ export default function TemplatesPage() {
       <RenameDialog target={renameTarget} onClose={() => setRenameTarget(null)} nameExists={nameExists} onSave={doRename} />
       <DuplicateDialog target={dupTarget} onClose={() => setDupTarget(null)} nameExists={nameExists} onSave={doDuplicate} />
       <DeleteDialog target={delTarget} onClose={() => setDelTarget(null)} onConfirm={doDelete} />
-      <DetailsSheet target={detailsTarget} onClose={() => setDetailsTarget(null)} onUse={useTemplate} />
+      <DetailsSheet target={detailsTarget} onClose={() => setDetailsTarget(null)} onUse={openTemplate} />
     </div>
   );
 }
