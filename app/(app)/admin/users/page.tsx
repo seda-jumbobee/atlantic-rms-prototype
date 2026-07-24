@@ -156,7 +156,8 @@ export default function UsersPage() {
       toast.error("Enter an email address");
       return;
     }
-    toast.success("Invitation sent", { description: `${inviteEmail.trim()} invited as ${ROLE_LABEL[inviteRole]}.` });
+    // Honest: no email provider is configured, so nothing is actually delivered.
+    toast.success("Invitation prepared", { description: `${inviteEmail.trim()} · ${ROLE_LABEL[inviteRole]} — no email is sent in this development preview.` });
     setInviteOpen(false);
     setInviteEmail("");
     setInviteRole("manager");
@@ -195,9 +196,9 @@ export default function UsersPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Role</Label>
+                  <Label htmlFor="invite-role">Role</Label>
                   <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as Role)}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger id="invite-role" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

@@ -55,8 +55,11 @@ function LoginInner() {
   const [cooldown, setCooldown] = useState(0);
 
   const next = useMemo(() => {
-    const n = sp.get("next");
-    return n && n.startsWith("/") && !n.startsWith("//") ? n : "/";
+    // same-origin path only: must start with "/" followed by a non-"/" and non-"\"
+    // character — rejects "//host", "/\\host", "/\\/host" (which browsers normalize
+    // to a protocol-relative external redirect).
+    const n = sp.get("next") ?? "";
+    return /^\/[^/\\]/.test(n) ? n : "/";
   }, [sp]);
 
   const succeed = (e: string) => {

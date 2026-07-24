@@ -33,6 +33,15 @@ export default function RequestAccessPage() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState<string | null>(null);
   const [resent, setResent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  const doResend = () => {
+    if (cooldown > 0) return;
+    resendActivation(normalizeEmail(email));
+    setResent(true);
+    setCooldown(30);
+    const iv = window.setInterval(() => setCooldown((c) => { if (c <= 1) { window.clearInterval(iv); return 0; } return c - 1; }), 1000);
+  };
 
   const matched = isSupportedEmail(email) ? companyForEmail(email) : null;
 
@@ -130,7 +139,9 @@ export default function RequestAccessPage() {
             <AlertDescription>
               Your request has already been approved. Check your email to finish setting up your account.
               {resent && <span className="mt-1 block text-success">Setup email sent. Check your inbox and spam folder.</span>}
-              <button type="button" onClick={() => { resendActivation(normalizeEmail(email)); setResent(true); }} className="mt-1 block font-medium text-primary hover:underline">Resend setup email</button>
+              <button type="button" onClick={doResend} disabled={cooldown > 0} className="mt-1 block font-medium text-primary hover:underline disabled:opacity-50 disabled:no-underline">
+                {cooldown > 0 ? `Resend setup email (${cooldown}s)` : "Resend setup email"}
+              </button>
             </AlertDescription>
           </Alert>
         )}
