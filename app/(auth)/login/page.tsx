@@ -1,241 +1,300 @@
 "use client";
 
-import { Suspense, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AlertCircle, Clock, MailCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Suspense } from "react";
+import { AlertCircle, CheckCircle2, Info, MailWarning } from "lucide-react";
+
+import { AuthFields, AuthHeader, AuthLayout, AuthSupportCard } from "@/components/auth/auth-shell";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AuthShell, AuthField, PasswordField } from "@/components/auth/auth-shell";
-import { useSession } from "@/components/session-provider";
-import { USERS, DEFAULT_MANAGER } from "@/lib/data/users";
-import {
-  isValidEmailFormat, isSupportedEmail, normalizeEmail, approvedDomainsSentence,
-} from "@/lib/auth/companies";
-import { accountForEmail, getRequestByEmail, resendActivation } from "@/lib/auth/access-store";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { TextField } from "@/components/ui/field";
+import { rememberedEmail, useSession } from "@/components/session-provider";
+import { COMPANIES, isValidEmailFormat, joinList, normalizeEmail } from "@/lib/auth/companies";
+import { formatWait, isEmailOutage, resendActivation } from "@/lib/auth/access-store";
+import type { LoginOutcome } from "@/lib/auth/access-store";
 
-type State =
-  | { kind: "idle" }
-  | { kind: "incorrect" }
-  | { kind: "pending" }
-  | { kind: "approved-incomplete"; email: string }
-  | { kind: "rejected" }
-  | { kind: "deactivated" }
-  | { kind: "too-many"; until: number }
-  | { kind: "network" };
+const RESEND_COOLDOWN_MS = 60_000;
+/** "Atlantic Project Cargo, JumboBee, or Atlantic Express Corp" — from the central config. */
+const COMPANY_NAMES = joinList(COMPANIES.map((c) => c.name), "or");
 
-const MAX_ATTEMPTS = 5;
-const LOCK_SECONDS = 60;
-const RESEND_COOLDOWN = 30;
+/** Account-state and failure banners. Copy is fixed by the product spec. */
+type Banner =
+  | { tone: "destructive" | "warning" | "info" | "success"; title: string; body?: string; resend?: boolean }
+  | null;
 
-function emailError(v: string): string | null {
-  const e = v.trim();
-  if (!e) return "Enter your corporate email.";
-  if (!isValidEmailFormat(e)) return "Enter a valid email address.";
-  if (!isSupportedEmail(e)) return `Use an approved corporate email ending in ${approvedDomainsSentence(true, "or")}.`;
-  return null;
+function bannerFor(outcome: LoginOutcome): Banner {
+  switch (outcome.kind) {
+    case "invalid-credentials":
+      return { tone: "destructive", title: "Email or password is incorrect." };
+    case "pending":
+      return {
+        tone: "info",
+        title: "Your access request is still under review.",
+        body: "We’ll email you when a decision is made.",
+      };
+    case "approved-incomplete":
+      return {
+        tone: "warning",
+        title: "Your access request was approved.",
+        body: "Check your email to finish setting up your account.",
+        resend: true,
+      };
+    case "rejected":
+      return {
+        tone: "destructive",
+        title: "Your access request was not approved.",
+        body: "Contact your administrator if you believe this is a mistake.",
+      };
+    case "deactivated":
+      return {
+        tone: "destructive",
+        title: "This account is inactive.",
+        body: "Contact your administrator for help.",
+      };
+    case "rate-limited":
+      return {
+        tone: "destructive",
+        title: `Too many unsuccessful attempts. Try again in ${formatWait(outcome.retryInMs)}, or reset your password.`,
+      };
+    default:
+      return null;
+  }
 }
 
-function LoginInner() {
-  const { loginAs } = useSession();
+const TONE_ICON = {
+  destructive: AlertCircle,
+  warning: MailWarning,
+  info: Info,
+  success: CheckCircle2,
+} as const;
+
+function LoginForm() {
   const router = useRouter();
-  const sp = useSearchParams();
+  const params = useSearchParams();
+  const { login, user, ready } = useSession();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [emailErr, setEmailErr] = useState<string | null>(null);
-  const [pwErr, setPwErr] = useState<string | null>(null);
-  const [state, setState] = useState<State>({ kind: "idle" });
-  const [loading, setLoading] = useState(false);
-  const attempts = useRef(0);
-  const focusField = (id: string) => document.getElementById(id)?.focus();
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [banner, setBanner] = useState<Banner>(null);
+  const [busy, setBusy] = useState(false);
+  const [remember, setRemember] = useState(false);
+  const [resendState, setResendState] = useState<"idle" | "sending" | "sent" | "failed">("idle");
+  const [resendUntil, setResendUntil] = useState(0);
 
-  // resend cooldown
-  const [resent, setResent] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
 
-  const next = useMemo(() => {
-    // same-origin path only: must start with "/" followed by a non-"/" and non-"\"
-    // character — rejects "//host", "/\\host", "/\\/host" (which browsers normalize
-    // to a protocol-relative external redirect).
-    const n = sp.get("next") ?? "";
-    return /^\/[^/\\]/.test(n) ? n : "/";
-  }, [sp]);
+  // Prefill from a previous "Remember me" login. Done in an effect rather than
+  // a useState initialiser so the server and client first paint match.
+  useEffect(() => {
+    const saved = rememberedEmail();
+    if (saved) {
+      setEmail(saved);
+      setRemember(true);
+    }
+  }, []);
 
-  const succeed = (e: string) => {
-    const u = USERS.find((x) => x.email.toLowerCase() === normalizeEmail(e));
-    loginAs(u?.id ?? DEFAULT_MANAGER.id); // activated prototype accounts stand in as the default manager
-    router.push(next);
-  };
+  // Already signed in → go where they were headed.
+  const next = params.get("next");
+  const safeNext = next && /^\/[^/\\]/.test(next) ? next : "/";
+  useEffect(() => {
+    if (ready && user) router.replace(safeNext);
+  }, [ready, user, router, safeNext]);
 
-  const submit = (ev: React.FormEvent) => {
+  const validate = useCallback(() => {
+    const e: { email?: string; password?: string } = {};
+    if (!email.trim()) e.email = "Enter your corporate email.";
+    else if (!isValidEmailFormat(email)) e.email = "Enter a valid email address.";
+    if (!password) e.password = "Enter your password.";
+    return e;
+  }, [email, password]);
+
+  async function onSubmit(ev: React.FormEvent) {
     ev.preventDefault();
-    const ee = emailError(email);
-    const pe = password ? null : "Enter your password.";
-    setEmailErr(ee);
-    setPwErr(pe);
-    if (ee) { focusField("email"); return; }
-    if (pe) { focusField("password"); return; }
+    if (busy) return; // guards against double submission
 
-    if (state.kind === "too-many" && state.until > Date.now()) return;
+    const found = validate();
+    setErrors(found);
+    if (found.email || found.password) {
+      // Move focus to the first invalid field.
+      (found.email ? emailRef : passwordRef).current?.focus();
+      return;
+    }
 
-    setLoading(true);
-    // simulate the round-trip so loading state is visible; no real backend
-    window.setTimeout(() => {
-      try {
-        const e = normalizeEmail(email);
-        const acct = accountForEmail(e);
-        if (acct.active) { succeed(e); return; }
-
-        const req = getRequestByEmail(e);
-        if (req?.status === "pending") setState({ kind: "pending" });
-        else if (req?.status === "approved") setState({ kind: "approved-incomplete", email: e });
-        else if (req?.status === "rejected") setState({ kind: "rejected" });
-        else if (acct.exists && !acct.active) setState({ kind: "deactivated" });
-        else {
-          attempts.current += 1;
-          if (attempts.current >= MAX_ATTEMPTS) setState({ kind: "too-many", until: Date.now() + LOCK_SECONDS * 1000 });
-          else setState({ kind: "incorrect" });
-        }
-      } catch {
-        setState({ kind: "network" });
-      } finally {
-        setLoading(false);
+    setBanner(null);
+    setBusy(true);
+    try {
+      const outcome = await login(email, password, remember);
+      if (outcome.kind === "ok") {
+        router.replace(safeNext);
+        return;
       }
-    }, 500);
-  };
-
-  const doResend = (e: string) => {
-    if (cooldown > 0) return;
-    resendActivation(e);
-    setResent(true);
-    setCooldown(RESEND_COOLDOWN);
-    const iv = window.setInterval(() => {
-      setCooldown((c) => {
-        if (c <= 1) { window.clearInterval(iv); return 0; }
-        return c - 1;
+      setBanner(bannerFor(outcome));
+      if (outcome.kind === "invalid-credentials") {
+        setPassword("");
+        passwordRef.current?.focus();
+      }
+    } catch {
+      setBanner({
+        tone: "destructive",
+        title: "We couldn’t log you in.",
+        body: "Check your connection and try again.",
       });
-    }, 1000);
-  };
-
-  const backToLogin = () => { setState({ kind: "idle" }); setResent(false); };
-
-  // live "too many" countdown label
-  const [, force] = useState(0);
-  if (state.kind === "too-many") {
-    const remaining = Math.max(0, Math.ceil((state.until - Date.now()) / 1000));
-    if (remaining > 0) setTimeout(() => force((n) => n + 1), 1000);
+    } finally {
+      setBusy(false);
+    }
   }
 
+  async function onResend() {
+    if (resendState === "sending" || Date.now() < resendUntil) return;
+    setResendState("sending");
+    // Reflects the real send result — an outage is reported, never hidden.
+    const outage = isEmailOutage();
+    const req = resendActivation(email);
+    await new Promise((r) => setTimeout(r, 400));
+    if (!req || outage || req.emailFailed) {
+      setResendState("failed");
+      return;
+    }
+    setResendState("sent");
+    setResendUntil(Date.now() + RESEND_COOLDOWN_MS);
+  }
+
+  const Icon = banner ? TONE_ICON[banner.tone] : null;
+
   return (
-    <AuthShell
-      title="Log in to Atlantic RMS"
-      description="Use your corporate email and password to continue."
-      footer={
-        <div className="flex flex-col items-center gap-1.5">
-          <Link href="/forgot-password" className="font-medium text-primary hover:underline">Forgot password?</Link>
-          <span>Need access?{" "}
-            <Link href="/request-access" className="font-medium text-primary hover:underline">Request access</Link>
-          </span>
-        </div>
-      }
-    >
-      {/* live region for auth-state announcements */}
-      <div aria-live="polite">
-        {state.kind === "incorrect" && (
-          <Alert variant="destructive" className="mb-4"><AlertCircle className="size-4" /><AlertDescription>Email or password is incorrect.</AlertDescription></Alert>
-        )}
-        {state.kind === "network" && (
-          <Alert variant="destructive" className="mb-4"><AlertCircle className="size-4" /><AlertDescription>We couldn’t log you in. Check your connection and try again.</AlertDescription></Alert>
-        )}
-        {state.kind === "too-many" && (
-          <Alert variant="destructive" className="mb-4">
-            <Clock className="size-4" />
-            <AlertDescription>
-              Too many unsuccessful attempts. Try again in {Math.max(0, Math.ceil((state.until - Date.now()) / 1000))}s, or{" "}
-              <Link href="/forgot-password" className="font-medium underline">reset your password</Link>.
-            </AlertDescription>
+    <>
+      <AuthHeader
+        title="Log in to Rate Management System"
+        description="Use your corporate email and password to continue."
+        showWelcome
+      />
+
+      <div className="flex flex-col gap-5">
+        {banner && Icon && (
+          <Alert variant={banner.tone}>
+            <Icon aria-hidden />
+            <AlertTitle>{banner.title}</AlertTitle>
+            {banner.body && <AlertDescription>{banner.body}</AlertDescription>}
+            {banner.resend && (
+              <AlertDescription className="mt-2">
+                {resendState === "sent" ? (
+                  <span className="text-status-positive-fg">
+                    Setup email sent to {normalizeEmail(email)}.
+                  </span>
+                ) : resendState === "failed" ? (
+                  <span className="text-status-negative-fg">
+                    We couldn’t send the setup email. Try again shortly.
+                  </span>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onResend}
+                    loading={resendState === "sending"}
+                    loadingText="Sending…"
+                  >
+                    Resend setup email
+                  </Button>
+                )}
+              </AlertDescription>
+            )}
           </Alert>
         )}
-        {state.kind === "pending" && (
-          <Alert className="mb-4">
-            <Clock className="size-4" />
-            <AlertTitle>Access request under review</AlertTitle>
-            <AlertDescription>
-              Your access request is still under review. We’ll email you when a decision is made.
-              <button type="button" onClick={backToLogin} className="mt-1 block font-medium text-primary hover:underline">Back to log in</button>
-            </AlertDescription>
-          </Alert>
-        )}
-        {state.kind === "rejected" && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="size-4" />
-            <AlertDescription>Your access request was not approved. Contact your administrator if you believe this is a mistake.</AlertDescription>
-          </Alert>
-        )}
-        {state.kind === "deactivated" && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="size-4" />
-            <AlertDescription>This account is inactive. Contact your administrator for help.</AlertDescription>
-          </Alert>
-        )}
-        {state.kind === "approved-incomplete" && (
-          <Alert className="mb-4">
-            <MailCheck className="size-4" />
-            <AlertTitle>Finish setting up your account</AlertTitle>
-            <AlertDescription>
-              Your access request was approved. Check your email to finish setting up your account.
-              {resent ? (
-                <span className="mt-1 block text-success">Setup email sent. Check your inbox and spam folder.</span>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => doResend(state.email)}
-                disabled={cooldown > 0}
-                className="mt-1 block font-medium text-primary hover:underline disabled:opacity-50 disabled:no-underline"
-              >
-                {cooldown > 0 ? `Resend setup email (${cooldown}s)` : "Resend setup email"}
-              </button>
-            </AlertDescription>
-          </Alert>
-        )}
+
+        <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
+          <AuthFields>
+            <TextField
+              ref={emailRef}
+              label="Corporate email"
+              type="email"
+              required
+              autoComplete="username"
+              autoFocus
+              // Figma's exact placeholder — company names read better than
+              // raw domains, and the label carries the requirement.
+              placeholder={`Enter ${COMPANY_NAMES} email`}
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (errors.email) setErrors((p) => ({ ...p, email: undefined }));
+              }}
+              error={errors.email}
+            />
+            <TextField
+              ref={passwordRef}
+              label="Password"
+              type="password"
+              required
+              autoComplete="current-password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (errors.password) setErrors((p) => ({ ...p, password: undefined }));
+              }}
+              error={errors.password}
+            />
+          </AuthFields>
+
+          <div className="flex flex-col gap-5">
+            <Button type="submit" className="w-full" loading={busy} loadingText="Logging in…">
+              Log in
+            </Button>
+            {/* Figma keeps "Forgot password?" below the CTA; Remember me shares
+                that row rather than pushing the approved order around. */}
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <div className="flex items-center gap-2.5">
+                <Checkbox
+                  id="remember-me"
+                  checked={remember}
+                  onCheckedChange={(v) => setRemember(v === true)}
+                  aria-describedby="remember-me-hint"
+                />
+                <label htmlFor="remember-me" className="text-body text-muted-foreground select-none">
+                  Remember me
+                </label>
+              </div>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/forgot-password">Forgot password?</Link>
+              </Button>
+            </div>
+            <p className="sr-only" id="remember-me-hint">
+              Keeps you logged in on this device after you close the browser. Leave it off on
+              shared computers.
+            </p>
+          </div>
+        </form>
       </div>
 
-      <form onSubmit={submit} className="space-y-4" noValidate>
-        <AuthField
-          id="email"
-          label="Corporate email"
-          type="email"
-          inputMode="email"
-          autoComplete="email"
-          placeholder="name@company.com"
-          value={email}
-          onChange={(e) => { setEmail(e.target.value); if (emailErr) setEmailErr(emailError(e.target.value)); }}
-          onBlur={() => setEmailErr(emailError(email))}
-          error={emailErr}
-          hint={emailErr ? undefined : "Use your Atlantic Project Cargo, JumboBee, or Atlantic Express Corp email."}
-        />
-        <PasswordField
-          id="password"
-          label="Password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => { setPassword(e.target.value); if (pwErr) setPwErr(e.target.value ? null : "Enter your password."); }}
-          onBlur={() => setPwErr(password ? null : "Enter your password.")}
-          error={pwErr}
-        />
-        <Button type="submit" className="w-full" disabled={loading} aria-busy={loading}>
-          {loading ? "Logging in…" : "Log in"}
+      <AuthSupportCard>
+        <span className="text-body font-bold text-foreground">Don’t have an account?</span>
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/request-access">Request access</Link>
         </Button>
-      </form>
-    </AuthShell>
+      </AuthSupportCard>
+    </>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<AuthShell title="Log in to Atlantic RMS" description="Use your corporate email and password to continue."><div className="h-40" /></AuthShell>}>
-      <LoginInner />
-    </Suspense>
+    <AuthLayout>
+      <Suspense
+        fallback={
+          <AuthHeader
+            title="Log in to Rate Management System"
+            description="Use your corporate email and password to continue."
+          />
+        }
+      >
+        <LoginForm />
+      </Suspense>
+    </AuthLayout>
   );
 }

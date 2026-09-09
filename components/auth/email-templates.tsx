@@ -96,7 +96,7 @@ export function emailPlainText(email: DevEmail): string {
 export function EmailBody({ email }: { email: DevEmail }) {
   const c = emailContent(email);
   return (
-    <div className="mx-auto max-w-[560px] overflow-hidden rounded-xl border bg-card">
+    <div className="mx-auto max-w-[560px] overflow-hidden rounded-lg border bg-card">
       <div className="border-b bg-primary px-6 py-4 text-primary-foreground">
         <div className="text-sm font-semibold tracking-tight">Atlantic RMS</div>
         <div className="text-xs opacity-80">Rate Management</div>

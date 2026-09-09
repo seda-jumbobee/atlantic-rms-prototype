@@ -1,73 +1,143 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
-import { MailCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { AuthShell, AuthField } from "@/components/auth/auth-shell";
-import { isValidEmailFormat, isSupportedEmail, normalizeEmail, approvedDomainsSentence } from "@/lib/auth/companies";
-import { requestPasswordReset } from "@/lib/auth/access-store";
+import { AlertCircle, MailCheck } from "lucide-react";
 
-function emailError(v: string): string | null {
-  const e = v.trim();
-  if (!e) return "Enter your corporate email.";
-  if (!isValidEmailFormat(e)) return "Enter a valid email address.";
-  if (!isSupportedEmail(e)) return `Use an approved corporate email ending in ${approvedDomainsSentence(true, "or")}.`;
-  return null;
-}
+import { AuthFields, AuthHeader, AuthLayout } from "@/components/auth/auth-shell";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { TextField } from "@/components/ui/field";
+import { isValidEmailFormat, normalizeEmail, expiryLabel, RESET_TOKEN_TTL_HOURS } from "@/lib/auth/companies";
+import { formatWait, requestPasswordResetGuarded } from "@/lib/auth/access-store";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [err, setErr] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [failure, setFailure] = useState<string | null>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const ee = emailError(email);
-    setErr(ee);
-    if (ee) return document.getElementById("fp-email")?.focus();
-    setLoading(true);
-    window.setTimeout(() => {
-      // Always show the same result — never reveal whether an account exists.
-      requestPasswordReset(normalizeEmail(email));
-      setSent(normalizeEmail(email));
-      setLoading(false);
-    }, 500);
-  };
+  function validate(v: string): string | null {
+    if (!v.trim()) return "Enter your corporate email.";
+    if (!isValidEmailFormat(v)) return "Enter a valid email address.";
+    return null;
+  }
 
-  if (sent) {
+  async function submit(ev: React.FormEvent) {
+    ev.preventDefault();
+    if (busy) return;
+
+    const e = validate(email);
+    setErr(e);
+    if (e) {
+      emailRef.current?.focus();
+      return;
+    }
+
+    setFailure(null);
+    setBusy(true);
+    try {
+      await new Promise((r) => setTimeout(r, 450));
+      const res = requestPasswordResetGuarded(email);
+      if (res.kind === "accepted") {
+        setSentTo(normalizeEmail(email));
+      } else if (res.kind === "cooldown") {
+        setFailure(`You just requested a link. Try again in ${formatWait(res.retryInMs)}.`);
+      } else {
+        // Reported for every address, so this cannot be used to detect accounts.
+        setFailure("We couldn’t send the email right now. Try again shortly.");
+      }
+    } catch {
+      setFailure("We couldn’t send the email. Check your connection and try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /* ── Success — deliberately does NOT confirm the account exists ─────────── */
+  if (sentTo) {
     return (
-      <AuthShell
-        icon={<div className="grid size-12 place-items-center rounded-full bg-success/10 text-success"><MailCheck className="size-6" /></div>}
-        title="Check your email"
-        description={<>If an active account exists for <span className="font-medium text-foreground">{sent}</span>, we sent a password-reset link.</>}
-        footer={<Link href="/login" className="font-medium text-primary hover:underline">Back to log in</Link>}
-      >
-        <p className="text-center text-sm text-muted-foreground">Check your inbox and spam folder.</p>
-      </AuthShell>
+      <AuthLayout>
+        <AuthHeader title="Check your email" showWelcome />
+        <div className="flex flex-col gap-5">
+          <Alert variant="info">
+            <MailCheck aria-hidden />
+            <AlertTitle>
+              If an active account exists for {sentTo}, we sent you a password-reset link.
+            </AlertTitle>
+            <AlertDescription>
+              The link is valid for {expiryLabel(RESET_TOKEN_TTL_HOURS)} and can be used once.
+              Check your spam folder if it hasn’t arrived.
+            </AlertDescription>
+          </Alert>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button asChild>
+              <Link href="/login">Back to log in</Link>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setSentTo(null);
+                setFailure(null);
+              }}
+            >
+              Use a different email
+            </Button>
+          </div>
+        </div>
+      </AuthLayout>
     );
   }
 
   return (
-    <AuthShell
-      title="Reset your password"
-      description="Enter your corporate email and we’ll send you a password-reset link."
-      footer={<Link href="/login" className="font-medium text-primary hover:underline">Back to log in</Link>}
-    >
-      <form onSubmit={submit} className="space-y-4" noValidate>
-        <AuthField
-          id="fp-email" label="Corporate email" required type="email" inputMode="email" autoComplete="email"
-          placeholder="name@company.com"
-          value={email}
-          onChange={(e) => { setEmail(e.target.value); if (err) setErr(emailError(e.target.value)); }}
-          onBlur={() => setErr(emailError(email))}
-          error={err}
-        />
-        <Button type="submit" className="w-full" disabled={loading} aria-busy={loading}>
-          {loading ? "Sending reset link…" : "Send reset link"}
-        </Button>
-      </form>
-    </AuthShell>
+    <AuthLayout>
+      <AuthHeader
+        title="Reset your password"
+        description="Enter your corporate email and we’ll send you a password-reset link."
+        showWelcome
+      />
+
+      <div className="flex flex-col gap-5">
+        {failure && (
+          <Alert variant="destructive">
+            <AlertCircle aria-hidden />
+            <AlertTitle>{failure}</AlertTitle>
+          </Alert>
+        )}
+
+        <form onSubmit={submit} noValidate className="flex flex-col gap-6">
+          <AuthFields>
+            <TextField
+              ref={emailRef}
+              label="Corporate email"
+              type="email"
+              required
+              inputMode="email"
+              autoComplete="email"
+              autoFocus
+              placeholder="name@company.com"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (err) setErr(null);
+              }}
+              error={err}
+            />
+          </AuthFields>
+
+          <div className="flex flex-col gap-3">
+            <Button type="submit" className="w-full" loading={busy} loadingText="Sending link…">
+              Send reset link
+            </Button>
+            <Button asChild variant="ghost" className="w-full">
+              <Link href="/login">Back to log in</Link>
+            </Button>
+          </div>
+        </form>
+      </div>
+    </AuthLayout>
   );
 }

@@ -84,10 +84,50 @@ export function isSupportedEmail(email: string): boolean {
 
 export const PASSWORD_MIN_LENGTH = 12;
 
+/** A handful of patterns that are long but still trivially guessable. */
+const COMMON_SEQUENCES = [
+  "password", "passw0rd", "qwerty", "asdfgh", "zxcvbn", "letmein",
+  "welcome", "admin", "atlantic", "jumbobee", "ratemanagement",
+  "123456", "1234567890", "abcdef", "iloveyou", "changeme",
+];
+
+/**
+ * Rejects passwords that clear the length bar but carry almost no entropy:
+ * one repeated character, a straight run up or down the keyboard/alphabet,
+ * a known common string, or the user's own email local-part.
+ */
+export function isWeakPassword(pw: string, email?: string): boolean {
+  const p = pw.toLowerCase();
+  if (/^(.)\1+$/.test(p)) return true; // "aaaaaaaaaaaa"
+  if (COMMON_SEQUENCES.some((s) => p.includes(s))) return true;
+  if (email) {
+    const local = normalizeEmail(email).split("@")[0];
+    if (local && local.length >= 4 && p.includes(local)) return true;
+  }
+  // A monotonic run over most of the password (e.g. "abcdefghijkl", "9876543210…")
+  let asc = 1;
+  let desc = 1;
+  for (let i = 1; i < p.length; i++) {
+    const d = p.charCodeAt(i) - p.charCodeAt(i - 1);
+    asc = d === 1 ? asc + 1 : 1;
+    desc = d === -1 ? desc + 1 : 1;
+    if (asc >= p.length - 1 || desc >= p.length - 1) return true;
+  }
+  return false;
+}
+
 /** UX-side password check. A real backend must enforce its own policy + hashing. */
-export function passwordError(pw: string): string | null {
+export function passwordError(pw: string, email?: string): string | null {
   if (!pw) return "Enter a password.";
   if (pw.length < PASSWORD_MIN_LENGTH) return `Use at least ${PASSWORD_MIN_LENGTH} characters.`;
+  if (isWeakPassword(pw, email)) return "Choose a stronger password.";
+  return null;
+}
+
+/** Second field of a create/confirm pair. */
+export function confirmPasswordError(pw: string, confirm: string): string | null {
+  if (!confirm) return "Confirm your password.";
+  if (pw !== confirm) return "Passwords do not match.";
   return null;
 }
 
