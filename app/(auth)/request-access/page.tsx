@@ -7,7 +7,7 @@ import { AlertCircle, Check, CheckCircle2, Info, MailWarning } from "lucide-reac
 import { AuthFields, AuthHeader, AuthLayout, AuthSupportCard, WELCOME_TITLE } from "@/components/auth/auth-shell";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Field, FieldError, FieldHelper, FieldLabel, TextField } from "@/components/ui/field";
+import { Field, FieldError, FieldLabel, TextField } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Stepper } from "@/components/ui/stepper";
 import {
@@ -49,6 +49,8 @@ export default function RequestAccessPage() {
   const companyRef = useRef<HTMLButtonElement>(null);
 
   const matched = isSupportedEmail(email) ? companyForEmail(email) : null;
+  /** The email domain picked the company, and the two still agree. */
+  const companyFromEmail = companySource === "email" && matched !== null && company === matched.id;
 
   function companyError(companyId: string, mail: string): string | null {
     if (!companyId) return "Select your company.";
@@ -305,11 +307,7 @@ export default function RequestAccessPage() {
                   autoFocus
                   aria-invalid={companyErr ? true : undefined}
                   aria-describedby={
-                    companyErr
-                      ? "ra-company-err"
-                      : companySource === "email" && matched
-                        ? "ra-company-ok"
-                        : "ra-company-hint"
+                    companyErr ? "ra-company-err" : companyFromEmail ? "ra-company-ok" : undefined
                   }
                   className="w-full"
                 >
@@ -325,16 +323,12 @@ export default function RequestAccessPage() {
               </Select>
               {companyErr ? (
                 <FieldError id="ra-company-err">{companyErr}</FieldError>
-              ) : companySource === "email" && matched && company === matched.id ? (
+              ) : companyFromEmail ? (
                 <p id="ra-company-ok" className="flex items-center gap-1.5 text-caption text-status-positive-fg">
                   <CheckCircle2 aria-hidden className="size-3.5" />
                   Matched from your email domain.
                 </p>
-              ) : (
-                <FieldHelper id="ra-company-hint">
-                  We’ll fill in your company’s email domain for you.
-                </FieldHelper>
-              )}
+              ) : null}
             </Field>
 
             <TextField
