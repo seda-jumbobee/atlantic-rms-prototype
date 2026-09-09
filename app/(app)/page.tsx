@@ -42,7 +42,7 @@ function OverviewCard({
     <Link
       href={href}
       aria-label={`${label}: ${value} (${sub}) — view details`}
-      className="group rounded-xl outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+      className="group rounded-lg outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
     >
       <Card className="h-full min-w-0 gap-1 p-4 transition group-hover:border-primary/40 group-hover:shadow-sm group-focus-visible:border-ring">
         <div className="flex items-start justify-between gap-2">

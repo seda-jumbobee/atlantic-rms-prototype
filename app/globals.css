@@ -4,224 +4,481 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================================
+   ATLANTIC RMS DESIGN SYSTEM — code mirror of Figma file VsutChFUEo2WJj9U0Agrfk
+   ("RMS | JB", pages 01 Foundations / 02 Components / 03 Patterns & Docs).
+
+   Architecture, matching Figma exactly:
+     PRIMITIVES  --p-*        raw ramps. Never reference these from a component.
+     SEMANTIC    role names   what components consume.
+     COMPONENT   --c-*        per-component tokens where a role isn't enough.
+
+   Brand inputs supplied by the client: primary #232572, secondary #FFB051,
+   page background #FAFAFA. Ramps generated in OKLCH so steps are perceptually
+   even; both brand hexes are pinned EXACTLY (primary at 700, secondary at 300).
+
+   Every foreground/background pair used in the product was measured against
+   WCAG 2.1 with values TRUNCATED toward fail (4.4987 is a fail, not "4.50").
+   Contrast figures live in comments next to the token they justify.
+   ========================================================================= */
+
 @theme inline {
+  /* ── fonts ───────────────────────────────────────────────────────────── */
+  --font-sans: var(--font-satoshi), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-satoshi), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+
+  /* ── type ramp ────────────────────────────────────────────────────────
+     Tracking and line-height are baked into each token, so no component
+     should ever hand-apply letter-spacing. Satoshi has NO 600 weight
+     (300/400/500/700/900 only), so Figma's "SemiBold" maps to 700. */
+  --text-h1: 1.75rem;                       /* 28 — RMS / Heading / Page */
+  --text-h1--line-height: 2.125rem;         /* 34 */
+  --text-h1--letter-spacing: -0.01em;       /* -1% */
+  --text-h1--font-weight: 700;
+
+  --text-h2: 1.5rem;                        /* 24 — RMS / Heading / Large */
+  --text-h2--line-height: 1.875rem;         /* 30 */
+  --text-h2--letter-spacing: -0.01em;
+  --text-h2--font-weight: 700;
+
+  --text-h3: 1.25rem;                       /* 20 — RMS / Heading / Medium */
+  --text-h3--line-height: 1.625rem;         /* 26 */
+  --text-h3--letter-spacing: -0.005em;      /* -0.5% */
+  --text-h3--font-weight: 700;
+
+  --text-h4: 1rem;                          /* 16 — RMS / Heading / Small */
+  --text-h4--line-height: 1.375rem;         /* 22 */
+  --text-h4--letter-spacing: -0.005em;
+  --text-h4--font-weight: 700;
+
+  --text-h4m: 1rem;                         /* 16 — RMS / Heading / 16 Medium */
+  --text-h4m--line-height: 1.375rem;        /* 22 */
+  --text-h4m--letter-spacing: -0.005em;
+  --text-h4m--font-weight: 500;
+
+  --text-h5m: 1.125rem;                     /* 18 — RMS / Heading / 18 Medium */
+  --text-h5m--line-height: 1.5rem;          /* 24 */
+  --text-h5m--letter-spacing: -0.005em;
+  --text-h5m--font-weight: 500;
+
+  --text-body-lg: 1rem;                     /* 16 — RMS / Body / Large */
+  --text-body-lg--line-height: 1.5rem;      /* 24 */
+  --text-body-lg--letter-spacing: 0em;
+
+  --text-body: 0.875rem;                    /* 14 — RMS / Body / Default (DEFAULT UI SIZE) */
+  --text-body--line-height: 1.25rem;        /* 20 */
+  --text-body--letter-spacing: 0em;
+
+  --text-body-sm: 0.75rem;                  /* 12 — RMS / Body / Small */
+  --text-body-sm--line-height: 1.125rem;    /* 18 */
+  --text-body-sm--letter-spacing: 0em;
+
+  --text-label: 0.8125rem;                  /* 13 — RMS / Label */
+  --text-label--line-height: 1.125rem;      /* 18 */
+  --text-label--letter-spacing: -0.005em;
+  --text-label--font-weight: 500;
+
+  --text-caption: 0.75rem;                  /* 12 — RMS / Caption */
+  --text-caption--line-height: 1rem;        /* 16 */
+  --text-caption--letter-spacing: 0em;
+
+  --text-btn: 0.875rem;                     /* 14 — RMS / Button / Default */
+  --text-btn--line-height: 1.25rem;         /* 20 */
+  --text-btn--letter-spacing: -0.005em;
+  --text-btn--font-weight: 700;             /* Figma SemiBold → Satoshi 700 */
+
+  /* ── control sizing (RMS/Sizing) ─────────────────────────────────────── */
+  --spacing-control: 2.75rem;               /* 44 — standard input & primary control */
+  --spacing-control-compact: 2rem;          /* 32 — compact, desktop/dense only */
+
+  /* ── radius (RMS/Radius) ─────────────────────────────────────────────── */
+  --radius-sm: 4px;
+  --radius-md: 8px;                         /* STANDARD: buttons, inputs, selects */
+  --radius-lg: 12px;                        /* cards, modals */
+  --radius-xl: 20px;                        /* auth support card (Figma 04 Screens) */
+  --radius-2xl: 48px;                       /* auth banner (Figma 04 Screens) */
+  --radius-full: 9999px;
+
+  /* ── colour: surfaces ────────────────────────────────────────────────── */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
-  --font-heading: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-active: var(--sidebar-active);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-pressed: var(--surface-pressed);
+  --color-surface-selected: var(--surface-selected);
+  --color-surface-inverse: var(--surface-inverse);
+
+  /* ── colour: text roles (fg-* avoids Tailwind's --text-* size namespace) ── */
+  --color-fg-tertiary: var(--fg-tertiary);
+  --color-fg-placeholder: var(--fg-placeholder);
+  --color-fg-disabled: var(--fg-disabled);
+  --color-fg-inverse: var(--fg-inverse);
+
+  /* ── colour: brand actions ───────────────────────────────────────────── */
   --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   --color-primary-hover: var(--primary-hover);
   --color-primary-active: var(--primary-active);
-  --color-primary-disabled: var(--primary-disabled);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-primary-border: var(--primary-border);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
   --color-brand-secondary: var(--brand-secondary);
   --color-brand-secondary-foreground: var(--brand-secondary-foreground);
   --color-brand-secondary-hover: var(--brand-secondary-hover);
   --color-brand-secondary-active: var(--brand-secondary-active);
-  --color-brand-secondary-disabled: var(--brand-secondary-disabled);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
+  --color-brand-secondary-subtle: var(--brand-secondary-subtle);
 
-  /* Status scale — the single system for every status/stage/source badge.
-     Use bg-status-*-bg + text-status-*-fg. */
+  /* ── colour: borders & focus ─────────────────────────────────────────── */
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-border-divider: var(--border-divider);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset: var(--ring-offset);
+
+  /* ── colour: feedback ────────────────────────────────────────────────── */
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-hover: var(--destructive-hover);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  /* status scale — the single system for every status/stage/source badge.
+     Use bg-status-*-bg + text-status-*-fg. Never colour alone: pair with a
+     word and, where space allows, a dot or glyph. */
   --color-status-info-bg: var(--status-info-bg);
   --color-status-info-fg: var(--status-info-fg);
+  --color-status-info-border: var(--status-info-border);
   --color-status-positive-bg: var(--status-positive-bg);
   --color-status-positive-fg: var(--status-positive-fg);
+  --color-status-positive-border: var(--status-positive-border);
   --color-status-warning-bg: var(--status-warning-bg);
   --color-status-warning-fg: var(--status-warning-fg);
+  --color-status-warning-border: var(--status-warning-border);
   --color-status-negative-bg: var(--status-negative-bg);
   --color-status-negative-fg: var(--status-negative-fg);
+  --color-status-negative-border: var(--status-negative-border);
   --color-status-neutral-bg: var(--status-neutral-bg);
   --color-status-neutral-fg: var(--status-neutral-fg);
+  --color-status-neutral-border: var(--status-neutral-border);
 
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  /* ── sidebar ─────────────────────────────────────────────────────────── */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Figma text style "Caption" (11/14 · -0.5%) → text-caption */
-  --text-caption: 0.6875rem;
-  --text-caption--line-height: 0.875rem;
-  --text-caption--letter-spacing: -0.005em;
+  /* ── charts ──────────────────────────────────────────────────────────── */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* ── elevation (RMS/Elevation) ───────────────────────────────────────── */
+  --shadow-card: 0 1px 2px 0 rgb(202 202 202 / 0.25);
+  --shadow-dropdown: 0 4px 12px -2px rgb(18 18 24 / 0.10), 0 2px 4px -2px rgb(18 18 24 / 0.06);
+  --shadow-modal: 0 12px 32px -4px rgb(18 18 24 / 0.16), 0 4px 8px -4px rgb(18 18 24 / 0.08);
+  --shadow-tooltip: 0 2px 6px -1px rgb(18 18 24 / 0.14);
 }
 
-/* Atlantic RMS brand palette (reference board, 2026-07-22):
-   brand/primary = indigo ramp, brand/secondary = orange ramp,
-   feedback = danger/warning/success triads, neutrals gray-50..300.
-   Reference quirks resolved here:
-   - text/link hex printed as BDBDBD (dup of text/disabled) but swatch is indigo → links use brand/primary/default.
-   - border/dark hex printed as CCCCCC but swatch is dark gray → dark-surface borders use #4f4f4f (see .dark).
-   - status-warning-fg: reference has no AA-readable amber text (FF8F00 = 1.9:1);
-     #8a5300 is FF8F00 darkened to pass 4.5:1 — the one derived color. */
+/* ============================================================================
+   PRIMITIVES — RMS/Primitives. Do not use directly in components.
+   ========================================================================= */
 :root {
-  --background: #fafafa; /* background/page */
-  --foreground: #121212; /* text/primary */
-  --card: #ffffff; /* background/surface */
-  --card-foreground: #121212;
-  --popover: #ffffff;
-  --popover-foreground: #121212;
-  --primary: #282aab; /* brand/primary/default */
-  --primary-foreground: #ffffff;
-  --primary-hover: #20248f; /* brand/primary/hover */
-  --primary-active: #14166d; /* brand/primary/active */
-  --primary-disabled: #f3f3f8; /* brand/primary/disabled */
-  --brand-secondary: #ff4c00; /* brand/secondary/default */
-  --brand-secondary-foreground: #ffffff;
-  --brand-secondary-hover: #e64500;
-  --brand-secondary-active: #b53800;
-  --brand-secondary-disabled: #ffe4d9;
-  --secondary: #f6f6f6; /* neutral/gray-50 — shadcn subtle surface (brand/secondary orange = --brand-secondary) */
-  --secondary-foreground: #121212;
-  --muted: #f6f6f6;
-  --muted-foreground: #4f4f4f; /* text/secondary */
-  --accent: #f3f3f8; /* brand/primary/disabled tint — menu hover/selection */
-  --accent-foreground: #14166d;
-  --destructive: #d32f2f; /* feedback/danger/default = text/error */
-  --destructive-foreground: #ffffff;
-  --success: #388e3c; /* feedback/success/default */
-  --success-foreground: #ffffff;
-  --warning: #ffa000; /* feedback/warning/default */
-  --warning-foreground: #121212;
-  --border: #e9e9e9; /* border/light */
-  --input: #e9e9e9;
-  --ring: #282aab;
-  --status-info-bg: #f3f3f8;
-  --status-info-fg: #282aab;
-  --status-positive-bg: #c8e6c9; /* feedback/success/light */
-  --status-positive-fg: #2e7d32; /* feedback/success/dark */
-  --status-warning-bg: #ffecb3; /* feedback/warning/light */
-  --status-warning-fg: #8a5300; /* derived — see header note */
-  --status-negative-bg: #ffcdd2; /* feedback/danger/light */
-  --status-negative-fg: #c62828; /* feedback/danger/dark */
-  --status-neutral-bg: #f6f6f6; /* neutral/gray-50 */
-  --status-neutral-fg: #4f4f4f; /* text/secondary */
-  --chart-1: #282aab;
-  --chart-2: #ff4c00;
-  --chart-3: #ffa000;
-  --chart-4: #388e3c;
-  --chart-5: #4a4fcf; /* brand/primary/light */
-  --radius: 0.625rem;
-  /* Sidebar = brand-primary surface. */
-  /* Sidebar (nav) surface + states — dark navy, theme-stable (2026-07-22). */
-  --sidebar: #0f1245; /* background — expanded + collapsed */
-  --sidebar-foreground: #fafafa;
-  --sidebar-primary: #cc3f00; /* brand/secondary/dark — count badge (white text ≥4.5:1) */
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #14166d; /* hovered item (own value; not aliased to status-info-fg) */
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-active: #1d2080; /* selected/active item */
-  --sidebar-border: #20248f; /* subtle seam against the darker surface */
-  --sidebar-ring: #fafafa; /* off-white focus ring, readable on navy */
+  /* primary — brand #232572 pinned at 700 */
+  --p-primary-50: #f6f9ff;
+  --p-primary-100: #d3d9f5;
+  --p-primary-200: #afb9e8;
+  --p-primary-300: #8d99da;
+  --p-primary-400: #6d7ac6;
+  --p-primary-500: #515cae;
+  --p-primary-600: #394190;
+  --p-primary-700: #232572; /* EXACT BRAND */
+  --p-primary-800: #17155c;
+  --p-primary-900: #0d0844;
+
+  /* secondary — brand #FFB051 pinned at 300. Light colour: always dark text. */
+  --p-secondary-50: #fff7e5;
+  --p-secondary-100: #ffe1bf;
+  --p-secondary-200: #ffc98c;
+  --p-secondary-300: #ffb051; /* EXACT BRAND */
+  --p-secondary-400: #ea8c00;
+  --p-secondary-500: #d06900;
+  --p-secondary-600: #b04b00;
+  --p-secondary-700: #902c00;
+  --p-secondary-800: #6e0c00;
+  --p-secondary-900: #4b0000;
+
+  /* neutral */
+  --p-neutral-0: #ffffff;
+  --p-neutral-50: #fafafa;   /* page background (client-supplied) */
+  --p-neutral-100: #f4f4f6;
+  --p-neutral-200: #e7e7eb;
+  --p-neutral-300: #d7d7d7;  /* decorative border */
+  --p-neutral-400: #8a8a92;  /* control boundary — 3.4251 white / 3.2815 page */
+  --p-neutral-500: #6e6e77;  /* lightest AA text — 5.0483 white / 4.8366 page */
+  --p-neutral-600: #5a5a66;
+  --p-neutral-700: #3d3d47;
+  --p-neutral-800: #26262e;
+  --p-neutral-900: #121218;
+  --p-neutral-disabled-text: #9a9aa3; /* WCAG-exempt: never the only cue */
+
+  /* feedback */
+  --p-success-main: #318735;
+  --p-success-hover: #1f7825;
+  --p-success-subtle: #e9f5ea;
+  --p-success-border: #bfe3c1;
+  --p-success-text: #237a29;
+
+  --p-warning-main: #ad6500;
+  --p-warning-hover: #9d5600;
+  --p-warning-subtle: #fff6e5;
+  --p-warning-border: #ffdf9e;
+  --p-warning-text: #9c5900;  /* clears 4.5 on white, page AND surface/subtle */
+
+  --p-error-main: #d32f2f;
+  --p-error-hover: #c1161f;
+  --p-error-subtle: #fdecec;
+  --p-error-border: #f8c6c6;
+  --p-error-text: #d02c2c;
+
+  --p-info-main: #3b3ebf;
+  --p-info-hover: #302dae;
+  --p-info-subtle: #efeff9;
+  --p-info-border: #c5c6ea;
+  --p-info-text: #3b3ebf;
 }
 
-/* Dark theme — NOT reachable in-app yet (no ThemeProvider). The reference
-   defines no dark mode; values marked ~ are derived from the same ramps. */
+/* ============================================================================
+   SEMANTIC — RMS/Semantic. This is what components consume.
+   ========================================================================= */
+:root {
+  /* surfaces */
+  --background: var(--p-neutral-50);          /* surface/page */
+  --foreground: var(--p-neutral-900);         /* text/primary — 17.8771 on page */
+  --card: var(--p-neutral-0);                 /* surface/default */
+  --card-foreground: var(--p-neutral-900);
+  --popover: var(--p-neutral-0);              /* surface/raised */
+  --popover-foreground: var(--p-neutral-900);
+  --muted: var(--p-neutral-100);              /* surface/subtle */
+  --muted-foreground: var(--p-neutral-600);   /* text/secondary — 6.5131 on page */
+  --surface-hover: var(--p-neutral-100);
+  --surface-pressed: var(--p-neutral-200);
+  --surface-selected: var(--p-primary-100);   /* 1.3987 vs white — cue with a glyph too */
+  --surface-inverse: var(--p-primary-900);    /* sidebar */
+  --accent: var(--p-primary-50);              /* action/primary/subtle — menu hover/selection */
+  --accent-foreground: var(--p-primary-700);
+
+  /* text roles */
+  --fg-tertiary: var(--p-neutral-500);        /* 4.8366 on page */
+  --fg-placeholder: var(--p-neutral-500);     /* 5.0483 on white */
+  --fg-disabled: var(--p-neutral-disabled-text);
+  --fg-inverse: var(--p-neutral-0);
+
+  /* brand actions */
+  --primary: var(--p-primary-700);            /* white label 13.2989 */
+  --primary-foreground: var(--p-neutral-0);
+  --primary-hover: var(--p-primary-800);      /* 16.1757 */
+  --primary-active: var(--p-primary-900);     /* 18.4970 */
+  --primary-subtle: var(--p-primary-50);
+  --primary-border: var(--p-primary-200);
+  --primary-disabled: var(--p-neutral-200);
+
+  /* shadcn "secondary" = neutral subtle surface (NOT the amber brand accent) */
+  --secondary: var(--p-neutral-100);
+  --secondary-foreground: var(--p-neutral-900);
+
+  /* the amber brand accent. Dark label ALWAYS: white on #FFB051 is 1.81 → fails */
+  --brand-secondary: var(--p-secondary-300);
+  --brand-secondary-foreground: var(--p-neutral-900); /* 10.2902 */
+  --brand-secondary-hover: var(--p-secondary-400);    /* dark label 7.3302 */
+  --brand-secondary-active: var(--p-secondary-500);   /* dark label 5.0670 */
+  --brand-secondary-subtle: var(--p-secondary-50);
+  --brand-secondary-disabled: var(--p-neutral-200);
+
+  /* borders & focus */
+  --border: var(--p-neutral-300);             /* decorative: cards, tables */
+  --border-strong: var(--p-neutral-400);      /* CONTROL boundary — WCAG 1.4.11 3:1 */
+  --border-divider: var(--p-neutral-200);
+  --input: var(--p-neutral-400);              /* inputs use the 3:1 boundary */
+  --ring: var(--p-primary-400);               /* NOT primary/700: that is the button
+                                                 fill, so the ring measured 1.0:1
+                                                 against the control it surrounds.
+                                                 400 = 4.0003 white / 3.3244 on primary */
+  --ring-offset: var(--p-neutral-0);
+
+  /* feedback */
+  --destructive: var(--p-error-main);         /* white label 4.9793 */
+  --destructive-foreground: var(--p-neutral-0);
+  --destructive-hover: var(--p-error-hover);
+  --success: var(--p-success-main);           /* white label 4.5184 */
+  --success-foreground: var(--p-neutral-0);
+  --warning: var(--p-warning-main);           /* white label 4.5275 */
+  --warning-foreground: var(--p-neutral-0);
+  --info: var(--p-info-main);                 /* white label 7.9929 */
+  --info-foreground: var(--p-neutral-0);
+
+  /* status scale */
+  --status-info-bg: var(--p-info-subtle);
+  --status-info-fg: var(--p-info-text);
+  --status-info-border: var(--p-info-border);
+  --status-positive-bg: var(--p-success-subtle);
+  --status-positive-fg: var(--p-success-text);
+  --status-positive-border: var(--p-success-border);
+  --status-warning-bg: var(--p-warning-subtle);
+  --status-warning-fg: var(--p-warning-text);
+  --status-warning-border: var(--p-warning-border);
+  --status-negative-bg: var(--p-error-subtle);
+  --status-negative-fg: var(--p-error-text);
+  --status-negative-border: var(--p-error-border);
+  --status-neutral-bg: var(--p-neutral-100);
+  --status-neutral-fg: var(--p-neutral-600);
+  --status-neutral-border: var(--p-neutral-300);
+
+  /* sidebar — surface/inverse */
+  --sidebar: var(--p-primary-900);
+  --sidebar-foreground: var(--p-neutral-0);        /* 18.4970 */
+  --sidebar-primary: var(--p-secondary-300);       /* count badge */
+  --sidebar-primary-foreground: var(--p-neutral-900);
+  --sidebar-accent: var(--p-primary-800);          /* hovered item */
+  --sidebar-accent-foreground: var(--p-neutral-0);
+  --sidebar-active: var(--p-primary-700);          /* selected item — white 13.2989 */
+  --sidebar-border: var(--p-primary-800);
+  --sidebar-ring: var(--p-primary-400);
+
+  /* charts */
+  --chart-1: var(--p-primary-700);
+  --chart-2: var(--p-secondary-300);
+  --chart-3: var(--p-warning-main);
+  --chart-4: var(--p-success-main);
+  --chart-5: var(--p-primary-400);
+
+  --radius: 8px; /* standard control radius */
+}
+
+/* ============================================================================
+   COMPONENT — RMS/Component. Only where a semantic role isn't specific enough.
+   ========================================================================= */
+:root {
+  --c-input-bg: var(--card);
+  --c-input-bg-disabled: var(--muted);
+  --c-input-bg-readonly: var(--muted);
+  --c-input-border: var(--border-strong);
+  --c-input-border-hover: var(--fg-tertiary);
+  --c-input-border-focus: var(--ring);
+  --c-input-border-error: var(--destructive);
+  --c-input-label: var(--muted-foreground);
+  --c-input-value: var(--foreground);
+  --c-input-placeholder: var(--fg-placeholder);
+  --c-input-helper: var(--fg-tertiary);
+  --c-input-error: var(--status-negative-fg);
+  --c-input-required: var(--destructive);
+
+  --c-table-header-bg: var(--muted);
+  --c-table-header-text: var(--muted-foreground);
+  --c-table-row-hover: var(--surface-hover);
+  --c-table-row-selected: var(--surface-selected);
+  --c-table-border: var(--border-divider);
+
+  --c-tooltip-bg: var(--surface-inverse);
+  --c-tooltip-text: var(--fg-inverse);
+}
+
+/* ============================================================================
+   DARK — not reachable in-app (no ThemeProvider) and NOT part of the Figma
+   system, which ships a Light mode only. Kept functional so `.dark` doesn't
+   break if a theme provider is added; values are derived, not designed.
+   ========================================================================= */
 .dark {
-  --background: #121212; /* neutral/black */
-  --foreground: #fafafa;
-  --card: #1e1e1e; /* ~ */
-  --card-foreground: #fafafa;
-  --popover: #1e1e1e; /* ~ */
-  --popover-foreground: #fafafa;
-  --primary: #4a4fcf; /* brand/primary/light */
-  --primary-foreground: #ffffff;
-  --primary-hover: #282aab; /* ~ ramp shifted */
-  --primary-active: #14166d; /* brand/primary/active — theme-stable */
-  --primary-disabled: #26284f; /* ~ */
-  --brand-secondary: #ff7033; /* brand/secondary/light */
-  --brand-secondary-foreground: #121212;
-  --brand-secondary-hover: #ff4c00;
-  --brand-secondary-active: #e64500;
-  --brand-secondary-disabled: #4a2a1c; /* ~ */
-  --secondary: #242424; /* ~ */
-  --secondary-foreground: #fafafa;
-  --muted: #1f1f1f; /* ~ */
-  --muted-foreground: #cccccc; /* neutral/gray-300 */
-  --accent: #20248f;
-  --accent-foreground: #ffffff;
-  --destructive: #d32f2f;
-  --destructive-foreground: #ffffff;
-  --success: #388e3c;
-  --success-foreground: #ffffff;
-  --warning: #ffa000;
-  --warning-foreground: #121212;
-  --border: #4f4f4f; /* border/dark (per swatch; printed hex is a typo) */
-  --input: #4f4f4f;
-  --ring: #4a4fcf;
-  /* Status scale is theme-stable */
-  --status-info-bg: #f3f3f8;
-  --status-info-fg: #282aab;
-  --status-positive-bg: #c8e6c9;
-  --status-positive-fg: #2e7d32;
-  --status-warning-bg: #ffecb3;
-  --status-warning-fg: #8a5300;
-  --status-negative-bg: #ffcdd2;
-  --status-negative-fg: #c62828;
-  --status-neutral-bg: #f6f6f6;
-  --status-neutral-fg: #4f4f4f;
-  --chart-1: #4a4fcf;
-  --chart-2: #ff7033;
-  --chart-3: #ffa000;
-  --chart-4: #388e3c;
-  --chart-5: #f3f3f8;
-  /* Sidebar is theme-stable (brand surface in both modes) */
-  --sidebar: #0f1245;
-  --sidebar-foreground: #fafafa;
-  --sidebar-primary: #cc3f00;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #14166d;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-active: #1d2080;
-  --sidebar-border: #20248f;
-  --sidebar-ring: #fafafa;
+  --background: var(--p-neutral-900);
+  --foreground: var(--p-neutral-50);
+  --card: var(--p-neutral-800);
+  --card-foreground: var(--p-neutral-50);
+  --popover: var(--p-neutral-800);
+  --popover-foreground: var(--p-neutral-50);
+  --muted: var(--p-neutral-700);
+  --muted-foreground: #cfcfd6;
+  --surface-hover: var(--p-neutral-700);
+  --surface-pressed: var(--p-neutral-600);
+  --surface-selected: var(--p-primary-800);
+  --accent: var(--p-primary-800);
+  --accent-foreground: var(--p-neutral-0);
+  --fg-tertiary: #a9a9b3;
+  --fg-placeholder: #a9a9b3;
+  --fg-disabled: #6e6e77;
+  --primary: var(--p-primary-400);
+  --primary-foreground: var(--p-neutral-900);
+  --primary-hover: var(--p-primary-300);
+  --primary-active: var(--p-primary-200);
+  --primary-subtle: var(--p-primary-900);
+  --secondary: var(--p-neutral-700);
+  --secondary-foreground: var(--p-neutral-50);
+  --border: var(--p-neutral-600);
+  --border-strong: #8a8a92;
+  --border-divider: var(--p-neutral-700);
+  --input: #8a8a92;
+  --ring: var(--p-primary-300);
+  --ring-offset: var(--p-neutral-900);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
-    /* Figma type ramp: body styles carry -1%/-0.5% letter-spacing (Inter) */
-    letter-spacing: -0.01em;
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    -webkit-font-smoothing: antialiased;
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer utilities {
+  /* One focus treatment for the whole product: a ring in --ring, offset from
+     the control so it stays visible even on a filled brand button (flush, the
+     ring measures only 2.2:1 against the amber secondary fill).
+     Deliberately in the utilities layer — the imported shadcn base sets
+     outline-color from a later layer, so a @layer base rule loses to it. And
+     longhands, not the `outline` shorthand, which drops the custom property
+     and silently falls back to currentColor. */
+  :is(a, button, input, select, textarea, summary, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
+    outline-style: solid;
+    outline-width: 2px;
+    outline-offset: 2px;
+    outline-color: var(--ring);
+  }
+  /* Destructive controls focus in their own colour so the ring reads as danger. */
+  [data-variant="destructive"]:focus-visible {
+    outline-color: var(--destructive);
+  }
+}
+
+@layer utilities {
+  /* Field-level invalid ring used by inputs/selects/textareas. */
+  .ring-invalid {
+    outline: 2px solid var(--destructive);
+    outline-offset: 2px;
   }
 }

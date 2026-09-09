@@ -86,7 +86,7 @@ export default function EmailPreviewPage() {
                   </div>
                 </div>
                 {plain ? (
-                  <pre className="max-w-[560px] overflow-x-auto rounded-xl border bg-muted/40 p-4 text-xs whitespace-pre-wrap">{emailPlainText(current)}</pre>
+                  <pre className="max-w-[560px] overflow-x-auto rounded-lg border bg-muted/40 p-4 text-xs whitespace-pre-wrap">{emailPlainText(current)}</pre>
                 ) : (
                   <EmailBody email={current} />
                 )}

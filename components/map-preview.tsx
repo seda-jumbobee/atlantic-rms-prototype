@@ -99,7 +99,7 @@ export function MapPreview({
   }, [origin?.lat, origin?.lng, destination?.lat, destination?.lng]);
 
   return (
-    <div className={cn("relative h-72 overflow-hidden rounded-xl border", className)}>
+    <div className={cn("relative h-72 overflow-hidden rounded-lg border", className)}>
       <div ref={elRef} className="absolute inset-0 z-0" />
       {transitDays != null && (
         <div className="pointer-events-none absolute bottom-3 left-1/2 z-[500] flex -translate-x-1/2 items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground shadow">

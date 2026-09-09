@@ -4,14 +4,15 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const alertVariants = cva(
-  "group/alert relative grid w-full gap-0.5 rounded-lg border border-border px-3.5 py-3 text-left text-sm has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-3 *:[svg]:row-span-2 *:[svg]:translate-y-px *:[svg]:shrink-0 *:[svg]:text-current *:[svg:not([class*='size-'])]:size-[18px]",
+  "group/alert relative grid w-full gap-0.5 rounded-md border border-border px-3.5 py-3 text-left text-body has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-3 *:[svg]:row-span-2 *:[svg]:translate-y-px *:[svg]:shrink-0 *:[svg]:text-current *:[svg:not([class*='size-'])]:size-[18px]",
   {
     variants: {
       variant: {
         default: "bg-card text-card-foreground",
-        success: "bg-status-positive-bg text-card-foreground",
-        warning: "bg-status-warning-bg text-card-foreground",
-        destructive: "bg-status-negative-bg text-card-foreground",
+        info: "border-status-info-border bg-status-info-bg text-card-foreground",
+        success: "border-status-positive-border bg-status-positive-bg text-card-foreground",
+        warning: "border-status-warning-border bg-status-warning-bg text-card-foreground",
+        destructive: "border-status-negative-border bg-status-negative-bg text-card-foreground",
       },
     },
     defaultVariants: {

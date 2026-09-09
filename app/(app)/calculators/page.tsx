@@ -124,7 +124,7 @@ function Count({ n }: { n: number }) {
 function CalculatorCard({ c }: { c: CalculatorMeta }) {
   const Icon = iconFor(c.icon);
   return (
-    <Link href={`/calculators/${c.id}`} className="group rounded-xl outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
+    <Link href={`/calculators/${c.id}`} className="group rounded-lg outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
       <Card className="flex h-full flex-col gap-3 p-5 transition group-hover:border-primary/40 group-hover:shadow-sm">
         <div className="flex items-start justify-between gap-3">
           <div className="grid size-10 place-items-center rounded-lg bg-muted text-primary transition group-hover:bg-primary/10">
@@ -169,7 +169,7 @@ function RecentList({ items, hadAny, searching, onClearSearch }: { items: typeof
   }
   return (
     <div className="space-y-3">
-      <div className="overflow-hidden rounded-xl border">
+      <div className="overflow-hidden rounded-lg border">
         <ul className="divide-y">
           {items.slice(0, 6).map((c) => (
             <li key={c.id} className="flex items-center justify-between gap-3 p-3 sm:p-4">
