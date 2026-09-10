@@ -74,37 +74,14 @@ function KpiCard({
 }
 
 /* ── Promo card ───────────────────────────────────────────────────────── */
-/** The Figma decoration: one stroked ribbon in a white 0 → 10% gradient,
-    clipped by the card. Exported from the reference, not redrawn. */
-function PromoRibbon() {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 392 410"
-      fill="none"
-      className="pointer-events-none absolute top-[-42%] left-[52%] h-[139%] w-[65%] max-w-none"
-      preserveAspectRatio="none"
-    >
-      <path
-        d="M82.8545 34.2283L28.2182 240.818C27.3733 244.013 31.5588 246.027 33.5277 243.373L183.369 41.4188C185.365 38.7286 189.6 40.8367 188.657 44.051L107.592 320.329C106.645 323.558 110.916 325.66 112.896 322.939L291.792 77.1909C293.768 74.4764 298.03 76.5621 297.099 79.7881L230.295 311.341C229.354 314.605 233.708 316.674 235.643 313.882L391.548 88.9811C393.505 86.1581 397.901 88.3059 396.877 91.5846L307.705 377.082C306.68 380.363 311.083 382.51 313.037 379.682L447.728 184.752"
-        stroke="url(#promo-ribbon)"
-        strokeWidth={56}
-        strokeLinecap="square"
-      />
-      <defs>
-        <linearGradient id="promo-ribbon" x1="-37.77" y1="135.9" x2="348.73" y2="372.9" gradientUnits="userSpaceOnUse">
-          <stop stopColor="white" stopOpacity="0" />
-          <stop offset="1" stopColor="white" stopOpacity="0.1" />
-        </linearGradient>
-      </defs>
-    </svg>
-  );
-}
+/* The reference draws a stroked ribbon over the gradient. It is dropped here:
+   at this card's aspect ratio the 56px stroke is clipped by the card and the
+   cut reads as a hard vertical line down the right edge. The gradient alone
+   carries the surface. */
 
 function PromoCard() {
   return (
     <Card className="relative min-w-0 justify-end border-transparent bg-[image:var(--c-promo-gradient)] p-8">
-      <PromoRibbon />
       <div className="relative flex max-w-md flex-col gap-2">
         <h2 className="text-h2 text-[color:var(--c-promo-foreground)]">Need to check rates?</h2>
         <p className="text-body text-[color:var(--c-promo-muted)]">

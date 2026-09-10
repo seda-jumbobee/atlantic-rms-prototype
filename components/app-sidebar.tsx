@@ -5,15 +5,15 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Sparkles, Route, Calculator, Briefcase, History,
   Building2, Database, Inbox, Plug, ChevronRight, ChevronLeft, Library, Users, Activity,
-  LayoutTemplate, Receipt, BarChart3, LogOut, ChevronsUpDown,
+  LayoutTemplate, Receipt, BarChart3, LogOut, UserRound,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel,
   SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuBadge,
-  SidebarRail, useSidebar,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
@@ -66,12 +66,14 @@ const NAV_ITEM = cn(
   "group-data-[collapsible=icon]:[&>span:last-child]:hidden",
 );
 
-/** The single expand/collapse control, centred on the sidebar/content seam.
-    One button for both directions: the chevron flips and the label changes,
-    so there is never a second control to find when the rail is collapsed.
+/** The single expand/collapse control. It lives in the sidebar header beside
+    the logo rather than floating on the sidebar/content seam, so it never
+    draws a line down the boundary. One button for both directions: the
+    chevron flips and the label changes, so there is no second control to
+    find once the rail is collapsed.
     Desktop only — below md the sidebar is an off-canvas sheet driven by the
     topbar trigger. */
-function BoundaryToggle() {
+function CollapseToggle() {
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const label = collapsed ? "Expand sidebar" : "Collapse sidebar";
@@ -84,12 +86,11 @@ function BoundaryToggle() {
           aria-label={label}
           aria-expanded={!collapsed}
           className={cn(
-            "absolute top-[3.625rem] -right-4 z-30 hidden size-8 items-center justify-center rounded-full md:flex",
-            "border border-border-divider bg-card text-muted-foreground shadow-card",
-            "transition-colors hover:border-border hover:bg-surface-hover hover:text-foreground",
+            "hidden size-8 shrink-0 items-center justify-center rounded-md md:flex",
+            "text-fg-tertiary transition-colors hover:bg-sidebar-accent hover:text-foreground",
           )}
         >
-          {collapsed ? <ChevronRight className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
+          {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
         </button>
       </TooltipTrigger>
       <TooltipContent side="right">{label}</TooltipContent>
@@ -117,23 +118,20 @@ function AccountMenu() {
       )}
     >
       <Avatar className="size-12 rounded-md">
-        <AvatarFallback
-          className="rounded-md text-sm"
-          style={{ backgroundColor: user.avatarColor, color: "var(--fg-inverse)" }}
-        >
-          {user.initials}
+        {user.avatarUrl && <AvatarImage className="rounded-md" src={user.avatarUrl} alt="" />}
+        {/* No photo on any seeded account — a person glyph stands in rather
+            than a coloured monogram. */}
+        <AvatarFallback className="rounded-md bg-muted text-muted-foreground">
+          <UserRound aria-hidden className="size-6" />
         </AvatarFallback>
       </Avatar>
       {!collapsed && (
-        <>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-body font-semibold text-sidebar-foreground">
-              {user.name}
-            </span>
-            <span className="block truncate text-caption text-fg-tertiary">{user.title}</span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-body font-semibold text-sidebar-foreground">
+            {user.name}
           </span>
-          <ChevronsUpDown aria-hidden className="size-3.5 shrink-0 text-fg-tertiary" />
-        </>
+          <span className="block truncate text-caption text-fg-tertiary">{user.title}</span>
+        </span>
       )}
       <span className="sr-only">Account menu for {user.name}</span>
     </button>
@@ -193,14 +191,17 @@ export function AppSidebar() {
     // The rail sits directly on --shell with no panel fill and no divider:
     // sidebar and page background are one surface, the content card floats on it.
     <Sidebar collapsible="icon" className="border-r-0">
-      <SidebarHeader className={cn("px-6 pt-6 pb-4", collapsed && "px-6")}>
-        <Link
-          href="/"
-          aria-label="Atlantic Rate Management System — dashboard"
-          className="rounded-md"
-        >
-          <Logo collapsed={collapsed} />
-        </Link>
+      <SidebarHeader className="px-6 pt-6 pb-4">
+        <div className={cn("flex items-center gap-2", collapsed && "flex-col gap-3")}>
+          <Link
+            href="/"
+            aria-label="Atlantic Rate Management System — dashboard"
+            className="min-w-0 flex-1 rounded-md"
+          >
+            <Logo collapsed={collapsed} />
+          </Link>
+          <CollapseToggle />
+        </div>
       </SidebarHeader>
 
       <SidebarContent>
@@ -240,8 +241,6 @@ export function AppSidebar() {
       <SidebarFooter className="gap-2 px-6 pt-4 pb-6">
         <AccountMenu />
       </SidebarFooter>
-      <BoundaryToggle />
-      <SidebarRail />
     </Sidebar>
   );
 }

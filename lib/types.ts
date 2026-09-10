@@ -16,6 +16,9 @@ export interface User {
   title: string;
   initials: string;
   avatarColor: string;
+  /** Profile photo. Absent for every seeded account, so the account block
+      falls back to a person glyph rather than inventing an image. */
+  avatarUrl?: string;
 }
 
 // ── Geography ────────────────────────────────────────────────────────────────
