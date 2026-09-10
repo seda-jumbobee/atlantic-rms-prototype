@@ -146,7 +146,9 @@ function TableSection({
   children: React.ReactNode;
 }) {
   return (
-    <Card asChild className="gap-4 p-0 pt-4 pb-5">
+    // py-5 matches the 20px the table's edge cells inset by, so the heading
+    // row, the rows below it and the card's own top and bottom all agree.
+    <Card asChild className="gap-4 p-0 py-5">
       <section aria-labelledby={id}>
         <div className="flex items-center justify-between gap-3 px-5">
           <h2 id={id} className="text-h4 text-foreground">{title}</h2>
@@ -302,7 +304,7 @@ export default function DashboardPage() {
               <Table plain>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="pl-5">Quote</TableHead>
+                    <TableHead>Quote</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Customer</TableHead>
                     <TableHead>Origin</TableHead>
@@ -310,13 +312,13 @@ export default function DashboardPage() {
                     <TableHead className="text-right">Client total</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Last updated</TableHead>
-                    <TableHead className="pr-5 text-right">Actions</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {recentQuotes.map((q) => (
                     <TableRow key={q.id}>
-                      <TableCell className="pl-5">
+                      <TableCell>
                         <Link
                           href={reopenHref(q)}
                           className="font-mono text-caption font-medium text-primary hover:underline"
@@ -335,7 +337,7 @@ export default function DashboardPage() {
                       <TableCell className="text-body text-muted-foreground">
                         <span title={fmtDate(q.updatedAt)}>{relativeAge(q.updatedAt)}</span>
                       </TableCell>
-                      <TableCell className="pr-5">
+                      <TableCell>
                         <div className="flex justify-end">{quoteActions(q)}</div>
                       </TableCell>
                     </TableRow>
@@ -397,19 +399,19 @@ export default function DashboardPage() {
               <Table plain>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="pl-5">Calculator</TableHead>
+                    <TableHead>Calculator</TableHead>
                     <TableHead>Inputs</TableHead>
                     <TableHead className="text-right">Result</TableHead>
                     <TableHead>Unit</TableHead>
                     <TableHead>Related quote</TableHead>
                     <TableHead>Calculated</TableHead>
-                    <TableHead className="pr-5 text-right">Actions</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {recentCalcs.map((c) => (
                     <TableRow key={c.id}>
-                      <TableCell className="pl-5 font-medium">{c.calculator}</TableCell>
+                      <TableCell className="font-medium">{c.calculator}</TableCell>
                       <TableCell className="max-w-80 truncate text-body text-muted-foreground">
                         {c.summary}
                       </TableCell>
@@ -436,7 +438,7 @@ export default function DashboardPage() {
                       <TableCell className="text-body text-muted-foreground">
                         <span title={fmtDate(c.createdAt)}>{relativeAge(c.createdAt)}</span>
                       </TableCell>
-                      <TableCell className="pr-5">
+                      <TableCell>
                         <div className="flex justify-end">
                           <Button asChild variant="ghost" size="sm" className="px-2">
                             <Link href={calculatorHref(c)} aria-label={`Open ${c.calculator}`}>

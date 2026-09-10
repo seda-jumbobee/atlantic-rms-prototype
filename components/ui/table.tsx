@@ -84,7 +84,10 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "h-12 px-3 text-left align-middle text-xs font-medium whitespace-nowrap text-[var(--c-table-header-text)] [&:has([role=checkbox])]:pr-0",
+        // The outer edges align with the surrounding card's 20px inset; the
+        // gutter between columns stays 12. Set here rather than per page, so
+        // every table in the app lines up the same way.
+        "h-12 px-3 first:pl-5 last:pr-5 text-left align-middle text-xs font-medium whitespace-nowrap text-[var(--c-table-header-text)] [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}
@@ -97,7 +100,7 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
     <td
       data-slot="table-cell"
       className={cn(
-        "px-3 py-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+        "px-3 py-2 first:pl-5 last:pr-5 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}
