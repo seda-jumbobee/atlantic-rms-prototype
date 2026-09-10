@@ -1,61 +1,71 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Sparkles, Calculator, ArrowRight, FileText, Briefcase, TrendingUp,
-  AlertCircle, LayoutTemplate, Pencil, Send, ExternalLink, Route,
+  LayoutTemplate, Pencil, Send, ExternalLink, Route,
   type LucideIcon,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { IconTile } from "@/components/stat-card";
-import { QuoteStatusBadge, StatusBadge } from "@/components/status-badge";
+import { QuoteStatusBadge } from "@/components/status-badge";
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
 import { useSession } from "@/components/session-provider";
 import { QUOTE_HISTORY, CALC_HISTORY } from "@/lib/data/history";
+import type { QuoteHistoryItem, CalcHistoryItem } from "@/lib/data/history";
 import { DEALS } from "@/lib/data/deals";
 import { money, fmtDate, relativeAge } from "@/lib/format";
-import { reopenHref, calculatorHref, needsAttention } from "@/lib/quote-links";
-import { cn } from "@/lib/utils";
+import { reopenHref, calculatorHref } from "@/lib/quote-links";
 
-/* Fully clickable overview card: main number, supporting label,
-   tertiary "View details", hover/focus/keyboard states. */
-function OverviewCard({
-  label, value, sub, icon: Icon, accent, href,
+/* ============================================================================
+   Dashboard — Figma "04 - Screens / Dashboard" (77:1075).
+
+   Everything here is composed from shared design-system components and
+   tokens: Card, Table, Button, StatusBadge, IconTile, PageHeader, and the
+   --c-* / semantic colour variables. No page-local colours, radii or type.
+   ========================================================================= */
+
+const QUOTE_TYPE_LABEL: Record<QuoteHistoryItem["quoteType"], string> = {
+  "rate-quote": "Rate quote",
+  "custom-route": "Custom route",
+};
+
+/** City without the state/country qualifier, for the narrow route columns. */
+const city = (loc: string) => loc.split(",")[0].trim();
+
+/* ── KPI card ─────────────────────────────────────────────────────────── */
+function KpiCard({
+  label, value, sub, icon: Icon, href,
 }: {
   label: string;
   value: string | number;
   sub: string;
   icon: LucideIcon;
-  accent?: "success" | "warning" | "destructive";
   href: string;
 }) {
-  const accentColor =
-    accent === "success" ? "text-success" : accent === "warning" ? "text-warning"
-    : accent === "destructive" ? "text-destructive" : "text-primary";
   return (
     <Link
       href={href}
       aria-label={`${label}: ${value} (${sub}) — view details`}
-      className="group rounded-lg outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+      className="group block rounded-card"
     >
-      <Card className="h-full min-w-0 gap-1 p-4 transition group-hover:border-primary/40 group-hover:shadow-sm group-focus-visible:border-ring">
+      <Card className="h-full min-w-0 gap-2 p-4 transition-colors group-hover:border-border-strong">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-xs font-medium text-muted-foreground">{label}</p>
-          <IconTile size="sm" className={accentColor}>
+          <p className="text-caption font-bold text-muted-foreground">{label}</p>
+          <IconTile size="sm" className="text-primary">
             <Icon />
           </IconTile>
         </div>
-        <p className="text-2xl font-semibold tracking-tight tabular-nums">{value}</p>
+        <p className="text-h2 tabular-nums text-foreground">{value}</p>
         <div className="flex items-center justify-between gap-2">
-          <p className="truncate text-xs text-muted-foreground">{sub}</p>
-          <span className="flex shrink-0 items-center gap-0.5 text-xs font-medium text-primary opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
-            View details <ArrowRight className="size-3.5" />
+          <p className="truncate text-caption text-muted-foreground">{sub}</p>
+          <span className="flex shrink-0 items-center gap-1 text-caption font-medium text-primary">
+            View details <ArrowRight aria-hidden className="size-3.5" />
           </span>
         </div>
       </Card>
@@ -63,35 +73,58 @@ function OverviewCard({
   );
 }
 
-/* Subtle ocean-freight illustration for the hero — container ship on a dashed
-   route arc between two ports. Pure SVG, colored via design-system tokens. */
-function OceanGraphic() {
+/* ── Promo card ───────────────────────────────────────────────────────── */
+/** The Figma decoration: one stroked ribbon in a white 0 → 10% gradient,
+    clipped by the card. Exported from the reference, not redrawn. */
+function PromoRibbon() {
   return (
-    <div aria-hidden className="hidden shrink-0 select-none md:block">
-      <svg viewBox="44 36 172 72" fill="none" className="h-auto w-[320px] text-primary lg:w-[420px] xl:w-[480px]">
-        {/* route arc between ports — kept short, hugging the ship */}
-        <path d="M54 80 C 95 42, 165 42, 206 80" stroke="currentColor" strokeOpacity="0.3" strokeWidth="1.5" strokeDasharray="2 6" strokeLinecap="round" />
-        <circle cx="54" cy="80" r="4" fill="currentColor" fillOpacity="0.45" />
-        <circle cx="206" cy="80" r="4" fill="currentColor" fillOpacity="0.45" />
-        {/* container stacks */}
-        <rect x="106" y="59" width="14" height="9" rx="1" fill="currentColor" fillOpacity="0.7" />
-        <rect x="122" y="59" width="14" height="9" rx="1" fill="currentColor" fillOpacity="0.4" />
-        <rect x="138" y="59" width="14" height="9" rx="1" fill="currentColor" fillOpacity="0.55" />
-        <rect x="114" y="49" width="14" height="9" rx="1" fill="currentColor" fillOpacity="0.5" />
-        <rect x="130" y="49" width="14" height="9" rx="1" fill="currentColor" fillOpacity="0.75" />
-        {/* bridge */}
-        <rect x="154" y="48" width="10" height="20" rx="1.5" fill="currentColor" fillOpacity="0.85" />
-        <rect x="156.5" y="52" width="5" height="3" rx="0.5" fill="var(--status-info-bg)" />
-        {/* hull */}
-        <path d="M98 69 H 168 L 159 85 H 106 Z" fill="currentColor" />
-        {/* waves */}
-        <path d="M86 93 q 8 -6 16 0 t 16 0 t 16 0 t 16 0 t 16 0 t 16 0" stroke="currentColor" strokeOpacity="0.28" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-        <path d="M104 101 q 8 -5 16 0 t 16 0 t 16 0 t 16 0" stroke="currentColor" strokeOpacity="0.16" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-      </svg>
-    </div>
+    <svg
+      aria-hidden
+      viewBox="0 0 392 410"
+      fill="none"
+      className="pointer-events-none absolute top-[-42%] left-[52%] h-[139%] w-[65%] max-w-none"
+      preserveAspectRatio="none"
+    >
+      <path
+        d="M82.8545 34.2283L28.2182 240.818C27.3733 244.013 31.5588 246.027 33.5277 243.373L183.369 41.4188C185.365 38.7286 189.6 40.8367 188.657 44.051L107.592 320.329C106.645 323.558 110.916 325.66 112.896 322.939L291.792 77.1909C293.768 74.4764 298.03 76.5621 297.099 79.7881L230.295 311.341C229.354 314.605 233.708 316.674 235.643 313.882L391.548 88.9811C393.505 86.1581 397.901 88.3059 396.877 91.5846L307.705 377.082C306.68 380.363 311.083 382.51 313.037 379.682L447.728 184.752"
+        stroke="url(#promo-ribbon)"
+        strokeWidth={56}
+        strokeLinecap="square"
+      />
+      <defs>
+        <linearGradient id="promo-ribbon" x1="-37.77" y1="135.9" x2="348.73" y2="372.9" gradientUnits="userSpaceOnUse">
+          <stop stopColor="white" stopOpacity="0" />
+          <stop offset="1" stopColor="white" stopOpacity="0.1" />
+        </linearGradient>
+      </defs>
+    </svg>
   );
 }
 
+function PromoCard() {
+  return (
+    <Card className="relative min-w-0 justify-end border-transparent bg-[image:var(--c-promo-gradient)] p-8">
+      <PromoRibbon />
+      <div className="relative flex max-w-md flex-col gap-2">
+        <h2 className="text-h2 text-[color:var(--c-promo-foreground)]">Need to check rates?</h2>
+        <p className="text-body text-[color:var(--c-promo-muted)]">
+          Check available rates using commodity-specific formulas and contract rates, or use
+          custom route.
+        </p>
+      </div>
+      <div className="relative mt-6 flex flex-wrap gap-3">
+        <Button asChild>
+          <Link href="/quote-master">Create rate quote</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/route-builder">Build custom route</Link>
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+/* ── Quick actions ────────────────────────────────────────────────────── */
 const QUICK_ACTIONS = [
   { href: "/quote-master", label: "Create rate quote", icon: Sparkles },
   { href: "/templates", label: "Use template", icon: LayoutTemplate },
@@ -99,9 +132,76 @@ const QUICK_ACTIONS = [
   { href: "/route-builder", label: "Build custom route", icon: Route },
 ];
 
+function QuickActions() {
+  return (
+    <Card asChild className="p-5">
+      <section aria-labelledby="quick-actions-heading">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+          <h2 id="quick-actions-heading" className="text-body font-bold text-muted-foreground">
+            Quick actions
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {QUICK_ACTIONS.map((a) => (
+              <Button key={a.href} asChild variant="outline" size="sm">
+                <Link href={a.href}>
+                  <a.icon aria-hidden className="size-4" /> {a.label}
+                </Link>
+              </Button>
+            ))}
+          </div>
+        </div>
+      </section>
+    </Card>
+  );
+}
+
+/* ── Section shell: card with a heading row and a "View all" link ─────── */
+function TableSection({
+  id, title, viewAllHref, viewAllLabel, children,
+}: {
+  id: string;
+  title: string;
+  viewAllHref: string;
+  viewAllLabel: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card asChild className="gap-4 p-0 pt-4 pb-5">
+      <section aria-labelledby={id}>
+        <div className="flex items-center justify-between gap-3 px-5">
+          <h2 id={id} className="text-h4 text-foreground">{title}</h2>
+          <Button asChild variant="ghost" size="sm">
+            <Link href={viewAllHref} aria-label={viewAllLabel}>
+              View all <ArrowRight aria-hidden className="size-4" />
+            </Link>
+          </Button>
+        </div>
+        {children}
+      </section>
+    </Card>
+  );
+}
+
+/** Stacked presentation used below md, where nine columns cannot fit without
+    forcing the page to scroll sideways. */
+function MobileRow({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 border-b border-[var(--c-table-border)] px-5 py-4 last:border-b-0">
+      {children}
+    </li>
+  );
+}
+function Cell({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <>
+      <dt className="text-caption text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 text-body text-foreground">{children}</dd>
+    </>
+  );
+}
+
 export default function DashboardPage() {
   const { user } = useSession();
-  const router = useRouter();
   const firstName = user?.name.split(" ")[0] ?? "there";
   const uid = user?.id;
 
@@ -118,218 +218,249 @@ export default function DashboardPage() {
       NOW - new Date(d.closedAt ?? d.lastModified).getTime() < 90 * 86_400_000
   );
   const wonValue = wonLast90d.reduce((s, d) => s + (d.sale ?? 0), 0);
-  const attentionQuotes = myQuotes.filter((q) => needsAttention(q, NOW));
 
   const recentQuotes = [...myQuotes]
-    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
+    .sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt))
     .slice(0, 5);
   const recentCalcs = [...myCalcs]
     .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
-    .slice(0, 4);
+    .slice(0, 5);
 
   const historyHref = (params: Record<string, string>) =>
     `/history?${new URLSearchParams(uid ? { manager: uid, ...params } : params)}`;
 
+  const quoteActions = (q: QuoteHistoryItem) => (
+    <div className="flex items-center gap-1">
+      {q.dealId && (
+        <Button asChild variant="ghost" size="sm" className="px-2">
+          <Link href={`/deals/${q.dealId}`} aria-label={`Open the deal for ${q.id}`}>
+            <ExternalLink aria-hidden className="size-4" /> Deal
+          </Link>
+        </Button>
+      )}
+      <Button asChild variant="ghost" size="sm" className="px-2">
+        <Link
+          href={reopenHref(q)}
+          aria-label={`${q.status === "sent" ? "Resend" : "Edit"} quote ${q.id}`}
+        >
+          {q.status === "sent" ? <Send aria-hidden className="size-4" /> : <Pencil aria-hidden className="size-4" />}
+          {q.status === "sent" ? "Resend" : "Edit"}
+        </Link>
+      </Button>
+    </div>
+  );
+
+  const calcResult = (c: CalcHistoryItem) =>
+    c.unit ? c.result.toLocaleString() : money(c.result);
+
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
       <PageHeader
         title="Dashboard"
-        description={`Good day, ${firstName} — here's where your work stands.`}
+        description={`Hello, ${firstName}! Here's where your work stands.`}
       />
 
-      {/* 1 · Overview */}
-      <section aria-label="Overview" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <OverviewCard
-          label="Active quotes"
-          value={activeQuotes.length}
-          sub="drafts + awaiting response"
-          icon={FileText}
-          href={historyHref({ status: "active" })}
-        />
-        <OverviewCard
-          label="Active deals"
-          value={activeDeals.length}
-          sub="in your pipeline"
-          icon={Briefcase}
-          href="/deals"
-        />
-        <OverviewCard
-          label="Won value"
-          value={money(wonValue)}
-          sub="last 90 days · won deals"
-          icon={TrendingUp}
-          href="/deals"
-        />
-        <OverviewCard
-          label="Quotes requiring attention"
-          value={attentionQuotes.length}
-          sub="drafts · stale · expired"
-          icon={AlertCircle}
-          accent={attentionQuotes.length > 0 ? "warning" : undefined}
-          href={historyHref({ status: "attention" })}
-        />
-      </section>
-
-      {/* 2 · Create a new quote (hero) — Rate Quote primary, Custom Route as the alternative */}
-      <section aria-label="Create a new quote">
-        <Card className="border-primary/20 bg-status-info-bg">
-          <CardContent className="flex flex-col gap-8 p-6 sm:p-8 md:flex-row md:items-center md:justify-between">
-            <div className="max-w-xl">
-              <h2 className="text-xl font-semibold tracking-tight">Create a new quote</h2>
-              <p className="mt-1.5 text-sm text-muted-foreground">
-                Check available rates using commodity-specific formulas and contract rates.
-              </p>
-              <Button asChild size="lg" className="mt-4">
-                <Link href="/quote-master">Create rate quote</Link>
-              </Button>
-
-              <div className="mt-7 border-t border-primary/15 pt-5">
-                <h3 className="text-base font-semibold">Need to build a custom route?</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Manually select transportation stages, vendors, and contracts for a complex shipment.
-                </p>
-                <Button asChild variant="outline" className="mt-3">
-                  <Link href="/route-builder">Build custom route</Link>
-                </Button>
-              </div>
-            </div>
-            <OceanGraphic />
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* 3 · Quick actions */}
-      <section aria-label="Quick actions" className="space-y-2">
-        <h2 className="font-semibold">Quick actions</h2>
-        <div className="flex flex-wrap gap-2">
-          {QUICK_ACTIONS.map((a) => (
-            <Button key={a.href} asChild variant="outline" size="sm" className="text-muted-foreground hover:text-foreground">
-              <Link href={a.href}>
-                <a.icon className="size-4" /> {a.label}
-              </Link>
-            </Button>
-          ))}
-        </div>
-      </section>
-
-      {/* 4 · Needs attention */}
-      {attentionQuotes.length > 0 && (
-        <section aria-label="Needs attention" className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Needs attention</h2>
-            <Button asChild variant="ghost" size="sm" className="text-muted-foreground">
-              <Link href={historyHref({ status: "attention" })}>
-                View all <ArrowRight className="size-4" />
-              </Link>
-            </Button>
+      {/* 1 · Overview + promo. The KPI block and the promo sit side by side on
+             wide screens, exactly as in the reference; below xl they stack. */}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <section aria-label="Overview" className="grid gap-6 sm:grid-cols-2">
+          <KpiCard
+            label="Active quotes"
+            value={activeQuotes.length}
+            sub="drafts + awaiting response"
+            icon={FileText}
+            href={historyHref({ status: "active" })}
+          />
+          <KpiCard
+            label="Active deals"
+            value={activeDeals.length}
+            sub="in your pipeline"
+            icon={Briefcase}
+            href="/deals"
+          />
+          <div className="sm:col-span-2">
+            <KpiCard
+              label="Won value"
+              value={money(wonValue)}
+              sub="last 90 days · won deals"
+              icon={TrendingUp}
+              href="/deals"
+            />
           </div>
-          <Card className="divide-y p-0">
-            {attentionQuotes.slice(0, 4).map((q) => {
-              const stale = q.status === "sent";
-              return (
-                <div key={q.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 sm:flex-nowrap">
-                  <StatusBadge tone={q.status === "draft" ? "neutral" : "warning"} className="shrink-0">
-                    {q.status === "draft" ? "Draft" : q.status === "expired" ? "Expired" : "No response"}
-                  </StatusBadge>
-                  <div className="min-w-0 flex-1">
-                    <span className="text-sm font-medium">{q.commodity}</span>
-                    <span className="ml-2 font-mono text-xs text-muted-foreground">{q.id}</span>
-                    <div className="truncate text-xs text-muted-foreground">
-                      {q.customer} · {stale
-                        ? `sent ${relativeAge(q.createdAt)}, no response`
-                        : `created ${relativeAge(q.createdAt)}, not sent`}
-                    </div>
-                  </div>
-                  <Button asChild variant="outline" size="sm" className="ml-auto shrink-0">
-                    <Link href={reopenHref(q)}>
-                      {stale ? <Send className="size-4" /> : <Pencil className="size-4" />}
-                      {stale ? "Resend" : "Edit & send"}
-                    </Link>
-                  </Button>
-                </div>
-              );
-            })}
-          </Card>
         </section>
-      )}
+        <PromoCard />
+      </div>
 
-      {/* 5 · Recent activity — balanced two-column grid */}
-      <div className="grid items-stretch gap-6 lg:grid-cols-2">
-        {/* Recent quotes */}
-        <section aria-label="Recent quotes" className="flex min-w-0 flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Recent quotes</h2>
-            <Button asChild variant="ghost" size="sm" className="text-muted-foreground">
-              <Link href={historyHref({ tab: "quotes" })}>
-                View all <ArrowRight className="size-4" />
-              </Link>
-            </Button>
-          </div>
-          {recentQuotes.length === 0 ? (
+      {/* 2 · Quick actions */}
+      <QuickActions />
+
+      {/* 3 · Recent quotes */}
+      <TableSection
+        id="recent-quotes-heading"
+        title="Recent quotes"
+        viewAllHref={historyHref({ tab: "quotes" })}
+        viewAllLabel="View all quotes in History"
+      >
+        {recentQuotes.length === 0 ? (
+          <div className="px-5">
             <EmptyState
               icon={FileText}
               title="No quotes yet"
               description="Your quotes will appear here once you create your first one."
-              className="flex-1 justify-center"
+              className="border-dashed shadow-none"
               action={
                 <Button asChild size="sm">
                   <Link href="/quote-master">Create rate quote</Link>
                 </Button>
               }
             />
-          ) : (
-            <Card className="flex-1 overflow-x-auto p-0">
-              <Table>
+          </div>
+        ) : (
+          <>
+            {/* md+ : one column per data point */}
+            <div className="hidden md:block">
+              <Table plain>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Quote</TableHead>
-                    <TableHead>Route</TableHead>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="pl-5">Quote</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Origin</TableHead>
+                    <TableHead>Destination</TableHead>
                     <TableHead className="text-right">Client total</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Updated</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>Last updated</TableHead>
+                    <TableHead className="pr-5 text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {recentQuotes.map((q) => (
-                    <TableRow
-                      key={q.id}
-                      className="cursor-pointer"
-                      onClick={() => router.push(reopenHref(q))}
-                    >
-                      <TableCell>
+                    <TableRow key={q.id}>
+                      <TableCell className="pl-5">
                         <Link
                           href={reopenHref(q)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="font-mono text-xs font-medium text-primary outline-none hover:underline focus-visible:underline"
+                          className="font-mono text-caption font-medium text-primary hover:underline"
                         >
                           {q.id}
                         </Link>
-                        <div className="max-w-[14rem] truncate text-xs text-muted-foreground">{q.customer}</div>
                       </TableCell>
-                      <TableCell className="whitespace-nowrap text-sm">
-                        {q.origin.split(",")[0]}
-                        <span className="text-muted-foreground"> → </span>
-                        {q.destination.split(",")[0]}
+                      <TableCell className="text-body text-muted-foreground">
+                        {QUOTE_TYPE_LABEL[q.quoteType]}
                       </TableCell>
+                      <TableCell className="max-w-56 truncate text-body">{q.customer}</TableCell>
+                      <TableCell className="text-body">{city(q.origin)}</TableCell>
+                      <TableCell className="text-body">{city(q.destination)}</TableCell>
                       <TableCell className="text-right font-medium tabular-nums">{money(q.total)}</TableCell>
                       <TableCell><QuoteStatusBadge status={q.status} /></TableCell>
-                      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                        <span title={fmtDate(q.createdAt)}>{relativeAge(q.createdAt)}</span>
+                      <TableCell className="text-body text-muted-foreground">
+                        <span title={fmtDate(q.updatedAt)}>{relativeAge(q.updatedAt)}</span>
                       </TableCell>
-                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1">
-                          {q.dealId && (
-                            <Button asChild variant="ghost" size="sm" className="h-8 px-2">
-                              <Link href={`/deals/${q.dealId}`}>
-                                <ExternalLink className="size-4" /> Deal
-                              </Link>
-                            </Button>
-                          )}
-                          <Button asChild variant="ghost" size="sm" className="h-8 px-2">
-                            <Link href={reopenHref(q)}>
-                              <Pencil className="size-4" />
-                              {q.status === "sent" ? "Resend" : "Edit"}
+                      <TableCell className="pr-5">
+                        <div className="flex justify-end">{quoteActions(q)}</div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* below md : the same fields, stacked, so nothing overflows */}
+            <ul className="md:hidden">
+              {recentQuotes.map((q) => (
+                <MobileRow key={q.id}>
+                  <dl className="col-span-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
+                    <Cell label="Quote">
+                      <Link href={reopenHref(q)} className="font-mono text-caption font-medium text-primary">
+                        {q.id}
+                      </Link>
+                    </Cell>
+                    <Cell label="Type">{QUOTE_TYPE_LABEL[q.quoteType]}</Cell>
+                    <Cell label="Customer">{q.customer}</Cell>
+                    <Cell label="Origin">{city(q.origin)}</Cell>
+                    <Cell label="Destination">{city(q.destination)}</Cell>
+                    <Cell label="Client total"><span className="tabular-nums">{money(q.total)}</span></Cell>
+                    <Cell label="Status"><QuoteStatusBadge status={q.status} /></Cell>
+                    <Cell label="Last updated">{relativeAge(q.updatedAt)}</Cell>
+                  </dl>
+                  <div className="col-span-2 pt-1">{quoteActions(q)}</div>
+                </MobileRow>
+              ))}
+            </ul>
+          </>
+        )}
+      </TableSection>
+
+      {/* 4 · Recent calculations — a separate table, never merged with quotes */}
+      <TableSection
+        id="recent-calculations-heading"
+        title="Recent calculations"
+        viewAllHref={historyHref({ tab: "calculations" })}
+        viewAllLabel="View all calculations in History"
+      >
+        {recentCalcs.length === 0 ? (
+          <div className="px-5">
+            <EmptyState
+              icon={Calculator}
+              title="No calculations yet"
+              description="Runs from the calculators will show up here."
+              className="border-dashed shadow-none"
+              action={
+                <Button asChild size="sm" variant="outline">
+                  <Link href="/calculators">Open calculators</Link>
+                </Button>
+              }
+            />
+          </div>
+        ) : (
+          <>
+            <div className="hidden md:block">
+              <Table plain>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="pl-5">Calculator</TableHead>
+                    <TableHead>Inputs</TableHead>
+                    <TableHead className="text-right">Result</TableHead>
+                    <TableHead>Unit</TableHead>
+                    <TableHead>Related quote</TableHead>
+                    <TableHead>Calculated</TableHead>
+                    <TableHead className="pr-5 text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentCalcs.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell className="pl-5 font-medium">{c.calculator}</TableCell>
+                      <TableCell className="max-w-80 truncate text-body text-muted-foreground">
+                        {c.summary}
+                      </TableCell>
+                      <TableCell className="text-right font-medium tabular-nums">{calcResult(c)}</TableCell>
+                      <TableCell className="text-body text-muted-foreground">
+                        {c.unit ?? <span aria-hidden>—</span>}
+                        {!c.unit && <span className="sr-only">not applicable</span>}
+                      </TableCell>
+                      <TableCell>
+                        {c.relatedQuoteId ? (
+                          <Link
+                            href={historyHref({ tab: "quotes", record: c.relatedQuoteId })}
+                            className="font-mono text-caption font-medium text-primary hover:underline"
+                          >
+                            {c.relatedQuoteId}
+                          </Link>
+                        ) : (
+                          <>
+                            <span aria-hidden className="text-muted-foreground">—</span>
+                            <span className="sr-only">none</span>
+                          </>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-body text-muted-foreground">
+                        <span title={fmtDate(c.createdAt)}>{relativeAge(c.createdAt)}</span>
+                      </TableCell>
+                      <TableCell className="pr-5">
+                        <div className="flex justify-end">
+                          <Button asChild variant="ghost" size="sm" className="px-2">
+                            <Link href={calculatorHref(c)} aria-label={`Open ${c.calculator}`}>
+                              <Calculator aria-hidden className="size-4" /> Open
                             </Link>
                           </Button>
                         </div>
@@ -338,62 +469,32 @@ export default function DashboardPage() {
                   ))}
                 </TableBody>
               </Table>
-            </Card>
-          )}
-        </section>
+            </div>
 
-        {/* Recent calculations */}
-        <section aria-label="Recent calculations" className="flex min-w-0 flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Recent calculations</h2>
-            <Button asChild variant="ghost" size="sm" className="text-muted-foreground">
-              <Link href={historyHref({ tab: "calculations" })}>
-                View all <ArrowRight className="size-4" />
-              </Link>
-            </Button>
-          </div>
-          {recentCalcs.length === 0 ? (
-            <EmptyState
-              icon={Calculator}
-              title="No calculations yet"
-              description="Runs from the calculators will show up here."
-              className="flex-1 justify-center"
-              action={
-                <Button asChild size="sm" variant="outline">
-                  <Link href="/calculators">Open calculators</Link>
-                </Button>
-              }
-            />
-          ) : (
-            <Card className="flex-1 content-start divide-y p-0">
+            <ul className="md:hidden">
               {recentCalcs.map((c) => (
-                <Link
-                  key={c.id}
-                  href={calculatorHref(c)}
-                  className={cn(
-                    "flex items-start justify-between gap-3 p-4 outline-none transition",
-                    "hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-ring/50",
-                    "first:rounded-t-xl last:rounded-b-xl"
-                  )}
-                >
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium">{c.calculator}</div>
-                    <div className="truncate text-xs text-muted-foreground">{c.summary}</div>
+                <MobileRow key={c.id}>
+                  <dl className="col-span-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
+                    <Cell label="Calculator"><span className="font-medium">{c.calculator}</span></Cell>
+                    <Cell label="Inputs">{c.summary}</Cell>
+                    <Cell label="Result"><span className="tabular-nums">{calcResult(c)}</span></Cell>
+                    <Cell label="Unit">{c.unit ?? "—"}</Cell>
+                    <Cell label="Related quote">{c.relatedQuoteId ?? "—"}</Cell>
+                    <Cell label="Calculated">{relativeAge(c.createdAt)}</Cell>
+                  </dl>
+                  <div className="col-span-2 pt-1">
+                    <Button asChild variant="ghost" size="sm" className="px-2">
+                      <Link href={calculatorHref(c)}>
+                        <Calculator aria-hidden className="size-4" /> Open
+                      </Link>
+                    </Button>
                   </div>
-                  <div className="shrink-0 text-right">
-                    <div className="text-sm font-semibold tabular-nums">
-                      {c.unit ? c.result : money(c.result)}
-                    </div>
-                    <div className="text-caption text-muted-foreground" title={fmtDate(c.createdAt)}>
-                      {relativeAge(c.createdAt)}
-                    </div>
-                  </div>
-                </Link>
+                </MobileRow>
               ))}
-            </Card>
-          )}
-        </section>
-      </div>
+            </ul>
+          </>
+        )}
+      </TableSection>
     </div>
   );
 }

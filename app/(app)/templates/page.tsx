@@ -144,7 +144,7 @@ export default function TemplatesPage() {
   const editTemplate = (t: QuoteTemplate) => router.push(templateHref(t)); // opens the workflow with the saved data
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
+    <div className="space-y-6">
       <PageHeader
         title="Templates"
         description="Reuse saved quote, route, and calculation setups to work faster."

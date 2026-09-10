@@ -2,10 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "rms-dev",
+      "name": "rms",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "cwd": "/Users/sedaghukasyan/Desktop/atlantic-rms-prototype-main",
       "port": 3000
     }
   ]

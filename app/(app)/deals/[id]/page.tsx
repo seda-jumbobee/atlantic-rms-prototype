@@ -135,7 +135,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
   const manager = getUser(deal.managerId);
 
   return (
-    <div className="space-y-6 p-4 sm:p-6">
+    <div className="space-y-6">
       <Link href="/deals" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-4" /> Back to deals
       </Link>

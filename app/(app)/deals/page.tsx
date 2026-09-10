@@ -42,7 +42,7 @@ export default function DealsPage() {
   }, []);
 
   return (
-    <div className="space-y-6 p-4 sm:p-6">
+    <div className="space-y-6">
       <PageHeader title="Deals & CRM" description="Atlantic Project Cargo pipeline — synced with Kommo CRM.">
         <div className="flex items-center gap-2">
           <ToggleGroup

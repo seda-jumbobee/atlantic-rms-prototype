@@ -4,11 +4,25 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+/**
+ * `plain` drops the table's own card chrome. Use it when the table already
+ * sits inside a Card, so the two don't stack a border and a radius on top of
+ * each other; the scroll container is kept either way.
+ */
+function Table({
+  className,
+  containerClassName,
+  plain = false,
+  ...props
+}: React.ComponentProps<"table"> & { containerClassName?: string; plain?: boolean }) {
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-x-auto rounded-lg border border-border bg-card"
+      className={cn(
+        "relative w-full overflow-x-auto",
+        !plain && "rounded-card border border-[var(--c-card-border)] bg-card shadow-card",
+        containerClassName
+      )}
     >
       <table
         data-slot="table"
@@ -23,7 +37,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("bg-muted [&_tr]:border-b", className)}
+      className={cn("bg-muted [&_tr]:border-b [&_tr]:border-[var(--c-table-border)]", className)}
       {...props}
     />
   )
@@ -57,7 +71,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "h-12 border-b transition-colors hover:bg-muted has-aria-expanded:bg-muted data-[state=selected]:bg-accent",
+        "h-13 border-b border-[var(--c-table-border)] transition-colors hover:bg-[var(--c-table-row-hover)] has-aria-expanded:bg-[var(--c-table-row-hover)] data-[state=selected]:bg-[var(--c-table-row-selected)]",
         className
       )}
       {...props}
@@ -70,7 +84,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "h-10 px-3 text-left align-middle text-xs font-medium whitespace-nowrap text-muted-foreground [&:has([role=checkbox])]:pr-0",
+        "h-12 px-3 text-left align-middle text-xs font-medium whitespace-nowrap text-[var(--c-table-header-text)] [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}

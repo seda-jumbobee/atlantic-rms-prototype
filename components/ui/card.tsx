@@ -1,18 +1,23 @@
 import * as React from "react"
+import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
 function Card({
   className,
   size = "default",
+  asChild = false,
   ...props
-}: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
+}: React.ComponentProps<"div"> & { size?: "default" | "sm"; asChild?: boolean }) {
+  // asChild lets a card BE the landmark it wraps (a <section>, an <article>)
+  // instead of adding a wrapper div around it.
+  const Comp = asChild ? Slot.Root : "div"
   return (
-    <div
+    <Comp
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col overflow-clip rounded-lg border bg-card text-body text-card-foreground [--card-p:--spacing(4)] data-[size=sm]:[--card-p:--spacing(3)]",
+        "group/card flex flex-col overflow-clip rounded-card border border-[var(--c-card-border)] bg-[var(--c-card-bg)] text-body text-card-foreground shadow-card [--card-p:--spacing(4)] data-[size=sm]:[--card-p:--spacing(3)]",
         className
       )}
       {...props}

@@ -95,12 +95,20 @@
   /* ── radius (RMS/Radius) ─────────────────────────────────────────────── */
   --radius-sm: 4px;
   --radius-md: 8px;                         /* STANDARD: buttons, inputs, selects */
-  --radius-lg: 12px;                        /* cards, modals */
+  --radius-lg: 12px;                        /* nested/dense surfaces */
+  --radius-card: 16px;                      /* cards, panels, nav pills (Figma Dashboard) */
+  --radius-shell: 24px;                     /* the app content surface (Figma Dashboard) */
   --radius-xl: 20px;                        /* auth support card (Figma 04 Screens) */
   --radius-2xl: 48px;                       /* auth banner (Figma 04 Screens) */
   --radius-full: 9999px;
 
+  /* ── elevation ───────────────────────────────────────────────────────── */
+  /* The only elevation in the Dashboard reference: a 1px lift under cards. */
+  --shadow-card: 0 1px 2px 0 rgb(202 202 202 / 0.25);
+  --shadow-shell: 0 1px 2px 0 rgb(202 202 202 / 0.35);
+
   /* ── colour: surfaces ────────────────────────────────────────────────── */
+  --color-shell: var(--shell);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -177,6 +185,7 @@
 
   /* ── sidebar ─────────────────────────────────────────────────────────── */
   --color-sidebar: var(--sidebar);
+  --color-sidebar-active-foreground: var(--sidebar-active-foreground);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
@@ -242,6 +251,10 @@
   --p-neutral-900: #121218;
   --p-neutral-disabled-text: #9a9aa3; /* WCAG-exempt: never the only cue */
 
+  /* blend — the midpoint of the brand gradient (secondary/100 → primary/500).
+     A stop, not a ramp step: it only ever appears inside that gradient. */
+  --p-blend-lilac: #a099b6;
+
   /* feedback */
   --p-success-main: #318735;
   --p-success-hover: #1f7825;
@@ -273,7 +286,10 @@
    ========================================================================= */
 :root {
   /* surfaces */
-  --background: var(--p-neutral-50);          /* surface/page */
+  /* The app frame the content surface floats on. Everything outside the
+     rounded content card — the sidebar column and the gutters — sits on this. */
+  --shell: var(--p-neutral-200);              /* surface/shell */
+  --background: var(--p-neutral-50);          /* surface/page — the content card */
   --foreground: var(--p-neutral-900);         /* text/primary — 17.8771 on page */
   --card: var(--p-neutral-0);                 /* surface/default */
   --card-foreground: var(--p-neutral-900);
@@ -354,15 +370,18 @@
   --status-neutral-fg: var(--p-neutral-600);
   --status-neutral-border: var(--p-neutral-300);
 
-  /* sidebar — surface/inverse */
-  --sidebar: var(--p-primary-900);
-  --sidebar-foreground: var(--p-neutral-0);        /* 18.4970 */
+  /* sidebar — a light rail on the shell, not a dark panel (Figma Dashboard).
+     States are translucent white so the rail reads as one surface with the
+     shell behind it; contrast is carried by the label colour, not the fill. */
+  --sidebar: var(--shell);
+  --sidebar-foreground: var(--p-neutral-900);      /* 15.8 on shell */
   --sidebar-primary: var(--p-secondary-300);       /* count badge */
   --sidebar-primary-foreground: var(--p-neutral-900);
-  --sidebar-accent: var(--p-primary-800);          /* hovered item */
-  --sidebar-accent-foreground: var(--p-neutral-0);
-  --sidebar-active: var(--p-primary-700);          /* selected item — white 13.2989 */
-  --sidebar-border: var(--p-primary-800);
+  --sidebar-accent: rgb(255 255 255 / 0.5);        /* hovered item */
+  --sidebar-accent-foreground: var(--p-neutral-900);
+  --sidebar-active: rgb(255 255 255 / 0.6);        /* selected item */
+  --sidebar-active-foreground: var(--p-primary-600); /* #394190 — 8.71 on the pill */
+  --sidebar-border: var(--p-neutral-300);
   --sidebar-ring: var(--p-primary-400);
 
   /* charts */
@@ -401,6 +420,23 @@
 
   --c-tooltip-bg: var(--surface-inverse);
   --c-tooltip-text: var(--fg-inverse);
+
+  --c-card-bg: var(--card);
+  --c-card-border: var(--border-divider);
+
+  /* promo/hero surface — the one gradient in the system. Warm secondary tint
+     into brand indigo; text on it is always white or neutral/200. */
+  --c-promo-from: var(--p-secondary-100);
+  --c-promo-mid: var(--p-blend-lilac);
+  --c-promo-to: var(--p-primary-500);
+  --c-promo-foreground: var(--p-neutral-0);
+  --c-promo-muted: var(--p-neutral-200);
+  --c-promo-gradient: linear-gradient(
+    260deg,
+    var(--c-promo-from) 0%,
+    var(--c-promo-mid) 45%,
+    var(--c-promo-to) 100%
+  );
 }
 
 /* ============================================================================
@@ -409,6 +445,7 @@
    break if a theme provider is added; values are derived, not designed.
    ========================================================================= */
 .dark {
+  --shell: #0b0b10;
   --background: var(--p-neutral-900);
   --foreground: var(--p-neutral-50);
   --card: var(--p-neutral-800);

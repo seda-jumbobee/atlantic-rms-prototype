@@ -26,18 +26,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (!ready || !user) {
     return (
-      <div className="grid min-h-svh place-items-center">
+      <div className="grid min-h-svh place-items-center bg-shell">
         <LogoMark className="size-12 animate-pulse" />
       </div>
     );
   }
 
   return (
-    <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
+    // --shell is the frame the whole app sits on; SidebarInset is the rounded
+    // content surface floating on it (Figma "04 - Screens / Dashboard").
+    <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen} className="bg-shell">
       <AppSidebar />
-      <SidebarInset className="min-w-0">
+      <SidebarInset className="min-w-0 overflow-hidden">
         <AppTopbar />
-        <main className="min-w-0 flex-1 p-4 sm:p-6">{children}</main>
+        <main className="min-w-0 flex-1 px-4 pt-6 pb-8 sm:px-6 md:px-8 md:pb-10">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

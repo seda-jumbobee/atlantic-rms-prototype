@@ -28,7 +28,9 @@ const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
-const SIDEBAR_WIDTH_ICON = "3rem"
+// 7rem = the collapsed rail in Figma "04 - Screens / Dashboard": 24px gutter
+// + a 48px icon target + the gap to the content surface.
+const SIDEBAR_WIDTH_ICON = "7rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
 type SidebarContextProps = {
@@ -306,7 +308,13 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
     <main
       data-slot="sidebar-inset"
       className={cn(
-        "relative flex w-full flex-1 flex-col bg-background md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-lg md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
+        // The content surface: a rounded card floating on --shell, matching
+        // Figma "04 - Screens / Dashboard". Full-bleed below md, where the
+        // sidebar becomes an off-canvas sheet and the gutters would only
+        // cost width.
+        "relative flex w-full flex-1 flex-col bg-background",
+        "md:my-6 md:mr-6 md:rounded-shell md:shadow-shell",
+        "md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-lg md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
         className
       )}
       {...props}
