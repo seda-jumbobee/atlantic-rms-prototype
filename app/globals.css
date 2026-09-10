@@ -405,8 +405,8 @@
      border to input/border = #E7E7EB, i.e. border/divider — NOT the 3:1
      control boundary. Checkbox and Radio keep border/strong, which is what
      their own Figma tokens (checkbox/border, radio/border) resolve to.
-     NOTE: #E7E7EB measures ~1.19:1 against the white field, below the 3:1
-     WCAG 1.4.11 asks of a control boundary. Hover (#6E6E77, 4.9:1) and the
+     NOTE: #E7E7EB measures 1.23 against the white field, below the 3:1
+     WCAG 1.4.11 asks of a control boundary. Hover (#6E6E77, 5.04) and the
      2px focus ring still identify the control; the resting edge does not. */
   --c-input-border: var(--border-divider);
   --c-input-border-hover: var(--fg-tertiary);
@@ -418,6 +418,18 @@
   --c-input-helper: var(--fg-tertiary);
   --c-input-error: var(--status-negative-fg);
   --c-input-required: var(--destructive);
+
+  /* select / dropdown — Figma "RMS / Select" (11:26) and "RMS / Select Menu"
+     (11:27). The menu is a bordered white panel, not a ring, and its items
+     carry their own resting/hover/selected treatment. */
+  --c-select-menu-bg: var(--popover);              /* #FFFFFF */
+  --c-select-menu-border: var(--border-divider);   /* #E7E7EB */
+  --c-select-item-hover: var(--surface-hover);     /* #F4F4F6 */
+  --c-select-item-selected: var(--p-primary-100);  /* #D3D9F5 */
+  --c-select-item-selected-text: var(--primary);   /* #232572 — 9.50 on the tint */
+  /* 6px sits between the DS radius steps (4 / 8); it is the menu item's own
+     measured value, so it lives here rather than in the global scale. */
+  --c-select-item-radius: 6px;
 
   --c-table-header-bg: var(--muted);
   --c-table-header-text: var(--muted-foreground);
