@@ -190,7 +190,7 @@ export function AppSidebar() {
   return (
     // The rail sits directly on --shell with no panel fill and no divider:
     // sidebar and page background are one surface, the content card floats on it.
-    <Sidebar collapsible="icon" className="border-r-0">
+    <Sidebar collapsible="icon">
       <SidebarHeader className="px-6 pt-6 pb-4">
         <div className={cn("flex items-center gap-2", collapsed && "flex-col gap-3")}>
           <Link
