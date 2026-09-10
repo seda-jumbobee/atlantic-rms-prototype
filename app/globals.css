@@ -401,7 +401,14 @@
   --c-input-bg: var(--card);
   --c-input-bg-disabled: var(--muted);
   --c-input-bg-readonly: var(--muted);
-  --c-input-border: var(--border-strong);
+  /* Figma "RMS / Input" (10:114) binds every text-entry control's resting
+     border to input/border = #E7E7EB, i.e. border/divider — NOT the 3:1
+     control boundary. Checkbox and Radio keep border/strong, which is what
+     their own Figma tokens (checkbox/border, radio/border) resolve to.
+     NOTE: #E7E7EB measures ~1.19:1 against the white field, below the 3:1
+     WCAG 1.4.11 asks of a control boundary. Hover (#6E6E77, 4.9:1) and the
+     2px focus ring still identify the control; the resting edge does not. */
+  --c-input-border: var(--border-divider);
   --c-input-border-hover: var(--fg-tertiary);
   --c-input-border-focus: var(--ring);
   --c-input-border-error: var(--destructive);
