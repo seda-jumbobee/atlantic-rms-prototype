@@ -90,7 +90,9 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-header"
-      className={cn("flex flex-col gap-0.5 p-4", className)}
+      // pr-12 clears the close button, which is 32px wide at right-3 and so
+      // reaches 44px into the panel. p-4 alone let a long title run under it.
+      className={cn("flex flex-col gap-0.5 p-4 pr-12", className)}
       {...props}
     />
   )

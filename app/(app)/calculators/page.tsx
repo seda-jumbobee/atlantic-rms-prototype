@@ -125,7 +125,7 @@ function CalculatorCard({ c }: { c: CalculatorMeta }) {
   const Icon = iconFor(c.icon);
   return (
     <Link href={`/calculators/${c.id}`} className="group rounded-lg outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
-      <Card className="flex h-full flex-col gap-3 p-5 transition group-hover:border-primary/40 group-hover:shadow-sm">
+      <Card className="flex h-full flex-col gap-3 p-4 transition group-hover:border-primary/40 group-hover:shadow-sm">
         <div className="flex items-start justify-between gap-3">
           <div className="grid size-10 place-items-center rounded-lg bg-muted text-primary transition group-hover:bg-primary/10">
             <Icon className="size-5" />

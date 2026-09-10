@@ -259,7 +259,7 @@ export function RouteStageCard({
 
           {/* custom step name */}
           {step.kind === "custom" && (
-            <div className="space-y-1"><Label className="text-xs text-muted-foreground">Stage name</Label><Input value={step.title} onChange={(e) => onPatch({ title: e.target.value })} className="h-8" aria-label="Stage name" /></div>
+            <div className="space-y-1"><Label className="text-xs text-muted-foreground">Stage name</Label><Input value={step.title} onChange={(e) => onPatch({ title: e.target.value })} size="sm" aria-label="Stage name" /></div>
           )}
 
           {/* vendor/carrier + rate source */}
@@ -315,12 +315,12 @@ export function RouteStageCard({
             ) : (
               <div className="space-y-1">
                 <Label htmlFor={`cost-${step.id}`} className="text-xs text-muted-foreground">Internal cost (USD)</Label>
-                <Input id={`cost-${step.id}`} type="number" min={0} value={step.cost} onChange={(e) => editCost(Number(e.target.value))} className="h-8 w-36 tabular-nums" />
+                <Input id={`cost-${step.id}`} type="number" min={0} value={step.cost} onChange={(e) => editCost(Number(e.target.value))} size="sm" className="w-36 tabular-nums" />
               </div>
             )}
             <div className="space-y-1">
               <Label htmlFor={`days-${step.id}`} className="text-xs text-muted-foreground">Duration (days)</Label>
-              <Input id={`days-${step.id}`} type="number" min={0} value={step.durationDays} onChange={(e) => onPatch({ durationDays: Number(e.target.value) })} className="h-8 w-28 tabular-nums" />
+              <Input id={`days-${step.id}`} type="number" min={0} value={step.durationDays} onChange={(e) => onPatch({ durationDays: Number(e.target.value) })} size="sm" className="w-28 tabular-nums" />
             </div>
           </div>
 

@@ -89,7 +89,9 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-1 pr-6", className)}
+      // pr-11 clears the close button (32px wide at right-2, so 40px in).
+      // pr-6 was 24px and under-reserved it by 16.
+      className={cn("flex flex-col gap-1 pr-11", className)}
       {...props}
     />
   )

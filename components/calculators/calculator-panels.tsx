@@ -2,9 +2,10 @@
 
 import { useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Search, Copy, LayoutTemplate } from "lucide-react";
+import { Save, Search, Copy, LayoutTemplate, SearchX } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -532,7 +533,7 @@ function OceanFreightPanel() {
                     value={amounts[c.code] ?? 0}
                     onChange={(e) => setAmounts((p) => ({ ...p, [c.code]: parseFloat(e.target.value) || 0 }))}
                     disabled={!on[c.code]}
-                    className="h-8 w-24 tabular-nums"
+                    size="sm" className="w-24 tabular-nums"
                   />
                 </div>
               ))}
@@ -645,7 +646,11 @@ function ShippingLinesPanel() {
             <h2 className="font-semibold">{results.length} rate options</h2>
             <span className="text-xs text-muted-foreground">{shipmentForContainer(container)} · sorted by total</span>
           </div>
-          {results.length === 0 && <p className="text-sm text-muted-foreground">No rates for this lane.</p>}
+          {/* Was a bare <p> hugging the page gutter while every sibling in
+              this stack is a padded card. */}
+          {results.length === 0 && (
+            <EmptyState icon={SearchX} title="No rates for this lane." />
+          )}
           {results.slice(0, 6).map((r) => (
             <RateResultCard
               key={r.id}

@@ -40,6 +40,10 @@ const inputVariants = cva(
         lg: "h-11 rounded-md px-3 text-body",
         // 32px — compact/dense (tables, toolbars). Below the 44px touch target.
         sm: "h-8 rounded-md px-2.5 text-body",
+        // 28px — editable cells inside a dense table, where a 32px control
+        // would grow every row. Declared here so those cells stop hand-rolling
+        // h-7 px-1.5 and the gutter stays a system value.
+        xs: "h-7 rounded-md px-1.5 text-body",
       },
     },
     defaultVariants: {

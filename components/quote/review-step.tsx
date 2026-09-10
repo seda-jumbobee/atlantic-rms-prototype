@@ -120,7 +120,7 @@ export function ReviewStep({
       <div className="min-w-0 space-y-4">
         {/* Client preview */}
         <Card className="gap-0 overflow-hidden p-0">
-          <div className="flex items-center justify-between gap-2 border-b bg-muted/30 px-4 py-3">
+          <div className="flex items-center justify-between gap-2 border-b bg-muted/30 px-5 py-3">
             <div className="flex items-center gap-2 text-sm font-semibold">Client preview</div>
             <Badge variant="secondary" className="gap-1 font-normal">This is what the client sees</Badge>
           </div>

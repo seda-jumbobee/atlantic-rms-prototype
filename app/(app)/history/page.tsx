@@ -23,7 +23,7 @@ import type { QuoteStatus } from "@/lib/types";
 
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge, type StatusTone } from "@/components/status-badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";

@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { SlidersHorizontal, Info, RotateCcw } from "lucide-react";
+import { SlidersHorizontal, Info, RotateCcw, SearchX } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
@@ -275,17 +276,23 @@ export function ResultsView({
         {filtered.map((r) => <RateResultCard key={r.id} rate={r} onSelect={onSelect} />)}
 
         {!filtered.length && (
-          <Card className="flex flex-col items-center gap-3 p-8 text-center">
-            <p className="text-sm font-medium">No rates match these filters.</p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {activeCount > 0 && (
-                <Button variant="outline" size="sm" className="gap-1.5" onClick={clearFilters}>
-                  <RotateCcw className="size-4" /> Clear filters
-                </Button>
-              )}
-              <Button variant="ghost" size="sm" onClick={onEditShipment}>Back to shipment details</Button>
-            </div>
-          </Card>
+          // The shared EmptyState, not a local copy of one: the sibling
+          // no-rates case in quote-master.tsx already uses it, and the two
+          // were drifting apart on padding.
+          <EmptyState
+            icon={SearchX}
+            title="No rates match these filters."
+            action={
+              <div className="flex flex-wrap justify-center gap-2">
+                {activeCount > 0 && (
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={clearFilters}>
+                    <RotateCcw className="size-4" /> Clear filters
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={onEditShipment}>Back to shipment details</Button>
+              </div>
+            }
+          />
         )}
       </div>
     </div>

@@ -47,14 +47,14 @@ export function ChargeTable({
             <tr key={c.id} className="hover:bg-muted/30">
               <td className="px-2 py-1">
                 {editable ? (
-                  <Input value={c.code ?? ""} onChange={(e) => update(c.id, { code: e.target.value })} aria-label={`Charge code for ${c.name || "charge"}`} className="h-7 px-1.5 font-mono text-xs" />
+                  <Input value={c.code ?? ""} onChange={(e) => update(c.id, { code: e.target.value })} aria-label={`Charge code for ${c.name || "charge"}`} size="xs" className="font-mono text-xs" />
                 ) : (
                   <span className="font-mono text-xs text-muted-foreground">{c.code}</span>
                 )}
               </td>
               <td className="px-2 py-1">
                 {editable ? (
-                  <Input value={c.name} onChange={(e) => update(c.id, { name: e.target.value })} aria-label="Charge name" className="h-7 px-1.5" />
+                  <Input value={c.name} onChange={(e) => update(c.id, { name: e.target.value })} aria-label="Charge name" size="xs" />
                 ) : (
                   c.name
                 )}
@@ -62,14 +62,14 @@ export function ChargeTable({
               <td className="hidden px-2 py-1 text-muted-foreground sm:table-cell">{c.basis}</td>
               <td className="px-2 py-1 text-right">
                 {editable ? (
-                  <Input type="number" value={c.qty} onChange={(e) => update(c.id, { qty: Number(e.target.value) })} aria-label={`Quantity for ${c.name || "charge"}`} className="h-7 px-1.5 text-right tabular-nums" />
+                  <Input type="number" value={c.qty} onChange={(e) => update(c.id, { qty: Number(e.target.value) })} aria-label={`Quantity for ${c.name || "charge"}`} size="xs" className="text-right tabular-nums" />
                 ) : (
                   c.qty
                 )}
               </td>
               <td className="px-2 py-1 text-right">
                 {editable ? (
-                  <Input type="number" value={c.unitCost} onChange={(e) => update(c.id, { unitCost: Number(e.target.value) })} aria-label={`Unit cost for ${c.name || "charge"}`} className="h-7 px-1.5 text-right tabular-nums" />
+                  <Input type="number" value={c.unitCost} onChange={(e) => update(c.id, { unitCost: Number(e.target.value) })} aria-label={`Unit cost for ${c.name || "charge"}`} size="xs" className="text-right tabular-nums" />
                 ) : (
                   money(c.unitCost)
                 )}
