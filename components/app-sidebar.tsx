@@ -66,14 +66,15 @@ const NAV_ITEM = cn(
   "group-data-[collapsible=icon]:[&>span:last-child]:hidden",
 );
 
-/** The single expand/collapse control. It lives in the sidebar header beside
-    the logo rather than floating on the sidebar/content seam, so it never
-    draws a line down the boundary. One button for both directions: the
-    chevron flips and the label changes, so there is no second control to
-    find once the rail is collapsed.
+/** The single expand/collapse control, centred on the sidebar/content seam.
+    One button for both directions: the chevron flips and the label changes,
+    so there is no second control to find once the rail is collapsed.
+    It can sit on the seam without drawing a line down it — the sidebar's
+    right border and SidebarRail (whose ::after painted that line on hover)
+    are both gone.
     Desktop only — below md the sidebar is an off-canvas sheet driven by the
     topbar trigger. */
-function CollapseToggle() {
+function BoundaryToggle() {
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const label = collapsed ? "Expand sidebar" : "Collapse sidebar";
@@ -86,11 +87,12 @@ function CollapseToggle() {
           aria-label={label}
           aria-expanded={!collapsed}
           className={cn(
-            "hidden size-8 shrink-0 items-center justify-center rounded-md md:flex",
-            "text-fg-tertiary transition-colors hover:bg-sidebar-accent hover:text-foreground",
+            "absolute top-[3.625rem] -right-4 z-30 hidden size-8 items-center justify-center rounded-full md:flex",
+            "border border-border-divider bg-card text-muted-foreground shadow-card",
+            "transition-colors hover:border-border hover:bg-surface-hover hover:text-foreground",
           )}
         >
-          {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
+          {collapsed ? <ChevronRight className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
         </button>
       </TooltipTrigger>
       <TooltipContent side="right">{label}</TooltipContent>
@@ -192,16 +194,13 @@ export function AppSidebar() {
     // sidebar and page background are one surface, the content card floats on it.
     <Sidebar collapsible="icon">
       <SidebarHeader className="px-6 pt-6 pb-4">
-        <div className={cn("flex items-center gap-2", collapsed && "flex-col gap-3")}>
-          <Link
-            href="/"
-            aria-label="Atlantic Rate Management System — dashboard"
-            className="min-w-0 flex-1 rounded-md"
-          >
-            <Logo collapsed={collapsed} />
-          </Link>
-          <CollapseToggle />
-        </div>
+        <Link
+          href="/"
+          aria-label="Atlantic Rate Management System — dashboard"
+          className="rounded-md"
+        >
+          <Logo collapsed={collapsed} />
+        </Link>
       </SidebarHeader>
 
       <SidebarContent>
@@ -241,6 +240,7 @@ export function AppSidebar() {
       <SidebarFooter className="gap-2 px-6 pt-4 pb-6">
         <AccountMenu />
       </SidebarFooter>
+      <BoundaryToggle />
     </Sidebar>
   );
 }
