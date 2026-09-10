@@ -44,7 +44,9 @@ export function Logo({ collapsed = false }: { collapsed?: boolean }) {
     <span
       className={cn(
         "flex items-center gap-2.5",
-        collapsed && "justify-center gap-0"
+        // Collapsed, the mark centres on a 48px box so it shares an axis with
+        // the icon rail below it rather than centring on the wider rail.
+        collapsed && "w-12 justify-center gap-0"
       )}
     >
       <LogoMark size={40} />

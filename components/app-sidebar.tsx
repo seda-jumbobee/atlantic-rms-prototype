@@ -116,7 +116,9 @@ function AccountMenu() {
       className={cn(
         "flex w-full items-center gap-2.5 rounded-card p-3 text-left transition-colors",
         "bg-sidebar-active hover:bg-card",
-        collapsed && "justify-center gap-0 p-3",
+        // Not centred when collapsed: the avatar keeps the same 12px inset it
+        // has expanded, so it does not shift sideways as the rail animates.
+        collapsed && "gap-0",
       )}
     >
       <Avatar className="size-12 rounded-md">
@@ -193,14 +195,23 @@ export function AppSidebar() {
     // The rail sits directly on --shell with no panel fill and no divider:
     // sidebar and page background are one surface, the content card floats on it.
     <Sidebar collapsible="icon">
-      <SidebarHeader className="px-6 pt-6 pb-4">
-        <Link
-          href="/"
-          aria-label="Atlantic Rate Management System — dashboard"
-          className="rounded-md"
-        >
-          <Logo collapsed={collapsed} />
-        </Link>
+      {/* The logo sits on the search field's centre line, as in Figma
+          "04 - Screens / Dashboard". The sidebar starts at the viewport top
+          while the search sits inside the content card, so the header's top
+          padding carries the card's own inset (24) plus its top padding (32);
+          an h-9 row then matches the field's height, putting both centres on
+          y=74. Below md the sidebar is an off-canvas sheet with no card to
+          line up against. */}
+      <SidebarHeader className="px-6 pt-6 pb-4 md:pt-14 md:pb-10">
+        <span className="flex h-9 items-center">
+          <Link
+            href="/"
+            aria-label="Atlantic Rate Management System — dashboard"
+            className="rounded-md"
+          >
+            <Logo collapsed={collapsed} />
+          </Link>
+        </span>
       </SidebarHeader>
 
       <SidebarContent>
