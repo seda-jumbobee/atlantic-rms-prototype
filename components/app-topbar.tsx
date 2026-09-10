@@ -50,7 +50,7 @@ export function AppTopbar() {
 
       <button
         onClick={() => setOpen(true)}
-        className="flex h-9 w-full max-w-80 items-center gap-2 rounded-md border border-border bg-card px-3 text-body text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground"
+        className="flex h-9 w-full max-w-80 items-center gap-2 rounded-md border border-[var(--c-input-border)] bg-card px-3 text-body text-muted-foreground transition-colors hover:border-[var(--c-input-border-hover)] hover:text-foreground"
       >
         <Search aria-hidden className="size-4" />
         <span className="truncate">Search lanes, deals, carriers…</span>

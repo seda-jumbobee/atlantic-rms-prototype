@@ -86,7 +86,7 @@ export function LocationCombobox({
       >
         <TooltipTrigger asChild>
           <PopoverTrigger asChild>
-            <Button id={id} variant="outline" role="combobox" aria-describedby={describedBy} aria-invalid={invalid || undefined} className="h-10 w-full justify-between font-normal">
+            <Button id={id} variant="outline" role="combobox" aria-describedby={describedBy} aria-invalid={invalid || undefined} className="h-10 w-full justify-between border-[var(--c-input-border)] font-normal hover:border-[var(--c-input-border-hover)]">
               {value ? (
                 <span className="flex min-w-0 flex-1 items-center gap-2">
                   {value.kind === "port" ? <Anchor className="size-4 shrink-0 text-primary" /> : <MapPin className="size-4 shrink-0 text-status-info-fg" />}
