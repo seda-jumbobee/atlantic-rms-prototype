@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Sparkles, Route, Calculator, Briefcase, History,
   Building2, Database, Inbox, Plug, ChevronRight, ChevronLeft, Library, Users, Activity,
-  LayoutTemplate, Receipt, BarChart3, LogOut, UserRound,
+  LayoutTemplate, Receipt, BarChart3, LogOut, Settings,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel,
@@ -13,8 +13,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { UserAvatar } from "@/components/user-avatar";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -121,14 +120,7 @@ function AccountMenu() {
         collapsed && "gap-0",
       )}
     >
-      <Avatar className="size-12 rounded-md">
-        {user.avatarUrl && <AvatarImage className="rounded-md" src={user.avatarUrl} alt="" />}
-        {/* No photo on any seeded account — a person glyph stands in rather
-            than a coloured monogram. */}
-        <AvatarFallback className="rounded-md bg-muted text-muted-foreground">
-          <UserRound aria-hidden className="size-6" />
-        </AvatarFallback>
-      </Avatar>
+      <UserAvatar src={user.avatarUrl} name={user.name} size={48} shape="rounded" />
       {!collapsed && (
         <span className="min-w-0 flex-1">
           <span className="block truncate text-body font-semibold text-sidebar-foreground">
@@ -155,15 +147,29 @@ function AccountMenu() {
       ) : (
         <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       )}
-      <DropdownMenuContent side="top" align="start" className="w-60">
-        <DropdownMenuLabel className="flex items-center justify-between gap-2">
-          <span className="truncate">{user.email}</span>
-          <Badge variant={user.role === "admin" ? "default" : "secondary"} className="shrink-0">
-            {user.role === "admin" ? "Procurement" : "Manager"}
-          </Badge>
+      <DropdownMenuContent side="top" align="start" className="w-64">
+        {/* The signed-in address, read-only. Long addresses truncate and the
+            full value is available on hover and focus rather than wrapping
+            the menu. */}
+        <DropdownMenuLabel className="font-normal text-muted-foreground">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span tabIndex={0} className="block max-w-full truncate rounded-sm">
+                {user.email}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-72 break-all">
+              {user.email}
+            </TooltipContent>
+          </Tooltip>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => { logout(); router.push("/login"); }}>
+        <DropdownMenuItem asChild>
+          <Link href="/settings">
+            <Settings className="size-4" /> Settings
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => { logout(); router.replace("/login"); }}>
           <LogOut className="size-4" /> Log out
         </DropdownMenuItem>
       </DropdownMenuContent>

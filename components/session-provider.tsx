@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import type { User } from "@/lib/types";
 import { USERS } from "@/lib/data/users";
 import { attemptLogin, type LoginOutcome } from "@/lib/auth/access-store";
+import { getProfile } from "@/lib/auth/profile-store";
 
 const STORAGE_KEY = "rms.session.userId";
 /** Accounts created through activation are not in the seeded USERS table. */
@@ -26,6 +27,9 @@ interface SessionValue {
    */
   login: (email: string, password: string, remember?: boolean) => Promise<LoginOutcome>;
   logout: () => void;
+  /** Re-read the stored profile overrides after Settings saves one, so the
+   *  sidebar reflects a new name or photo without a reload. */
+  refreshProfile: () => void;
 }
 
 const SessionContext = createContext<SessionValue | null>(null);
@@ -38,6 +42,19 @@ export function rememberedEmail(): string {
   } catch {
     return "";
   }
+}
+
+/**
+ * Layer the account's saved profile edits over the record it came from.
+ *
+ * The override is AUTHORITATIVE for the avatar, not a fallback: merging with
+ * `?? u.avatarUrl` would keep resurrecting the previous photo from the
+ * already-merged session object, so removing a photo could never take effect.
+ */
+function withProfile(u: User): User {
+  const o = getProfile(u.email);
+  const name = o.name || u.name;
+  return { ...u, name, initials: initials(name), avatarUrl: o.avatarUrl };
 }
 
 function initials(name: string): string {
@@ -80,14 +97,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     if (id) {
       const seeded = USERS.find((x) => x.id === id);
       if (seeded) {
-        setUser(seeded);
+        setUser(withProfile(seeded));
       } else {
         // Restore an activated (non-seeded) account.
         try {
           const raw = readEither(ACTIVATED_KEY);
           if (raw) {
             const u = JSON.parse(raw) as User;
-            if (u?.id === id) setUser(u);
+            if (u?.id === id) setUser(withProfile(u));
           }
         } catch {
           /* corrupt payload — stay logged out */
@@ -134,7 +151,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       const outcome = await attemptLogin(email, password);
       if (outcome.kind !== "ok") return outcome;
       const seeded = USERS.find((u) => u.email.toLowerCase() === outcome.email);
-      persist(seeded ?? activatedUser(outcome.email, outcome.name, outcome.role), remember);
+      const base = seeded ?? activatedUser(outcome.email, outcome.name, outcome.role);
+      persist(withProfile(base), remember);
       return outcome;
     },
     [persist],
@@ -142,10 +160,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => persist(null), [persist]);
 
+  const refreshProfile = useCallback(() => {
+    setUser((u) => (u ? withProfile(u) : u));
+  }, []);
+
   // Roles come from the account record — there is no in-app role switching and
   // no way for the login screen to pick one.
   return (
-    <SessionContext.Provider value={{ user, ready, login, logout }}>
+    <SessionContext.Provider value={{ user, ready, login, logout, refreshProfile }}>
       {children}
     </SessionContext.Provider>
   );

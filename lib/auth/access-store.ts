@@ -72,6 +72,10 @@ interface StoreShape {
   resets: Record<string, SimToken>; // email → reset token
   attempts: Record<string, AttemptRecord>; // failed logins, for rate limiting
   resetSentAt: Record<string, number>; // email → last reset email, for cooldown
+  /** email → `salt:hash`, for accounts with no access-request record of their
+   *  own (the seeded demo USERS). Request-backed accounts keep their hash on
+   *  the request itself. */
+  credentials: Record<string, string>;
   /** Dev switch: when true, "sending" fails so failure states are reachable
    *  honestly instead of being faked as success. Toggled from /dev/email-preview. */
   emailOutage?: boolean;
@@ -135,6 +139,7 @@ function seed(): StoreShape {
     resets: {},
     attempts: {},
     resetSentAt: {},
+    credentials: {},
   };
 }
 
@@ -155,6 +160,7 @@ function read(): StoreShape {
       resets: parsed.resets ?? {},
       attempts: parsed.attempts ?? {},
       resetSentAt: parsed.resetSentAt ?? {},
+      credentials: parsed.credentials ?? {},
       emailOutage: parsed.emailOutage ?? false,
     };
   } catch {
@@ -458,15 +464,37 @@ export async function verifyPassword(password: string, stored?: string): Promise
   return (await sha256Hex(salt + password)) === hash;
 }
 
-/** Store a password hash for an activated account (activation or reset). */
-export async function setPasswordForEmail(email: string, password: string): Promise<void> {
-  const s = read();
+export type SetPasswordOutcome = { ok: true } | { ok: false; reason: "no-account" | "storage" };
+
+/**
+ * Store a password hash for an account (activation, reset, or a signed-in user
+ * changing it from Settings).
+ *
+ * Returns an outcome rather than void: it used to no-op silently for the
+ * seeded demo USERS, which let a caller report success for a write that never
+ * happened. Those accounts now get a record in `credentials`, and a caller can
+ * tell a real failure from a real success.
+ */
+export async function setPasswordForEmail(email: string, password: string): Promise<SetPasswordOutcome> {
   const e = normalizeEmail(email);
-  const r = s.requests.find((x) => x.email === e);
-  if (!r) return; // seeded demo USERS have no request record — see attemptLogin
-  r.passwordHash = await hashPassword(password);
-  r.hasPassword = true;
-  write(s);
+  const hash = await hashPassword(password);
+  try {
+    const s = read();
+    const r = s.requests.find((x) => x.email === e);
+    if (r) {
+      r.passwordHash = hash;
+      r.hasPassword = true;
+    } else if (USERS.some((u) => u.email.toLowerCase() === e)) {
+      s.credentials[e] = hash;
+    } else {
+      return { ok: false, reason: "no-account" };
+    }
+    write(s);
+    return { ok: true };
+  } catch {
+    // localStorage can throw (quota, private mode). Never claim success.
+    return { ok: false, reason: "storage" };
+  }
 }
 
 // ── login throttling ────────────────────────────────────────────────────────
@@ -525,8 +553,10 @@ export type LoginOutcome =
  * because the product spec requires them — see the summary for the disclosure
  * trade-off that carries.
  *
- * Seeded demo USERS have no password on file: any non-empty password is
- * accepted for them and that is a documented prototype gap, not a real check.
+ * Seeded demo USERS start with no password on file: any non-empty password is
+ * accepted for them, and that is a documented prototype gap, not a real check.
+ * Once such an account sets a password (Settings → Change password) the
+ * credential is verified like any other, so the change actually takes effect.
  */
 export async function attemptLogin(email: string, password: string): Promise<LoginOutcome> {
   const e = normalizeEmail(email);
@@ -540,8 +570,9 @@ export async function attemptLogin(email: string, password: string): Promise<Log
 
   // ── active accounts ──
   if (seeded) {
-    // No credential on file for demo fixtures; accept any non-empty password.
-    if (!password) {
+    const stored = s.credentials[e];
+    const ok = stored ? await verifyPassword(password, stored) : Boolean(password);
+    if (!ok) {
       recordFailure(s, e);
       write(s);
       return { kind: "invalid-credentials" };
