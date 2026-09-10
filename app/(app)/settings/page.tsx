@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { AlertCircle, ChevronRight, KeyRound, Upload } from "lucide-react";
+import { AlertCircle, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/page-header";
 import { UserAvatar } from "@/components/user-avatar";
+import { ChangePasswordForm } from "@/components/change-password-form";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -260,16 +260,11 @@ export default function SettingsPage() {
         </form>
       </SectionCard>
 
-      <SectionCard title="Security" description="Keep your account credentials up to date.">
-        <Button asChild variant="outline" className="justify-between">
-          <Link href="/settings/password">
-            <span className="flex items-center gap-2">
-              <KeyRound aria-hidden className="size-4" />
-              Change password
-            </span>
-            <ChevronRight aria-hidden className="size-4" />
-          </Link>
-        </Button>
+      <SectionCard
+        title="Change password"
+        description="Create a new password for your Atlantic RMS account."
+      >
+        <ChangePasswordForm />
       </SectionCard>
     </div>
   );
