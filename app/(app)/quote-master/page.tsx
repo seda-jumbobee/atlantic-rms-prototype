@@ -7,7 +7,9 @@ export const metadata = {
 
 export default function QuoteMasterPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-sm text-muted-foreground">Loading Rate Quote…</div>}>
+    // No padding on the fallback: the app shell already insets the content
+    // area, so p-8 here doubled the gutter for as long as it was on screen.
+    <Suspense fallback={<p className="text-body text-muted-foreground">Loading Rate Quote…</p>}>
       <QuoteMaster />
     </Suspense>
   );

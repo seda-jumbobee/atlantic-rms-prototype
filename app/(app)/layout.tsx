@@ -37,9 +37,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     // content surface floating on it (Figma "04 - Screens / Dashboard").
     <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen} className="bg-shell">
       <AppSidebar />
-      <SidebarInset className="min-w-0 overflow-hidden">
+      {/* The content surface owns its inset in ONE place, so the search row
+          and the page below it can never drift apart: 32px on all four sides
+          at md and up (Figma "04 - Screens / Dashboard"), stepping down to 24
+          and 16 as the viewport narrows. The same step drives the gap between
+          the two rows, which the reference also sets to 32. */}
+      <SidebarInset className="min-w-0 gap-4 overflow-hidden p-4 sm:gap-6 sm:p-6 md:gap-8 md:p-8">
         <AppTopbar />
-        <main className="min-w-0 flex-1 px-4 pt-6 pb-8 sm:px-6 md:px-8 md:pb-10">{children}</main>
+        <main className="min-w-0 flex-1">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

@@ -44,7 +44,7 @@ export function AppTopbar() {
   };
 
   return (
-    <div className="flex items-center gap-2 px-4 pt-4 sm:px-6 md:px-8 md:pt-8">
+    <div className="flex items-center gap-2">
       {/* Below md the sidebar is an off-canvas sheet; this is its trigger. */}
       <SidebarTrigger className="size-11 text-muted-foreground md:hidden" />
 
