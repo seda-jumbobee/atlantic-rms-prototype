@@ -79,7 +79,9 @@ export default function ChangePasswordPage() {
   }
 
   const backLink = (
-    <Button asChild variant="ghost" size="sm" className="-ml-2 self-start">
+    // No negative margin: an -ml-* here optically aligned the label but pulled
+    // the control's own box 8px outside the container inset.
+    <Button asChild variant="ghost" size="sm" className="self-start">
       <Link href="/settings">
         <ArrowLeft aria-hidden className="size-4" /> Back to settings
       </Link>
