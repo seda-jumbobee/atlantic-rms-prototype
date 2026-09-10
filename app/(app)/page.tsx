@@ -81,7 +81,10 @@ function KpiCard({
 
 function PromoCard() {
   return (
-    <Card className="relative min-w-0 justify-end border-transparent bg-[image:var(--c-promo-gradient)] p-8">
+    // border-0, not a transparent border: a gradient is sized to the padding
+    // box but painted to the border box and repeats, so a 1px border leaves a
+    // strip of the next tile — the 100% stop — down the right edge.
+    <Card className="relative min-w-0 justify-end border-0 bg-[image:var(--c-promo-gradient)] bg-origin-border p-8">
       <div className="relative flex max-w-md flex-col gap-2">
         <h2 className="text-h2 text-[color:var(--c-promo-foreground)]">Need to check rates?</h2>
         <p className="text-body text-[color:var(--c-promo-muted)]">
