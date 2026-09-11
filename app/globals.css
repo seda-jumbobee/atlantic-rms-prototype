@@ -179,6 +179,9 @@
   --color-status-negative-bg: var(--status-negative-bg);
   --color-status-negative-fg: var(--status-negative-fg);
   --color-status-negative-border: var(--status-negative-border);
+  --color-status-brand-bg: var(--status-brand-bg);
+  --color-status-brand-fg: var(--status-brand-fg);
+  --color-status-brand-border: var(--status-brand-border);
   --color-status-neutral-bg: var(--status-neutral-bg);
   --color-status-neutral-fg: var(--status-neutral-fg);
   --color-status-neutral-border: var(--status-neutral-border);
@@ -366,6 +369,12 @@
   --status-negative-bg: var(--p-error-subtle);
   --status-negative-fg: var(--p-error-text);
   --status-negative-border: var(--p-error-border);
+  /* brand — the accent state a wizard's current step uses. Not one of the
+     five semantic states: it says "here", not "good/bad". Text is
+     secondary/600 on secondary/50 = 5.1104. */
+  --status-brand-bg: var(--p-secondary-50);
+  --status-brand-fg: var(--p-secondary-600);
+  --status-brand-border: var(--p-secondary-200);
   --status-neutral-bg: var(--p-neutral-100);
   --status-neutral-fg: var(--p-neutral-600);
   --status-neutral-border: var(--p-neutral-300);

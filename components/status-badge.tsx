@@ -8,7 +8,9 @@ import type { QuoteStatus, DealStage } from "@/lib/types";
  * admin tables — maps into one of these five tones. Never use raw palette
  * colors (amber/emerald/slate/…) for state chips.
  */
-export type StatusTone = "neutral" | "info" | "positive" | "warning" | "negative";
+/** The five semantic states, plus `brand` — an accent "you are here" chip
+ *  for wizard progress, which is not a judgement about the record. */
+export type StatusTone = "neutral" | "info" | "positive" | "warning" | "negative" | "brand";
 
 export function StatusBadge({
   tone = "neutral",

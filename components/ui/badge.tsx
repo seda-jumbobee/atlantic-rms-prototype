@@ -22,6 +22,8 @@ const badgeVariants = cva(
         /* Unified status scale (Figma: "Status badge" 43:25) — the only palette
            for state chips: quote status, deal stage, source, route step, invoice */
         "status-neutral": "border-status-neutral-border bg-status-neutral-bg text-status-neutral-fg",
+        /* brand accent — "in progress" in a wizard, not a semantic state */
+        "status-brand": "border-status-brand-border bg-status-brand-bg text-status-brand-fg",
         "status-info": "border-status-info-border bg-status-info-bg text-status-info-fg",
         "status-positive": "border-status-positive-border bg-status-positive-bg text-status-positive-fg",
         "status-warning": "border-status-warning-border bg-status-warning-bg text-status-warning-fg",
