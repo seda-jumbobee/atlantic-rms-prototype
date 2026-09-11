@@ -3,10 +3,11 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { SearchX, Route, ArrowLeft } from "lucide-react";
+import { SearchX, Route } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
+import { StepBackButton } from "@/components/step-back-button";
 import { QuoteSearchWidget } from "@/components/quote/quote-search-widget";
 import { ResultsView } from "@/components/quote/results-view";
 import { QuotePricingFlow } from "@/components/quote/quote-pricing-flow";
@@ -119,7 +120,7 @@ export function QuoteMaster() {
   // Per-step back navigation (kept in the same place across all steps).
   const back =
     stepIndex === 1
-      ? { label: "Back to shipment details", onClick: () => setEditingSearch(true) }
+      ? { label: "Back to shipping details", onClick: () => setEditingSearch(true) }
       : stepIndex === 2
         ? { label: "Back to rates", onClick: () => setSelected(null) }
         : stepIndex === 3
@@ -133,25 +134,18 @@ export function QuoteMaster() {
         description="Check available rates and create a client quote using commodity-specific formulas and contract rates."
       />
 
-      {/* Progress first — where you are in the flow reads before what you are
-          quoting. Full main-content width. */}
+      {/* The way out, then the map, then the context: back button BEFORE the
+          stepper on every step, so one place always answers "how do I go back". */}
+      {back && input && !showSearch && (
+        <StepBackButton label={back.label} onClick={back.onClick} />
+      )}
+
       <FlowProgress steps={STEPS} current={stepIndex} onStepClick={goToStep} ariaLabel="Quote progress" />
 
-      {/* Shared back navigation + shipment summary — consistent across Choose rate,
-          Set pricing, and Review & send so the Manager always knows the context. */}
-      {input && !showSearch && (
-        <div className="space-y-4">
-          {back && (
-            <button
-              type="button"
-              onClick={back.onClick}
-              className="inline-flex items-center gap-1.5 rounded text-sm font-medium text-primary outline-none transition hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50"
-            >
-              <ArrowLeft className="size-4" /> {back.label}
-            </button>
-          )}
-          <ShipmentSummary input={input} onEdit={() => setEditingSearch(true)} />
-        </div>
+      {/* Step 3 pairs the summary with the selected rate itself, so it renders
+          the summary in that row rather than here. */}
+      {input && !showSearch && stepIndex !== 2 && (
+        <ShipmentSummary input={input} onEdit={() => setEditingSearch(true)} />
       )}
 
       {showSearch && (
@@ -220,6 +214,7 @@ export function QuoteMaster() {
             commodityKind={input.commodityKind}
             shipmentType={input.shipmentType}
             reviewing={reviewing}
+            shipmentSummary={<ShipmentSummary input={input} onEdit={() => setEditingSearch(true)} />}
             onReview={() => setReviewing(true)}
             onBackToPricing={() => setReviewing(false)}
           />

@@ -6,7 +6,7 @@ import { SourceBadge } from "@/components/status-badge";
 import { PricingStep } from "@/components/quote/pricing-step";
 import { ReviewStep } from "@/components/quote/review-step";
 import { usePricingModel, type QuoteMeta } from "@/components/quote/pricing-parts";
-import { getCarrier } from "@/lib/data/carriers";
+import type { ReactNode } from "react";
 import { money, fmtDate } from "@/lib/format";
 import type { CommodityKind, RateOption, ShipmentType } from "@/lib/types";
 
@@ -22,9 +22,11 @@ export interface QuotePricingContext {
 
 export function QuotePricingFlow({
   rate, quoteId, origin, destination, commodityLabel, commodityKind, shipmentType,
-  reviewing, onReview, onBackToPricing,
+  reviewing, shipmentSummary, onReview, onBackToPricing,
 }: QuotePricingContext & {
   reviewing: boolean;
+  /** The shipping summary, shown beside the selected rate on Set pricing. */
+  shipmentSummary?: ReactNode;
   onReview: () => void;
   onBackToPricing: () => void;
 }) {
@@ -58,17 +60,12 @@ export function QuotePricingFlow({
     </Card>
   );
 
-  const reminder = (
-    <Card className="flex flex-row items-center gap-2 p-3 text-xs text-muted-foreground">
-      <CarrierName carrierId={rate.carrierId} />
-      <span className="truncate">{getCarrier(rate.carrierId)?.name}</span>
-      <SourceBadge source={rate.sourceType} />
-    </Card>
-  );
-
+  // No `reminder`: the carrier belongs to the rate, and the rate is already
+  // named in the Selected rate card and in the quote itself. Repeating it in
+  // the Review side rail was the same fact in a third place.
   return reviewing ? (
-    <ReviewStep model={model} meta={meta} reminder={reminder} onBackToPricing={onBackToPricing} templateKindLabel="pricing setup" />
+    <ReviewStep model={model} meta={meta} onBackToPricing={onBackToPricing} templateKindLabel="pricing setup" />
   ) : (
-    <PricingStep model={model} meta={meta} summary={summary} onReview={onReview} />
+    <PricingStep model={model} meta={meta} summary={summary} context={shipmentSummary} onReview={onReview} />
   );
 }

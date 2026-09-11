@@ -4,10 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeftRight, Info, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ActionBar } from "@/components/ui/action-bar";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { RequiredMark } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Spinner } from "@/components/ui/spinner";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -17,7 +18,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { LocationCombobox, type LocationValue } from "@/components/location-combobox";
 import {
-  CommodityPicker, RequiredMark, COMMODITY_KIND_LABEL, type CommoditySelection,
+  CommodityPicker, COMMODITY_KIND_LABEL, type CommoditySelection,
 } from "@/components/commodity-picker";
 import { MapPreview, type MapPoint } from "@/components/map-preview";
 import { LocationLabel, locationPoint } from "@/components/location-label";
@@ -58,22 +59,6 @@ function mapPoint(v?: LocationValue): MapPoint | undefined {
   return rec ? { lat: rec.lat, lng: rec.lng, label: shortLoc(v) } : undefined;
 }
 
-function LocationRow({ label, value }: { label: string; value: LocationValue }) {
-  const point = locationPoint(value.kind, value.id);
-  return (
-    <div className="flex items-center justify-between gap-3 text-sm">
-      <dt className="shrink-0 text-muted-foreground">{label}</dt>
-      <dd className="flex min-w-0 justify-end text-right">
-        {point ? (
-          <LocationLabel point={point} />
-        ) : (
-          <span className="truncate">{value.label}</span>
-        )}
-      </dd>
-    </div>
-  );
-}
-
 type FieldErrors = Partial<Record<"origin" | "dest" | "kind" | "details" | "dims", string>>;
 
 function validateForm(
@@ -109,22 +94,53 @@ function validateForm(
 
 /* ── Context summary cards (desktop side panel + inline on smaller screens) ── */
 
+/* The two context cards share one shell so they read as a pair: same caption,
+   same inset, same rhythm. */
+function ContextCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <Card className="gap-3 p-4">
+      <h3 className="text-caption font-bold tracking-wide text-muted-foreground uppercase">{title}</h3>
+      {children}
+    </Card>
+  );
+}
+
+/* A route reads DOWN a line, not across a two-column table. The ends are the
+   same kind of thing, so they get the same treatment, and a marker and a rule
+   say "from here to there" without an "Origin:" / "Destination:" label
+   repeating what the shape already shows. */
+function RouteEnd({ value, kind }: { value: LocationValue; kind: "from" | "to" }) {
+  const point = locationPoint(value.kind, value.id);
+  return (
+    <li className="flex min-w-0 items-start gap-2.5">
+      <span
+        aria-hidden
+        className={cn("mt-1.5 size-2 shrink-0 rounded-full", kind === "from" ? "bg-primary" : "bg-success")}
+      />
+      <span className="min-w-0 flex-1">
+        <span className="sr-only">{kind === "from" ? "Origin: " : "Destination: "}</span>
+        {point ? (
+          <LocationLabel point={point} className="text-body" />
+        ) : (
+          <span className="block truncate text-body">{value.label}</span>
+        )}
+      </span>
+    </li>
+  );
+}
+
 function RouteOverviewCard({ origin, dest }: { origin: LocationValue; dest: LocationValue }) {
   const o = mapPoint(origin);
   const d = mapPoint(dest);
   return (
-    <Card className="gap-3 p-4">
-      <CardHeader className="p-0">
-        <CardTitle className="text-base font-semibold">Route overview</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 p-0">
-        <dl className="space-y-1.5">
-          <LocationRow label="Origin" value={origin} />
-          <LocationRow label="Destination" value={dest} />
-        </dl>
-        {o && d && <MapPreview origin={o} destination={d} className="h-44" />}
-      </CardContent>
-    </Card>
+    <ContextCard title="Route">
+      <ol className="relative flex flex-col gap-2.5">
+        <span aria-hidden className="absolute top-3 bottom-3 left-[3px] w-px bg-border-divider" />
+        <RouteEnd value={origin} kind="from" />
+        <RouteEnd value={dest} kind="to" />
+      </ol>
+      {o && d && <MapPreview origin={o} destination={d} className="h-32 rounded-lg" />}
+    </ContextCard>
   );
 }
 
@@ -139,21 +155,19 @@ function CommodityDetailsCard({ commodity }: { commodity: CommoditySelection }) 
   if (d && (d.lengthIn || d.widthIn || d.heightIn)) rows.push(["Dimensions", `${d.lengthIn || "—"}″L × ${d.widthIn || "—"}″W × ${d.heightIn || "—"}″H`]);
   if (d?.weightLb) rows.push(["Weight", `${d.weightLb.toLocaleString()} lb`]);
   return (
-    <Card className="gap-3 p-4">
-      <CardHeader className="p-0">
-        <CardTitle className="text-base font-semibold">Commodity details</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <dl className="space-y-1.5 text-sm">
-          {rows.map(([k, v]) => (
-            <div key={k} className="flex items-baseline justify-between gap-3">
-              <dt className="shrink-0 text-muted-foreground">{k}</dt>
-              <dd className="min-w-0 break-words text-right font-medium">{v}</dd>
-            </div>
-          ))}
-        </dl>
-      </CardContent>
-    </Card>
+    <ContextCard title="Commodity">
+      {/* Label above value, in columns. A right-aligned value column forced the
+          eye back and forth across a gap for every row; stacked pairs are read
+          in one pass and wrap instead of truncating. */}
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+        {rows.map(([k, v]) => (
+          <div key={k} className="min-w-0">
+            <dt className="text-caption text-muted-foreground">{k}</dt>
+            <dd className="mt-0.5 text-body font-medium break-words text-foreground">{v}</dd>
+          </div>
+        ))}
+      </dl>
+    </ContextCard>
   );
 }
 
@@ -173,7 +187,16 @@ export function QuoteSearchWidget({
   const [origin, setOrigin] = useState<LocationValue | undefined>(initial?.origin);
   const [dest, setDest] = useState<LocationValue | undefined>(initial?.dest);
   const [commodity, setCommodity] = useState<CommoditySelection | undefined>(initial?.commodity);
-  const [advanced, setAdvanced] = useState(initial?.advanced ?? false);
+  /* Extended search is no longer a switch — it is explained in the Schedule &
+     rate sources section instead — so the flag takes a fixed value. It is ON,
+     because the copy beside it tells the Manager those sources ARE searched
+     and the UI must not claim something the search does not do.
+
+     CONSEQUENCE, the one non-visual effect in this change: a search now widens
+     to 8 rate options across contract, tariff, live-API and spot sources
+     rather than 5 contract/tariff ones (lib/quote-engine.ts:193-196).
+     Reverting is this one line. Flagged for product confirmation. */
+  const [advanced] = useState(initial?.advanced ?? true);
   const [loadingDate, setLoadingDate] = useState(initial?.loadingDate ?? "");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [loading, setLoading] = useState(false);
@@ -185,7 +208,7 @@ export function QuoteSearchWidget({
     initial ? JSON.stringify({ o: initial.origin, d: initial.dest, c: initial.commodity, a: initial.advanced ?? false, l: initial.loadingDate ?? "" }) : null,
   );
 
-  const dirty = !!(origin || dest || commodity || loadingDate || advanced);
+  const dirty = !!(origin || dest || commodity || loadingDate);
   const snapshot = JSON.stringify({ o: origin, d: dest, c: commodity, a: advanced, l: loadingDate });
   const editedSinceSeed = initialSnapshotRef.current === null || snapshot !== initialSnapshotRef.current;
 
@@ -255,7 +278,6 @@ export function QuoteSearchWidget({
     setOrigin(undefined);
     setDest(undefined);
     setCommodity(undefined);
-    setAdvanced(false);
     setLoadingDate("");
     setErrors({});
   };
@@ -342,75 +364,42 @@ export function QuoteSearchWidget({
 
           {/* 3 · Schedule & rate sources — with the commodity chosen */}
           {routeComplete && commodity && (
-            <section aria-label="Schedule and rate sources" className="space-y-4 duration-300 animate-in fade-in slide-in-from-top-1">
+            <section aria-labelledby="rq-schedule-heading" className="space-y-4 duration-300 animate-in fade-in slide-in-from-top-1">
               <Separator />
-              <div className="flex flex-col gap-6 rounded-lg border bg-muted/30 p-3">
-                <div className="flex items-center gap-2">
-                  <label className="flex items-center gap-2.5">
-                    <Switch checked={advanced} onCheckedChange={setAdvanced} />
-                    <span className="text-sm font-medium">Extended search</span>
-                  </label>
+              {/* The same shape as Route and Commodity above: a heading, one
+                  line of supporting text, then the fields. The tinted bordered
+                  block is gone — this section is not special, and the tint was
+                  the only thing claiming it was. */}
+              <div>
+                <h3 id="rq-schedule-heading" className="text-lg font-semibold">Schedule &amp; rate sources</h3>
+                <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                  <span>Extended search included — contract, tariff, live carrier APIs and spot.</span>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         type="button"
                         aria-label="What is extended search?"
-                        className="rounded-full text-muted-foreground outline-none transition hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                        className="inline-flex rounded-full text-muted-foreground outline-none transition hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50"
                       >
-                        <Info className="size-4" />
+                        <Info aria-hidden className="size-3.5" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
-                      Also searches live Shipping Line APIs and spot-market sources for more rate
-                      options, on top of your contract and offline tariff rates.
+                      Extended search also queries live Shipping Line APIs and spot-market sources
+                      for more rate options, on top of your contract and offline tariff rates.
                     </TooltipContent>
                   </Tooltip>
-                </div>
-                {advanced && (
-                  <div className="space-y-1.5 duration-300 animate-in fade-in slide-in-from-top-1">
-                    <Label htmlFor="rq-loading-date" className="text-sm">Loading date</Label>
-                    <Input id="rq-loading-date" type="date" value={loadingDate} onChange={(e) => setLoadingDate(e.target.value)} className="h-10 w-full sm:w-56" />
-                  </div>
-                )}
+                </p>
+              </div>
+              {/* Optional, and left unmarked: this form annotates what is
+                  REQUIRED, so anything without an asterisk is already optional. */}
+              <div className="space-y-1.5">
+                <Label htmlFor="rq-loading-date" className="text-sm">Loading date</Label>
+                <Input id="rq-loading-date" type="date" value={loadingDate} onChange={(e) => setLoadingDate(e.target.value)} className="h-10 w-full sm:w-56" />
               </div>
             </section>
           )}
 
-          {/* Primary action */}
-          <div className="space-y-2 pt-1">
-            <Button size="lg" className="w-full gap-2" onClick={submit} disabled={loading} aria-busy={loading}>
-              {loading ? (
-                <>
-                  <Spinner className="size-4" /> Checking available rates…
-                </>
-              ) : (
-                ctaLabel
-              )}
-            </Button>
-            {dirty && !loading && (
-              <div className="flex justify-center">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
-                      <RotateCcw className="size-3.5" /> Start over
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Clear the entered shipment details?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        The route, commodity, and shipment details you entered will be removed.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Keep editing</AlertDialogCancel>
-                      <AlertDialogAction onClick={clearAll}>Clear form</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            )}
-          </div>
         </CardContent>
       </Card>
 
@@ -427,6 +416,46 @@ export function QuoteSearchWidget({
           </div>
         )}
       </aside>
+
+      {/* The step's actions, held at the bottom of the viewport. Spans both
+          columns so it is never trapped under the sticky context panel. */}
+      <div className="lg:col-span-12">
+        <ActionBar
+          aside={
+            dirty && !loading ? (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" className="gap-1.5 text-muted-foreground">
+                    <RotateCcw className="size-4" /> Start over
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Clear the entered shipping details?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      The route, commodity, and shipping details you entered will be removed.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep editing</AlertDialogCancel>
+                    <AlertDialogAction onClick={clearAll}>Clear form</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ) : undefined
+          }
+        >
+          <Button onClick={submit} disabled={loading} aria-busy={loading} className="sm:min-w-48">
+            {loading ? (
+              <>
+                <Spinner className="size-4" /> Checking available rates…
+              </>
+            ) : (
+              ctaLabel
+            )}
+          </Button>
+        </ActionBar>
+      </div>
     </div>
   );
 }

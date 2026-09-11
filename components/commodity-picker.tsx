@@ -28,11 +28,6 @@ export interface CommoditySelection {
   condition?: "operable" | "inoperable";
 }
 
-/** Re-exported so existing call sites keep working; the asterisk itself lives
-    in the design system (components/ui/field.tsx), which is the only place its
-    colour is decided. */
-export { RequiredMark };
-
 // Commodity = WHAT it is (mode is derived from operability + dimensions, not chosen here).
 const KINDS: { value: CommodityKind; label: string }[] = [
   { value: "equipment", label: "Machinery & Equipment" },

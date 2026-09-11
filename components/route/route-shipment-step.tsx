@@ -5,13 +5,14 @@ import { ArrowRight, Save } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { RequiredMark } from "@/components/ui/field";
 import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { LocationCombobox, type LocationValue } from "@/components/location-combobox";
-import { CommodityPicker, RequiredMark, type CommoditySelection } from "@/components/commodity-picker";
+import { CommodityPicker, type CommoditySelection } from "@/components/commodity-picker";
 import { ShipmentSummary } from "@/components/quote/shipment-summary";
 import { MapPreview } from "@/components/map-preview";
 import { routeSearchInput, pointFromLocation } from "@/components/route/route-data";

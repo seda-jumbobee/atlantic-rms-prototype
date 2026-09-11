@@ -431,7 +431,11 @@
   --c-input-placeholder: var(--fg-placeholder);
   --c-input-helper: var(--fg-tertiary);
   --c-input-error: var(--status-negative-fg);
-  --c-input-required: var(--destructive);
+  /* The mark and the message it predicts are the same red. This was
+     --destructive (#d32f2f, the solid destructive BUTTON fill); the error
+     message beside it is --status-negative-fg (#d02c2c), and two reds a shade
+     apart in one field read as a mistake rather than a system. */
+  --c-input-required: var(--status-negative-fg);
 
   /* select / dropdown — Figma "RMS / Select" (11:26) and "RMS / Select Menu"
      (11:27). The menu is a bordered white panel, not a ring, and its items
