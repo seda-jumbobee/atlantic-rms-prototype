@@ -86,7 +86,7 @@ export default function CalculatorsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Calculators"
-        description="Estimate freight, equipment fit, shipment requirements, and additional costs."
+        description="Estimate freight, equipment fit, shipping requirements, and additional costs."
       />
 
       {/* Category tabs */}

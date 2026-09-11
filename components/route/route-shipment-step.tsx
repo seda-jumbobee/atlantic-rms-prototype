@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowRight, Save } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ActionBar } from "@/components/ui/action-bar";
 import { Label } from "@/components/ui/label";
 import { RequiredMark } from "@/components/ui/field";
 import { Separator } from "@/components/ui/separator";
@@ -82,7 +83,7 @@ export function RouteShipmentStep({
           <section className="space-y-4">
             <div>
               <h3 className="text-lg font-semibold">Route</h3>
-              <p className="mt-1 text-xs text-muted-foreground">Where the shipment starts and ends — pick a port or a door address for each.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Where the shipping starts and ends — pick a port or a door address for each.</p>
             </div>
             <div className="grid items-start gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
@@ -113,19 +114,16 @@ export function RouteShipmentStep({
               showDetails={routeComplete}
             />
             {routeComplete === false && commodity && (
-              <p className="text-xs text-muted-foreground">Set the origin and final destination to add cargo and shipment details.</p>
+              <p className="text-xs text-muted-foreground">Set the origin and final destination to add cargo and shipping details.</p>
             )}
           </section>
 
-          <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
-            <Button variant="outline" className="gap-1.5" onClick={onSaveDraft}><Save className="size-4" /> Save draft</Button>
-            <Button className="gap-1.5" onClick={submit}>Continue to build route <ArrowRight className="size-4" /></Button>
-          </div>
+
         </CardContent>
       </Card>
 
       {/* live context panel */}
-      <aside className="space-y-4 lg:col-span-5 lg:sticky lg:top-20 lg:self-start" aria-label="Shipment preview">
+      <aside className="space-y-4 lg:col-span-5 lg:sticky lg:top-20 lg:self-start" aria-label="Shipping preview">
         {input && <ShipmentSummary input={input} />}
         {routeComplete && (
           <Card className="overflow-hidden p-0">
@@ -135,6 +133,16 @@ export function RouteShipmentStep({
           </Card>
         )}
       </aside>
+
+      {/* Same shared bar as Rate Quote step 1 — Custom Route's own actions. */}
+      <div className="lg:col-span-12">
+        <ActionBar>
+          <Button variant="outline" onClick={onSaveDraft}><Save className="size-4" /> Save draft</Button>
+          <Button onClick={submit} className="sm:min-w-48">
+            Continue to build route <ArrowRight className="size-4" />
+          </Button>
+        </ActionBar>
+      </div>
 
       <AlertDialog open={!!pending} onOpenChange={(o) => !o && setPending(null)}>
         <AlertDialogContent>

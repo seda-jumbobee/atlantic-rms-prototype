@@ -802,7 +802,7 @@ function QuoteDetailsSheet({ quote: q, onClose }: { quote: QuoteHistoryItem | nu
 
               {/* shipment */}
               <section className="space-y-1.5">
-                <h3 className="text-sm font-semibold">Shipment details</h3>
+                <h3 className="text-sm font-semibold">Shipping details</h3>
                 <div className="rounded-lg border">
                   <DetailRow label="Origin" value={q.origin} />
                   <DetailRow label="Destination" value={q.destination} />

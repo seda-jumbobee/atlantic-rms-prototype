@@ -4,18 +4,18 @@ import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   Send, FileDown, MessageSquareText, Save, LayoutTemplate, Briefcase,
-  EyeOff, ChevronDown, Pencil, ShieldCheck,
+  Eye, EyeOff, ChevronDown, Pencil, ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ActionBar } from "@/components/ui/action-bar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RequiredMark } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
@@ -121,9 +121,11 @@ export function ReviewStep({
       <div className="min-w-0 space-y-4">
         {/* Client preview */}
         <Card className="gap-0 overflow-hidden p-0">
-          <div className="flex items-center justify-between gap-2 border-b bg-muted/30 px-5 py-3">
-            <div className="flex items-center gap-2 text-sm font-semibold">Client preview</div>
-            <Badge variant="secondary" className="gap-1 font-normal">This is what the client sees</Badge>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--c-card-border)] px-5 py-3.5">
+            <h2 className="flex items-center gap-2 text-h4 text-foreground">
+              <Eye aria-hidden className="size-4 text-muted-foreground" /> Client preview
+            </h2>
+            <Badge variant="status-info" className="font-normal">This is what the client sees</Badge>
           </div>
           <div className="space-y-4 p-5">
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
@@ -176,16 +178,21 @@ export function ReviewStep({
 
         {/* Internal summary — never shown to the client */}
         <Collapsible open={internalOpen} onOpenChange={setInternalOpen}>
-          <Card className="gap-0 overflow-hidden border-dashed p-0">
-            <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left outline-none transition hover:bg-muted/40 focus-visible:ring-[3px] focus-visible:ring-ring/50">
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                <EyeOff className="size-4 text-muted-foreground" /> Internal summary
-                <span className="text-xs font-normal text-muted-foreground">— not visible to the client</span>
+          {/* Set apart from the preview above it on purpose: a dashed edge, a
+              tinted band and a struck-through eye, so the two blocks can never
+              be mistaken for one another at a glance. */}
+          <Card className="gap-0 overflow-hidden border-dashed border-border-strong bg-muted/30 p-0">
+            <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 px-4 py-3.5 text-left outline-none transition hover:bg-muted/60 focus-visible:ring-[3px] focus-visible:ring-ring/50">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="flex items-center gap-2 text-h4 text-foreground">
+                  <EyeOff aria-hidden className="size-4 text-muted-foreground" /> Internal summary
+                </h2>
+                <span className="text-caption text-muted-foreground">not visible to the client</span>
               </div>
               <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", internalOpen && "rotate-180")} />
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="space-y-4 border-t p-4">
+              <div className="space-y-4 border-t border-[var(--c-card-border)] bg-card p-4">
                 {/* headline economics */}
                 <div className="grid grid-cols-3 gap-2">
                   <Metric label="Internal cost" value={money(calc.internalCost)} />
@@ -234,20 +241,12 @@ export function ReviewStep({
       {/* right: send actions */}
       <div className="min-w-0 space-y-4 lg:sticky lg:top-20 lg:self-start">
         <Card className="space-y-3 p-4">
-          <div className="text-sm font-semibold">Send quote</div>
+          <h2 className="text-h4 text-foreground">Quote actions</h2>
           <p className="flex items-start gap-1.5 rounded-md bg-status-positive-bg/60 p-2 text-caption text-status-positive-fg">
             <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
             Only the client price and services are shared. Internal cost, profit, vendors and surcharges stay internal.
           </p>
 
-          <SendViaFrontDialog payload={payload} trigger={
-            <Button className="w-full gap-1.5"><Send className="size-4" /> Send via Front</Button>
-          } />
-          <PdfPreview payload={payload} trigger={
-            <Button variant="outline" className="w-full gap-1.5"><FileDown className="size-4" /> Preview PDF</Button>
-          } />
-
-          <Separator />
           <div className="text-caption font-medium uppercase tracking-wide text-muted-foreground">More actions</div>
           <div className="space-y-1">
             <TextDialog payload={payload} trigger={
@@ -275,6 +274,20 @@ export function ReviewStep({
         </Card>
 
         {reminder}
+      </div>
+
+      {/* Sending the quote is the point of this step, so it is held at the
+          bottom of the viewport rather than parked in a side rail that
+          scrolls. The lower-emphasis actions stay on the right. */}
+      <div className="lg:col-span-2">
+        <ActionBar innerClassName="sm:justify-center">
+          <PdfPreview payload={payload} trigger={
+            <Button variant="outline"><FileDown className="size-4" /> Preview PDF</Button>
+          } />
+          <SendViaFrontDialog payload={payload} trigger={
+            <Button className="sm:min-w-48"><Send className="size-4" /> Send via Front</Button>
+          } />
+        </ActionBar>
       </div>
     </div>
   );

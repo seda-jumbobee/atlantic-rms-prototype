@@ -8,6 +8,7 @@ import {
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ActionBar } from "@/components/ui/action-bar";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -306,16 +307,22 @@ export function RouteStagesStep({
             <span className="text-muted-foreground">Total internal cost</span>
             <span className="font-semibold tabular-nums">{money(totalCost)}</span>
           </div>
-          <div className="mt-3 space-y-2">
-            <Button className="w-full gap-1.5" onClick={onContinue} disabled={!canContinue}>
-              Continue to pricing <ArrowRight className="size-4" />
-            </Button>
-            <Button variant="outline" size="sm" className="w-full gap-1.5" onClick={onSaveDraft}><Save className="size-4" /> Save draft</Button>
-            {!canContinue && (
-              <p className="text-caption text-muted-foreground">Resolve the highlighted items to price and send a client quote. You can still save a draft.</p>
-            )}
-          </div>
+          {!canContinue && (
+            <p className="mt-3 text-caption text-muted-foreground">
+              Resolve the highlighted items to price and send a client quote. You can still save a draft.
+            </p>
+          )}
         </Card>
+      </div>
+
+      {/* The shared bar — same place, same shape, as every other step. */}
+      <div className="lg:col-span-2">
+        <ActionBar>
+          <Button variant="outline" onClick={onSaveDraft}><Save className="size-4" /> Save draft</Button>
+          <Button onClick={onContinue} disabled={!canContinue} className="sm:min-w-48">
+            Continue to pricing <ArrowRight className="size-4" />
+          </Button>
+        </ActionBar>
       </div>
 
       <OceanSearchDialog open={oceanDialogFor != null} onOpenChange={(o) => !o && setOceanDialogFor(null)} onPick={(c, cost, d) => oceanDialogFor && pickOcean(oceanDialogFor, c, cost, d)} />

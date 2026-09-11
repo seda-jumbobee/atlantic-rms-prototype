@@ -294,7 +294,7 @@ export function QuoteSearchWidget({
             <div>
               <h3 id="rq-route-heading" className="text-lg font-semibold">Route</h3>
               <p className="mt-1 text-xs text-muted-foreground">
-                Where the shipment starts and ends — pick a port or a door address for each.
+                Where the shipping starts and ends — pick a port or a door address for each.
               </p>
             </div>
             <div ref={originAnchor} className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
@@ -404,7 +404,7 @@ export function QuoteSearchWidget({
       </Card>
 
       {/* ── Context panel (desktop) ── */}
-      <aside className="sticky top-20 hidden space-y-4 self-start lg:col-span-5 lg:block" aria-label="Shipment summary">
+      <aside className="sticky top-20 hidden space-y-4 self-start lg:col-span-5 lg:block" aria-label="Shipping summary">
         {routeComplete && (
           <div className="duration-300 animate-in fade-in">
             <RouteOverviewCard origin={origin!} dest={dest!} />

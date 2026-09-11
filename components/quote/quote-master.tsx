@@ -63,7 +63,7 @@ function widgetInitialFromInput(input: SearchInput) {
 }
 
 const STEPS: FlowStep[] = [
-  { key: "search", label: "Shipment details" },
+  { key: "search", label: "Shipping details" },
   { key: "choose", label: "Choose rate" },
   { key: "pricing", label: "Set pricing" },
   { key: "review", label: "Review & send" },
@@ -185,10 +185,10 @@ export function QuoteMaster() {
           <EmptyState
             icon={SearchX}
             title="No matching rates found"
-            description="We could not find a rate for the selected route and shipment details. Adjust the shipment details, or price the transportation stages manually in Custom Route."
+            description="We could not find a rate for the selected route and shipping details. Adjust the shipping details, or price the transportation stages manually in Custom Route."
             action={
               <div className="flex flex-wrap justify-center gap-2">
-                <Button onClick={() => setEditingSearch(true)}>Edit shipment details</Button>
+                <Button onClick={() => setEditingSearch(true)}>Edit shipping details</Button>
                 <Button variant="outline" asChild>
                   <Link href="/route-builder"><Route className="size-4" /> Build custom route</Link>
                 </Button>

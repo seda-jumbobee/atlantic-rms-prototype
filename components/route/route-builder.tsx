@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { ArrowLeft, Route, Wand2, MoreHorizontal } from "lucide-react";
+import { Route, Wand2, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
+import { StepBackButton } from "@/components/step-back-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -23,7 +24,7 @@ import type { CommoditySelection } from "@/components/commodity-picker";
 import type { QuoteLeg, RouteStep } from "@/lib/types";
 
 const STEPS: FlowStep[] = [
-  { key: "shipment", label: "Shipment details" },
+  { key: "shipment", label: "Shipping details" },
   { key: "build", label: "Build route" },
   { key: "pricing", label: "Set pricing" },
   { key: "review", label: "Review & send" },
@@ -108,7 +109,7 @@ export function RouteBuilder() {
   };
 
   const back =
-    step === 1 ? { label: "Back to shipment details", onClick: () => setStep(0) }
+    step === 1 ? { label: "Back to shipping details", onClick: () => setStep(0) }
     : step === 2 ? { label: "Back to route", onClick: () => setStep(1) }
     : step === 3 ? { label: "Back to pricing", onClick: () => setStep(2) }
     : null;
@@ -152,23 +153,17 @@ export function RouteBuilder() {
         </DropdownMenu>
       </PageHeader>
 
-      {/* Progress first — where you are in the flow reads before what you are routing. */}
+      {/* Same order as Rate Quote: the way back, then the map, then the
+          context. Shared components, Custom Route's own steps and labels. */}
+      {back && step > 0 && input && (
+        <StepBackButton label={back.label} onClick={back.onClick} />
+      )}
+
       <FlowProgress steps={STEPS} current={step} onStepClick={onStepClick} ariaLabel="Custom route progress" />
 
-      {/* Shared back nav + shipment summary across Build route / Set pricing / Review & send */}
-      {step > 0 && input && (
-        <div className="space-y-4">
-          {back && (
-            <button
-              type="button"
-              onClick={back.onClick}
-              className="inline-flex items-center gap-1.5 rounded text-sm font-medium text-primary outline-none transition hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50"
-            >
-              <ArrowLeft className="size-4" /> {back.label}
-            </button>
-          )}
-          <ShipmentSummary input={input} onEdit={() => setStep(0)} />
-        </div>
+      {/* Set pricing pairs the summary with the route card instead. */}
+      {step > 0 && input && step !== 2 && (
+        <ShipmentSummary input={input} onEdit={() => setStep(0)} />
       )}
 
       {step === 0 && (
@@ -199,6 +194,7 @@ export function RouteBuilder() {
           model={model}
           meta={meta}
           summary={pricingSummary}
+          context={input ? <ShipmentSummary input={input} onEdit={() => setStep(0)} /> : undefined}
           editableCosts={false}
           servicesLabel="Route stages"
           onReview={() => setStep(3)}
