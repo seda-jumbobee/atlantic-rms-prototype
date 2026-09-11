@@ -6,9 +6,11 @@ import { Search, Upload, Plus, Library, Ship, Truck, AlertTriangle, FileSpreadsh
 import { toast } from "sonner";
 import { AdminGate } from "@/components/admin-gate";
 import { PageHeader } from "@/components/page-header";
-import { StatCard } from "@/components/stat-card";
+import { StatCard, IconTile } from "@/components/stat-card";
 import { CarrierName } from "@/components/carrier-name";
-import { Card, CardContent } from "@/components/ui/card";
+import { CountryFlag } from "@/components/location-label";
+import { EmptyState } from "@/components/empty-state";
+import { Card } from "@/components/ui/card";
 import { StatusBadge, type StatusTone } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +23,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogBody,
+  DialogClose,
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -29,6 +33,8 @@ import {
   searchRates,
   getVendor,
   getDataSource,
+  findPortByLocode,
+  type RateRow,
   type RateType,
 } from "@/lib/data";
 import { money, fmtDate } from "@/lib/format";
@@ -67,6 +73,70 @@ const PARSED_PREVIEW = [
   { type: "surcharge", lane: "—", carrier: "BAF — US exports", rate: "$292 per container" },
 ];
 
+/** The one way this page draws "no value", so an empty cell never reads as a
+    missing column. */
+function Dash() {
+  return <span className="text-muted-foreground">—</span>;
+}
+
+/* A lane end. The library stores ends as UN/LOCODEs ("USHOU"), not as the free
+   text `laneCountryCode` parses, so the country comes from the port record the
+   code resolves to. A drayage end like "Houston CFS" resolves to no port and
+   correctly gets no flag — a flag is only drawn for a country we can name. */
+function LaneEnd({ value }: { value?: string }) {
+  if (!value) return <Dash />;
+  const port = findPortByLocode(value);
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 align-middle"
+      title={port ? `${port.name}, ${port.country}` : undefined}
+    >
+      <CountryFlag cc={port?.countryCode} className="text-sm" />
+      <span className="tabular-nums">{value}</span>
+    </span>
+  );
+}
+
+function LaneCell({ rate }: { rate: RateRow }) {
+  if (!rate.origin && !rate.destination) return <Dash />;
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <LaneEnd value={rate.origin} />
+      <span className="text-muted-foreground">→</span>
+      <LaneEnd value={rate.destination} />
+    </span>
+  );
+}
+
+function ValidityCell({ rate }: { rate: RateRow }) {
+  return (
+    <>
+      <span className="tabular-nums">{fmtDate(rate.validFrom)}</span>
+      <span className="text-muted-foreground"> → </span>
+      <span className="tabular-nums">{fmtDate(rate.validTo)}</span>
+      {isExpired(rate.validTo) && (
+        <StatusBadge tone="warning" dot={false} className="ml-2 align-middle">
+          Expired
+        </StatusBadge>
+      )}
+    </>
+  );
+}
+
+function CarrierOrVendor({ rate }: { rate: RateRow }) {
+  const vendor = getVendor(rate.vendorId);
+  if (rate.carrierId) return <CarrierName carrierId={rate.carrierId} />;
+  if (vendor) return <span className="text-body font-medium">{vendor.name}</span>;
+  return <Dash />;
+}
+
+/** Every row's action reads the same ("Edit"), so the accessible name has to
+    carry the row: the lane where there is one, the item otherwise. */
+function rateLabel(r: RateRow): string {
+  const lane = r.origin || r.destination ? `${r.origin ?? "—"} to ${r.destination ?? "—"}` : undefined;
+  return [RATE_TYPE_LABEL[r.type], lane ?? r.commodity ?? r.container].filter(Boolean).join(" · ");
+}
+
 export default function RateLibraryPage() {
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<RateType | "all">("all");
@@ -81,20 +151,25 @@ export default function RateLibraryPage() {
   const truckingCount = RATE_LIBRARY.filter((r) => r.type === "trucking").length;
   const expiredCount = RATE_LIBRARY.filter((r) => isExpired(r.validTo)).length;
 
+  const clearFilters = () => {
+    setQuery("");
+    setTypeFilter("all");
+  };
+
   return (
     <AdminGate>
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
         <PageHeader
           title="Rate Library"
           description="One searchable home for every rate behind the quote engine — ocean, RoRo, trucking, loading, drayage and surcharges. Bulk-upload contracts to keep it fresh."
         >
           <BulkUploadDialog />
-          <Button onClick={() => toast.success("Opening rate editor…")}>
+          <Button onClick={() => toast("Rate editor not built yet", { description: "Editing a stored rate needs a backend." })}>
             <Plus className="size-4" /> Add rate
           </Button>
         </PageHeader>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Total rates" value={total} icon={Library} accent="primary" />
           <StatCard label="Ocean freight" value={oceanCount} sub="containerized lanes" icon={Ship} accent="primary" />
           <StatCard label="Trucking (inland)" value={truckingCount} sub="per-mile vendor rates" icon={Truck} accent="primary" />
@@ -107,147 +182,240 @@ export default function RateLibraryPage() {
           />
         </div>
 
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="relative w-full lg:max-w-sm">
-            <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search lanes, carriers, commodities, containers…"
-              className="pl-8"
-            />
+        {/* Filters: each group titled at body size, 10px above its control, the
+            same as the rate filters on the quote screens. */}
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="w-full lg:max-w-sm">
+            <label htmlFor="rate-search" className="mb-2.5 block text-body font-medium text-foreground">
+              Search
+            </label>
+            <div className="relative">
+              <Search
+                aria-hidden
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                id="rate-search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search lanes, carriers, commodities, containers…"
+                className="pl-9"
+              />
+            </div>
           </div>
-          <Tabs value={typeFilter} onValueChange={(v) => setTypeFilter(v as RateType | "all")}>
-            <TabsList className="max-w-full overflow-x-auto">
-              <TabsTrigger value="all">All</TabsTrigger>
-              {TYPE_ORDER.map((t) => (
-                <TabsTrigger key={t} value={t}>
-                  {RATE_TYPE_LABEL[t]}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+          <div className="min-w-0">
+            <span id="rate-type-label" className="mb-2.5 block text-body font-medium text-foreground">
+              Rate type
+            </span>
+            {/* The six types never fit a phone: the strip scrolls on its own
+                rather than widening the page. The padding is given back as a
+                negative margin so the scroller does not clip a focus ring and
+                the strip still sits where it would without it. */}
+            <Tabs value={typeFilter} onValueChange={(v) => setTypeFilter(v as RateType | "all")}>
+              <div className="-my-1 min-w-0 overflow-x-auto py-1">
+                <TabsList aria-labelledby="rate-type-label">
+                  <TabsTrigger value="all">All</TabsTrigger>
+                  {TYPE_ORDER.map((t) => (
+                    <TabsTrigger key={t} value={t}>
+                      {RATE_TYPE_LABEL[t]}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+            </Tabs>
+          </div>
         </div>
 
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Lane</TableHead>
-                  <TableHead>Carrier / Vendor</TableHead>
-                  <TableHead>Container</TableHead>
-                  <TableHead>Commodity</TableHead>
-                  <TableHead className="text-right">Rate</TableHead>
-                  <TableHead>Validity</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {results.map((r) => {
-                  const vendor = getVendor(r.vendorId);
-                  const source = getDataSource(r.dataSourceId);
-                  const expired = isExpired(r.validTo);
-                  return (
-                    <TableRow key={r.id}>
-                      <TableCell>
-                        <StatusBadge tone={TYPE_TONE[r.type]} dot={false} className="font-normal">
-                          {RATE_TYPE_LABEL[r.type]}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {r.origin || r.destination ? (
-                          <span className="tabular-nums">
-                            {r.origin ?? "—"} → {r.destination ?? "—"}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {r.carrierId ? (
-                          <CarrierName carrierId={r.carrierId} />
-                        ) : vendor ? (
-                          <span className="text-sm">{vendor.name}</span>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {r.container ?? <span className="text-muted-foreground">—</span>}
-                      </TableCell>
-                      <TableCell className="max-w-[200px] text-sm">
-                        {r.commodity ?? <span className="text-muted-foreground">—</span>}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        <span className="font-medium">{money(r.rate, r.currency)}</span>
-                        <span className="text-muted-foreground"> {r.unit}</span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm tabular-nums">
-                          {fmtDate(r.validFrom)} → {fmtDate(r.validTo)}
+        <div className="flex flex-col gap-3">
+          <p role="status" aria-live="polite" className="text-body text-muted-foreground">
+            Showing {results.length} of {total} rates
+          </p>
+
+          {results.length === 0 ? (
+            <EmptyState
+              title="No rates match your search"
+              description="Try another lane, carrier or commodity — or clear the filters to browse the whole library."
+              action={
+                <Button variant="outline" size="sm" onClick={clearFilters}>
+                  Clear filters
+                </Button>
+              }
+            />
+          ) : (
+            <>
+              {/* md+ : a block of figures read down its columns, so compact rows
+                  and right-aligned money. */}
+              <div className="hidden md:block">
+                <Table density="compact">
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead>Type</TableHead>
+                      <TableHead>Lane</TableHead>
+                      <TableHead>Carrier / Vendor</TableHead>
+                      <TableHead>Container</TableHead>
+                      <TableHead>Commodity</TableHead>
+                      <TableHead numeric>Rate</TableHead>
+                      {/* The unit is its own column: left in the Rate cell it
+                          sat between the figures and the right edge, and no two
+                          amounts lined up. */}
+                      <TableHead>Unit</TableHead>
+                      <TableHead>Validity</TableHead>
+                      <TableHead>Source</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {results.map((r) => {
+                      const source = getDataSource(r.dataSourceId);
+                      return (
+                        <TableRow key={r.id}>
+                          <TableCell>
+                            <StatusBadge tone={TYPE_TONE[r.type]} dot={false}>
+                              {RATE_TYPE_LABEL[r.type]}
+                            </StatusBadge>
+                          </TableCell>
+                          <TableCell>
+                            <LaneCell rate={r} />
+                          </TableCell>
+                          {/* The long free-text columns are capped and truncated
+                              so one 40-character vendor or file name cannot push
+                              the money and validity columns off the scroller. */}
+                          <TableCell className="max-w-[10rem] truncate">
+                            <CarrierOrVendor rate={r} />
+                          </TableCell>
+                          <TableCell>{r.container ?? <Dash />}</TableCell>
+                          <TableCell className="max-w-[11rem] truncate" title={r.commodity}>
+                            {r.commodity ?? <Dash />}
+                          </TableCell>
+                          <TableCell numeric className="font-medium">
+                            {money(r.rate, r.currency)}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{r.unit}</TableCell>
+                          <TableCell>
+                            <ValidityCell rate={r} />
+                          </TableCell>
+                          <TableCell className="max-w-[11rem] truncate" title={source?.name}>
+                            {source ? (
+                              <Link href="/admin/data-sources" className="text-primary hover:underline">
+                                {source.name}
+                              </Link>
+                            ) : (
+                              <Dash />
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <StatusBadge tone={STATUS_TONE[r.status]}>{STATUS_LABEL[r.status]}</StatusBadge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                aria-label={`Edit rate — ${rateLabel(r)}`}
+                                onClick={() => toast("Opening rate editor…")}
+                              >
+                                Edit
+                              </Button>
+                              {source && (
+                                <Button variant="ghost" size="icon-sm" asChild>
+                                  <Link href="/admin/data-sources" aria-label={`Open data source ${source.name}`}>
+                                    <ExternalLink className="size-4" />
+                                  </Link>
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* below md : the same eleven fields, stacked, so a phone never
+                  scrolls a table sideways to reach the rate. */}
+              <Card className="md:hidden">
+                <ul>
+                  {results.map((r) => {
+                    const source = getDataSource(r.dataSourceId);
+                    return (
+                      <li
+                        key={r.id}
+                        className="flex flex-col gap-3 border-b border-[var(--c-table-border)] p-4 last:border-b-0"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <StatusBadge tone={TYPE_TONE[r.type]} dot={false}>
+                            {RATE_TYPE_LABEL[r.type]}
+                          </StatusBadge>
+                          <StatusBadge tone={STATUS_TONE[r.status]}>{STATUS_LABEL[r.status]}</StatusBadge>
                         </div>
-                        {expired && <div className="text-xs font-medium text-status-warning-fg">expired</div>}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {source ? (
-                          <Link
-                            href="/admin/data-sources"
-                            className="text-primary hover:underline"
-                          >
-                            {source.name}
-                          </Link>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge tone={STATUS_TONE[r.status]} className="font-normal">
-                          {STATUS_LABEL[r.status]}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
+                        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
+                          <Field label="Lane">
+                            <LaneCell rate={r} />
+                          </Field>
+                          <Field label="Carrier / Vendor">
+                            <CarrierOrVendor rate={r} />
+                          </Field>
+                          <Field label="Container">{r.container ?? <Dash />}</Field>
+                          <Field label="Commodity">{r.commodity ?? <Dash />}</Field>
+                          <Field label="Rate">
+                            <span className="font-medium tabular-nums">{money(r.rate, r.currency)}</span>{" "}
+                            <span className="text-muted-foreground">{r.unit}</span>
+                          </Field>
+                          <Field label="Validity">
+                            <ValidityCell rate={r} />
+                          </Field>
+                          <Field label="Source">
+                            {source ? (
+                              <Link href="/admin/data-sources" className="text-primary hover:underline">
+                                {source.name}
+                              </Link>
+                            ) : (
+                              <Dash />
+                            )}
+                          </Field>
+                        </dl>
+                        <div className="flex gap-2">
                           <Button
-                            variant="ghost"
-                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            aria-label={`Edit rate — ${rateLabel(r)}`}
                             onClick={() => toast("Opening rate editor…")}
                           >
                             Edit
                           </Button>
                           {source && (
-                            <Button variant="ghost" size="sm" asChild>
-                              <Link href="/admin/data-sources">
+                            <Button variant="outline" size="icon" asChild>
+                              <Link href="/admin/data-sources" aria-label={`Open data source ${source.name}`}>
                                 <ExternalLink className="size-4" />
                               </Link>
                             </Button>
                           )}
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {results.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={10} className="py-10 text-center text-sm text-muted-foreground">
-                      No rates match your search.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Card>
+            </>
+          )}
 
-        <p className="text-xs text-muted-foreground">
-          Showing {results.length} of {total} rates. Search across every rate type at once, or bulk-upload a
-          contract to refresh hundreds of lanes in one pass.
-        </p>
+          <p className="text-caption text-muted-foreground">
+            Search across every rate type at once, or bulk-upload a contract to refresh hundreds of lanes in one pass.
+          </p>
+        </div>
       </div>
     </AdminGate>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <>
+      <dt className="text-caption text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 text-body text-foreground">{children}</dd>
+    </>
   );
 }
 
@@ -267,46 +435,51 @@ function BulkUploadDialog() {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid place-items-center gap-2 rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/30 px-4 py-10 text-center">
-          <div className="grid size-12 place-items-center rounded-full bg-muted text-primary">
-            <FileSpreadsheet className="size-5" />
+        <DialogBody className="flex flex-col gap-4">
+          <div className="grid place-items-center gap-2 rounded-lg border-2 border-dashed border-border-strong bg-muted px-4 py-10 text-center">
+            <IconTile size="lg" variant="primary" className="rounded-full">
+              <FileSpreadsheet />
+            </IconTile>
+            <p className="text-body font-medium">Drag &amp; drop a contract here</p>
+            <p className="text-caption text-muted-foreground">XLS / XLSX, CSV or PDF — up to 25 MB</p>
+            <Button variant="outline" size="sm" className="mt-1" onClick={() => toast("Choose a file to upload")}>
+              Browse files
+            </Button>
           </div>
-          <p className="text-sm font-medium">Drag &amp; drop a contract here</p>
-          <p className="text-xs text-muted-foreground">XLS / XLSX, CSV or PDF — up to 25 MB</p>
-          <Button variant="outline" size="sm" className="mt-1" onClick={() => toast("Choose a file to upload")}>
-            Browse files
-          </Button>
-        </div>
 
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">Detected mapping preview</p>
-          <div className="overflow-hidden rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="h-8 text-xs">Type</TableHead>
-                  <TableHead className="h-8 text-xs">Lane</TableHead>
-                  <TableHead className="h-8 text-xs">Carrier / Item</TableHead>
-                  <TableHead className="h-8 text-xs">Rate</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {PARSED_PREVIEW.map((row, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="py-1.5 text-xs capitalize">{row.type}</TableCell>
-                    <TableCell className="py-1.5 text-xs tabular-nums">{row.lane}</TableCell>
-                    <TableCell className="py-1.5 text-xs">{row.carrier}</TableCell>
-                    <TableCell className="py-1.5 text-xs tabular-nums">{row.rate}</TableCell>
+          <div className="flex flex-col gap-2.5">
+            <p className="text-body font-medium text-foreground">Detected mapping preview</p>
+            <div className="overflow-hidden rounded-lg border border-[var(--c-table-border)]">
+              <Table plain density="compact">
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>Type</TableHead>
+                    <TableHead>Lane</TableHead>
+                    <TableHead>Carrier / Item</TableHead>
+                    <TableHead>Rate</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {PARSED_PREVIEW.map((row, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="capitalize">{row.type}</TableCell>
+                      <TableCell className="tabular-nums">{row.lane}</TableCell>
+                      <TableCell>{row.carrier}</TableCell>
+                      <TableCell className="tabular-nums">{row.rate}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <p className="text-caption text-muted-foreground">124 rows parsed · 3 shown · 2 flagged for review</p>
           </div>
-          <p className="text-xs text-muted-foreground">124 rows parsed · 3 shown · 2 flagged for review</p>
-        </div>
+        </DialogBody>
 
         <DialogFooter>
-          <Button onClick={() => toast.success("Importing 124 rates into the library…")}>
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+          <Button onClick={() => toast("Import prepared", { description: "124 rates would be added — no import runs in this development preview." })}>
             <Upload className="size-4" /> Import 124 rates
           </Button>
         </DialogFooter>

@@ -1,13 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plug, FileSpreadsheet, MessageSquare, Inbox, Search, Upload } from "lucide-react";
+import {
+  Plug, FileSpreadsheet, MessageSquare, Inbox, Search, Upload, AlertTriangle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AdminGate } from "@/components/admin-gate";
 import { PageHeader } from "@/components/page-header";
 import { CarrierName } from "@/components/carrier-name";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/empty-state";
+import { AccentTile, accentAt } from "@/components/accent-tile";
+import { Card } from "@/components/ui/card";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -19,6 +23,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogBody,
+  DialogClose,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { DATA_SOURCES, getVendor } from "@/lib/data";
@@ -74,24 +80,33 @@ function isExpired(ds: DataSource): boolean {
 }
 
 function SourceStatusBadge({ status }: { status: DataSourceStatus }) {
+  return <StatusBadge tone={STATUS_TONE[status]}>{STATUS_LABEL[status]}</StatusBadge>;
+}
+
+/** An empty cell. The dash is drawn for the eye; a reader using speech hears a
+    word instead of "em dash", which is how the dashboard states a missing value. */
+function NoValue() {
   return (
-    <StatusBadge tone={STATUS_TONE[status]} className="font-normal">
-      {STATUS_LABEL[status]}
-    </StatusBadge>
+    <>
+      <span aria-hidden className="text-muted-foreground">—</span>
+      <span className="sr-only">none</span>
+    </>
   );
 }
 
 function SourceTable({ sources }: { sources: DataSource[] }) {
   return (
-    <Table>
+    // `plain` because the table sits inside the section Card — otherwise the two
+    // stack a border and a radius on the same edge.
+    <Table plain>
       <TableHeader>
-        <TableRow>
+        <TableRow className="hover:bg-transparent">
           <TableHead>Source</TableHead>
           <TableHead>Carrier / Vendor</TableHead>
           <TableHead>Format</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Validity</TableHead>
-          <TableHead className="text-right">Rates</TableHead>
+          <TableHead numeric>Rates</TableHead>
           <TableHead>Last sync</TableHead>
         </TableRow>
       </TableHeader>
@@ -101,44 +116,54 @@ function SourceTable({ sources }: { sources: DataSource[] }) {
           const expired = isExpired(ds);
           return (
             <TableRow key={ds.id}>
-              <TableCell className="max-w-[280px]">
-                <div className="font-medium">{ds.name}</div>
+              {/* The only cell allowed to wrap. Cells are nowrap by default, so a
+                  long file name and its description used to push the whole table
+                  sideways rather than fill the width they were capped at. The
+                  floor is what stops auto-layout from paying for the narrow
+                  viewport out of this one column — the table scrolls instead. */}
+              <TableCell className="min-w-[220px] max-w-[280px] whitespace-normal">
+                <div className="text-body font-medium text-foreground">{ds.name}</div>
                 {ds.description && (
-                  <div className="text-xs text-muted-foreground">{ds.description}</div>
+                  <div className="mt-0.5 text-caption text-muted-foreground">{ds.description}</div>
                 )}
               </TableCell>
               <TableCell>
                 {ds.carrierId ? (
                   <CarrierName carrierId={ds.carrierId} />
                 ) : vendor ? (
-                  <span className="text-sm">{vendor.name}</span>
+                  <span className="text-body">{vendor.name}</span>
                 ) : (
-                  <span className="text-sm text-muted-foreground">—</span>
+                  <NoValue />
                 )}
               </TableCell>
               <TableCell>
+                {/* A format is a kind, not a judgement, so it takes the neutral
+                    chip without the state dot — as SourceBadge does for sources. */}
                 {ds.format ? (
-                  <Badge variant="secondary" className="bg-muted font-normal text-muted-foreground">
-                    {ds.format}
-                  </Badge>
+                  <StatusBadge tone="neutral" dot={false}>{ds.format}</StatusBadge>
                 ) : (
-                  <span className="text-muted-foreground">—</span>
+                  <NoValue />
                 )}
               </TableCell>
               <TableCell><SourceStatusBadge status={ds.status} /></TableCell>
-              <TableCell>
-                <div className="text-sm tabular-nums">
+              {/* Allowed to break at the arrow. Held on one line it is the
+                  widest nowrap column on the row, and it alone pushed the table
+                  past its container at 1280. */}
+              <TableCell className="whitespace-normal">
+                <div className="text-body tabular-nums">
                   {fmtDate(ds.validFrom)} → {fmtDate(ds.validTo)}
                 </div>
                 {expired && (
-                  <div className="text-xs font-medium text-status-warning-fg">expired — still quotable</div>
+                  <div className="mt-0.5 text-caption font-medium text-status-warning-fg">
+                    Expired — still quotable
+                  </div>
                 )}
               </TableCell>
-              <TableCell className="text-right tabular-nums">
-                {ds.rateCount != null ? ds.rateCount.toLocaleString() : "—"}
+              <TableCell numeric className="text-body">
+                {ds.rateCount != null ? ds.rateCount.toLocaleString() : <NoValue />}
               </TableCell>
-              <TableCell className="text-sm text-muted-foreground tabular-nums">
-                {ds.lastSync ? fmtDate(ds.lastSync) : "—"}
+              <TableCell className="text-body tabular-nums text-muted-foreground">
+                {ds.lastSync ? fmtDate(ds.lastSync) : <NoValue />}
               </TableCell>
             </TableRow>
           );
@@ -165,7 +190,7 @@ export default function DataSourcesPage() {
 
   return (
     <AdminGate>
-      <div className="space-y-6">
+      <div className="flex min-w-0 flex-col gap-6">
         <PageHeader
           title="Data Sources"
           description="Every rate feed behind the quote engine — APIs, uploaded contracts, custom quotes and Front imports."
@@ -173,74 +198,112 @@ export default function DataSourcesPage() {
           <BulkUploadDialog />
         </PageHeader>
 
-        <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search sources by name, description or vendor…"
-            className="pl-8"
-          />
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {KIND_ORDER.map((k) => {
+        {/* The four kinds, named once. The tab below shows one kind at a time,
+            so this is the only place the whole set can be read at a glance —
+            which is why the blurbs live here and not in each tab panel. */}
+        <section aria-label="Source kinds" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {KIND_ORDER.map((k, i) => {
             const meta = KIND_META[k];
             const Icon = meta.icon;
             return (
-              <Card key={k}>
-                <CardContent className="space-y-2 p-4">
-                  <div className="flex items-center gap-2">
-                    <div className="grid size-8 place-items-center rounded-lg bg-muted text-primary">
-                      <Icon className="size-4" />
-                    </div>
-                    <span className="text-sm font-medium">{meta.label}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{meta.blurb}</p>
-                </CardContent>
+              <Card key={k} className="min-w-0 gap-2 p-4">
+                <div className="flex items-center gap-2.5">
+                  <AccentTile accent={accentAt(i)}>
+                    <Icon aria-hidden className="size-5" />
+                  </AccentTile>
+                  <span className="text-body font-medium text-foreground">{meta.label}</span>
+                </div>
+                <p className="text-caption text-muted-foreground">{meta.blurb}</p>
               </Card>
             );
           })}
+        </section>
+
+        {/* Search sits directly above the tabs it filters — the counts in the
+            tab labels move with it, so the two have to be read together. */}
+        <div className="flex flex-col gap-2.5">
+          <label htmlFor="source-search" className="text-body font-medium text-foreground">
+            Search sources
+          </label>
+          <div className="relative w-full sm:max-w-md">
+            <Search
+              aria-hidden
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              id="source-search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Name, description or vendor…"
+              className="pl-9"
+            />
+          </div>
         </div>
 
         {expiredCount > 0 && (
-          <p className="text-xs text-status-warning-fg">
-            {expiredCount} source{expiredCount > 1 ? "s" : ""} past validity — these remain quotable until replaced.
-          </p>
+          <Alert variant="warning">
+            <AlertTriangle aria-hidden />
+            <AlertTitle>
+              {expiredCount} source{expiredCount > 1 ? "s" : ""} past validity
+            </AlertTitle>
+            <AlertDescription>These remain quotable until replaced.</AlertDescription>
+          </Alert>
         )}
 
-        <Tabs defaultValue={KIND_ORDER[0]}>
-          <TabsList className="max-w-full overflow-x-auto">
-            {KIND_ORDER.map((k) => {
-              const count = filtered.filter((d) => d.kind === k).length;
-              return (
-                <TabsTrigger key={k} value={k}>
-                  {KIND_META[k].label}
-                  <Badge variant="secondary" className="ml-2 bg-muted text-muted-foreground tabular-nums">
-                    {count}
-                  </Badge>
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
+        <Tabs defaultValue={KIND_ORDER[0]} className="gap-4">
+          {/* The list scrolls inside its own container rather than widening the
+              page; the -mx-1/px-1 pair keeps the end triggers' focus rings
+              from being clipped by that scrollport. */}
+          <div className="-mx-1 overflow-x-auto px-1">
+            <TabsList>
+              {KIND_ORDER.map((k) => {
+                const count = filtered.filter((d) => d.kind === k).length;
+                return (
+                  <TabsTrigger key={k} value={k}>
+                    {KIND_META[k].label}
+                    <span className="text-caption tabular-nums text-muted-foreground">{count}</span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </div>
           {KIND_ORDER.map((k) => {
+            const meta = KIND_META[k];
             const sources = filtered.filter((d) => d.kind === k);
             return (
-              <TabsContent key={k} value={k} className="mt-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">{KIND_META[k].label}</CardTitle>
-                    <CardDescription>{KIND_META[k].blurb}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {sources.length ? (
-                      <SourceTable sources={sources} />
-                    ) : (
-                      <p className="py-6 text-center text-sm text-muted-foreground">
-                        {query ? "No sources match your search." : "No sources of this kind."}
-                      </p>
-                    )}
-                  </CardContent>
+              <TabsContent key={k} value={k}>
+                {/* py-5 matches the 20px the table's edge cells inset by, so the
+                    heading row and the rows below it share one left edge. */}
+                <Card className="min-w-0 gap-4 p-0 py-5">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-5">
+                    <h2 className="text-h4 text-foreground">{meta.label}</h2>
+                    <p className="text-caption tabular-nums text-muted-foreground">
+                      {sources.length} source{sources.length === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                  {sources.length ? (
+                    <SourceTable sources={sources} />
+                  ) : (
+                    <div className="px-5">
+                      <EmptyState
+                        icon={query ? undefined : meta.icon}
+                        title={query ? "No matching sources" : "No sources of this kind"}
+                        description={
+                          query
+                            ? `Nothing under ${meta.label} matches “${query}”. Another tab may still have results.`
+                            : meta.blurb
+                        }
+                        className="border-dashed shadow-none"
+                        action={
+                          query ? (
+                            <Button size="sm" variant="outline" onClick={() => setQuery("")}>
+                              Clear search
+                            </Button>
+                          ) : undefined
+                        }
+                      />
+                    </div>
+                  )}
                 </Card>
               </TabsContent>
             );
@@ -262,7 +325,7 @@ function BulkUploadDialog() {
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">
-          <Upload className="size-4" /> Bulk upload contract
+          <Upload aria-hidden className="size-4" /> Bulk upload contract
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -273,45 +336,51 @@ function BulkUploadDialog() {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid place-items-center gap-2 rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/30 px-4 py-10 text-center">
-          <div className="grid size-12 place-items-center rounded-full bg-muted text-primary">
-            <FileSpreadsheet className="size-5" />
+        <DialogBody className="flex flex-col gap-5">
+          <div className="flex flex-col items-center gap-2 rounded-card border-2 border-dashed border-border-strong bg-muted px-4 py-10 text-center">
+            <AccentTile accent="indigo" className="size-12 rounded-full">
+              <FileSpreadsheet aria-hidden className="size-5" />
+            </AccentTile>
+            <p className="text-body font-medium text-foreground">Drag &amp; drop a contract here</p>
+            <p className="text-caption text-muted-foreground">XLS / XLSX, CSV or PDF — up to 25 MB</p>
+            {/* Full height, not sm: on a touch device this is the only way in —
+                there is nothing to drag from. */}
+            <Button variant="outline" className="mt-2" onClick={() => toast("Choose a file to upload")}>
+              Browse files
+            </Button>
           </div>
-          <p className="text-sm font-medium">Drag &amp; drop a contract here</p>
-          <p className="text-xs text-muted-foreground">XLS / XLSX, CSV or PDF — up to 25 MB</p>
-          <Button variant="outline" size="sm" className="mt-1" onClick={() => toast("Choose a file to upload")}>
-            Browse files
-          </Button>
-        </div>
 
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">Detected mapping preview</p>
-          <div className="overflow-hidden rounded-md border">
-            <Table>
+          <div className="flex flex-col gap-2.5">
+            <p className="text-body font-medium text-foreground">Detected mapping preview</p>
+            {/* Three short rows read as one block of figures, so compact. */}
+            <Table density="compact">
               <TableHeader>
-                <TableRow>
-                  <TableHead className="h-8 text-xs">Lane</TableHead>
-                  <TableHead className="h-8 text-xs">Item</TableHead>
-                  <TableHead className="h-8 text-xs">Rate</TableHead>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead>Lane</TableHead>
+                  <TableHead>Item</TableHead>
+                  <TableHead>Rate</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {PARSED_PREVIEW.map((row, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="py-1.5 text-xs tabular-nums">{row.lane}</TableCell>
-                    <TableCell className="py-1.5 text-xs">{row.item}</TableCell>
-                    <TableCell className="py-1.5 text-xs tabular-nums">{row.rate}</TableCell>
+                {PARSED_PREVIEW.map((row) => (
+                  <TableRow key={`${row.lane}-${row.item}`}>
+                    <TableCell className="text-body">{row.lane}</TableCell>
+                    <TableCell className="text-body">{row.item}</TableCell>
+                    <TableCell className="text-body tabular-nums">{row.rate}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+            <p className="text-caption text-muted-foreground">124 rows parsed · 3 shown · 2 flagged for review</p>
           </div>
-          <p className="text-xs text-muted-foreground">124 rows parsed · 3 shown · 2 flagged for review</p>
-        </div>
+        </DialogBody>
 
         <DialogFooter>
-          <Button onClick={() => toast.success("Importing contract — 124 rates queued for review…")}>
-            <Upload className="size-4" /> Import
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+          <Button onClick={() => toast("Contract import prepared", { description: "124 rates would be queued for review — no import runs in this development preview." })}>
+            <Upload aria-hidden className="size-4" /> Import
           </Button>
         </DialogFooter>
       </DialogContent>

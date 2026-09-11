@@ -5,14 +5,14 @@ import { BarChart3, Award, TriangleAlert, Gauge, Timer, Crown, Star } from "luci
 import { AdminGate } from "@/components/admin-gate";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/empty-state";
+import { Card } from "@/components/ui/card";
 import { StatusBadge, type StatusTone } from "@/components/status-badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { VENDORS, getVendor, RATE_LIBRARY, ratesForVendor, VENDOR_INVOICES, invoiceTotals } from "@/lib/data";
 import type { RateRow, RateType } from "@/lib/data";
@@ -31,6 +31,9 @@ const SERVICE_META: { service: string; label: string; rateType: RateType; unit: 
 ];
 const COASTS: (Coast | "all")[] = ["all", "East", "West", "Gulf", "Inland", "Intl"];
 
+/** Short form of the unit, for the head of the rate column. */
+const UNIT_SHORT: Record<string, string> = { "$/mile": "mi", "per container": "cntr", flat: "unit" };
+
 function median(nums: number[]): number {
   if (!nums.length) return 0;
   const s = [...nums].sort((a, b) => a - b);
@@ -41,6 +44,42 @@ function median(nums: number[]): number {
 function TierBadge({ tier }: { tier: VendorTier }) {
   const tone: StatusTone = tier === 1 ? "positive" : tier === 2 ? "info" : "neutral";
   return <StatusBadge tone={tone} dot={false}>T{tier}</StatusBadge>;
+}
+
+/** A magnitude drawn beside the figure it belongs to. Decorative: the number is
+    already in the next cell, so announcing the bar as well only repeats it. */
+function MeterBar({ pct, className }: { pct: number; className?: string }) {
+  return (
+    <span aria-hidden className="block h-1.5 w-full overflow-hidden rounded-full bg-muted">
+      <span className={cn("block h-full rounded-full bg-primary", className)} style={{ width: `${pct}%` }} />
+    </span>
+  );
+}
+
+/** Report section: heading inside the card, table flush to the card's own 20px
+    inset — the rhythm the Dashboard's tables set. */
+function ReportCard({
+  id, title, description, children,
+}: {
+  id: string;
+  title: React.ReactNode;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    // min-w-0: the card clips rather than scrolls, and a clip box is not a
+    // scroll container, so a grid track would otherwise size itself to the
+    // table's min-content width and push the card past the column.
+    <Card asChild className="min-w-0 gap-4 p-0 py-5">
+      <section aria-labelledby={id}>
+        <div className="flex flex-col gap-1 px-5">
+          <h2 id={id} className="text-h4 text-foreground">{title}</h2>
+          {description && <p className="text-caption text-muted-foreground">{description}</p>}
+        </div>
+        {children}
+      </section>
+    </Card>
+  );
 }
 
 export default function ReportsPage() {
@@ -117,157 +156,239 @@ export default function ReportsPage() {
 
   return (
     <AdminGate>
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
         <PageHeader title="Reports" description="Procurement analytics — vendor pricing, invoice accuracy and rate freshness." />
 
         <Tabs defaultValue="vendors">
-          <TabsList>
-            <TabsTrigger value="vendors">Vendors</TabsTrigger>
-            <TabsTrigger value="carriers" disabled>Carriers · soon</TabsTrigger>
-            <TabsTrigger value="lanes" disabled>Lanes · soon</TabsTrigger>
-          </TabsList>
+          {/* The tab strip scrolls itself on a phone rather than widening the page. */}
+          <div className="-mx-1 overflow-x-auto px-1">
+            <TabsList>
+              <TabsTrigger value="vendors">Vendors</TabsTrigger>
+              <TabsTrigger value="carriers" disabled>Carriers · soon</TabsTrigger>
+              <TabsTrigger value="lanes" disabled>Lanes · soon</TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value="vendors" className="space-y-5 pt-4">
+          <TabsContent value="vendors" className="flex flex-col gap-6 pt-4">
             {/* KPI strip */}
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <section aria-label="Key metrics" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               <StatCard label="Active vendors" value={kpis.activeVendors} sub="with a live rate" icon={BarChart3} />
               <StatCard label="Median loading" value={money(kpis.medLoading)} sub="per container (flat)" icon={Award} />
               <StatCard label="Avg invoice variance" value={`${(kpis.avgVar * 100).toFixed(1)}%`} sub="invoiced vs quoted" icon={TriangleAlert} accent={kpis.avgVar > 0.02 ? "warning" : "success"} />
               <StatCard label="Discrepancy rate" value={`${Math.round(kpis.discRate * 100)}%`} sub="of vendor invoices" icon={Gauge} accent={kpis.discRate > 0.25 ? "destructive" : "success"} />
               <StatCard label="Rate freshness" value={`${Math.round(kpis.freshness * 100)}%`} sub="actual, non-expired" icon={Timer} accent={kpis.freshness < 0.7 ? "warning" : "success"} />
-            </div>
+            </section>
 
-            {/* Filter bar */}
+            {/* Filter bar — every control full width on a phone, one row from lg up. */}
             <Card className="p-4">
-              <div className="flex flex-wrap items-end gap-4">
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Service (units must match)</Label>
+              <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end">
+                <div className="flex flex-col gap-2.5">
+                  <Label htmlFor="rep-service" className="text-body font-medium text-foreground">Service</Label>
                   <Select value={service} onValueChange={setService}>
-                    <SelectTrigger className="h-9 w-48"><SelectValue /></SelectTrigger>
+                    <SelectTrigger id="rep-service" className="w-full lg:w-56"><SelectValue /></SelectTrigger>
                     <SelectContent>{SERVICE_META.map((m) => <SelectItem key={m.service} value={m.service}>{m.label}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Coast</Label>
+                <div className="flex flex-col gap-2.5">
+                  <Label htmlFor="rep-coast" className="text-body font-medium text-foreground">Coast</Label>
                   <Select value={coast} onValueChange={(v) => setCoast(v as Coast | "all")}>
-                    <SelectTrigger className="h-9 w-32"><SelectValue /></SelectTrigger>
+                    <SelectTrigger id="rep-coast" className="w-full lg:w-40"><SelectValue /></SelectTrigger>
                     <SelectContent>{COASTS.map((c) => <SelectItem key={c} value={c}>{c === "all" ? "All coasts" : c}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Tier</Label>
-                  <div className="flex gap-1">
+                <div className="flex flex-col gap-2.5">
+                  {/* A span, not a Label: the group has three buttons, and a label
+                      pointing at one of them would mislabel the other two. */}
+                  <span id="rep-tier-label" className="text-body font-medium text-foreground">Tier</span>
+                  <div role="group" aria-labelledby="rep-tier-label" className="flex gap-1.5">
                     {([1, 2, 3] as VendorTier[]).map((t) => (
-                      <button key={t} type="button" onClick={() => toggleTier(t)}
-                        className={cn("rounded-md border px-2.5 py-1.5 text-sm font-medium transition", tiers.has(t) ? "border-primary bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted")}>
+                      <button key={t} type="button" onClick={() => toggleTier(t)} aria-pressed={tiers.has(t)}
+                        className={cn(
+                          "h-11 min-w-11 rounded-md border px-3.5 text-body font-medium transition-colors",
+                          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                          tiers.has(t)
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border-strong text-muted-foreground hover:bg-surface-hover"
+                        )}>
                         T{t}
                       </button>
                     ))}
                   </div>
                 </div>
-                <label className="flex items-center gap-2 pb-1.5 text-sm">
-                  <Switch checked={actualOnly} onCheckedChange={setActualOnly} /> Actual rates only
-                </label>
-                <div className="ml-auto flex items-center gap-3 pb-1.5">
-                  <span className="text-xs text-muted-foreground">{ranked.length} vendors</span>
+                <div className="flex h-11 items-center gap-2.5">
+                  <Switch id="rep-actual-only" checked={actualOnly} onCheckedChange={setActualOnly} />
+                  <Label htmlFor="rep-actual-only" className="text-body font-medium text-foreground">Actual rates only</Label>
+                </div>
+                <div className="flex h-11 items-center gap-3 lg:ml-auto">
+                  <p role="status" aria-live="polite" className="text-caption text-muted-foreground">
+                    {ranked.length} {ranked.length === 1 ? "vendor" : "vendors"}
+                  </p>
                   <Button variant="ghost" size="sm" onClick={reset}>Reset</Button>
                 </div>
               </div>
             </Card>
 
             {/* Widget A — ranked cost table */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Vendor cost ranking — {meta.label} <span className="font-normal text-muted-foreground">({meta.unit})</span></CardTitle>
-              </CardHeader>
-              <CardContent>
-                {ranked.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-muted-foreground">No comparable {meta.label} rates for the current filters.</p>
-                ) : (
-                  <div className="space-y-2">
+            <ReportCard
+              id="report-cost-ranking"
+              title={<>Vendor cost ranking — {meta.label} <span className="font-normal text-muted-foreground">({meta.unit})</span></>}
+              description={`Only ${meta.unit} rates are compared, so the figures are apples-to-apples.`}
+            >
+              {ranked.length === 0 ? (
+                <div className="px-5">
+                  <EmptyState
+                    icon={BarChart3}
+                    title="No comparable rates"
+                    description={`No ${meta.label} rates match the current filters.`}
+                    className="border-dashed shadow-none"
+                    action={<Button size="sm" variant="outline" onClick={reset}>Reset filters</Button>}
+                  />
+                </div>
+              ) : (
+                <Table plain>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead>Vendor</TableHead>
+                      <TableHead>Tier</TableHead>
+                      <TableHead>Coast</TableHead>
+                      <TableHead numeric>Rating</TableHead>
+                      {/* The bar restates the rate column; on a phone the figures win. */}
+                      <TableHead className="hidden w-40 md:table-cell">Relative cost</TableHead>
+                      <TableHead numeric>Rate / {UNIT_SHORT[meta.unit] ?? meta.unit}</TableHead>
+                      <TableHead numeric>vs cheapest</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {ranked.map((r, i) => {
                       const delta = minRate ? Math.round(((r.rate - minRate) / minRate) * 100) : 0;
                       const barPct = maxRate ? Math.max(6, (r.rate / maxRate) * 100) : 100;
                       return (
-                        <div key={r.vendor.id} className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-lg border p-2.5">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="truncate text-sm font-medium">{r.vendor.name}</span>
-                              <TierBadge tier={r.vendor.tier} />
-                              <span className="text-xs text-muted-foreground">{r.vendor.coast}</span>
-                              {i === 0 && <Badge variant="status-positive" className="gap-1"><Crown className="size-3" /> Best price</Badge>}
-                              {i === ranked.length - 1 && ranked.length > 1 && <Badge variant="status-warning">Premium</Badge>}
-                            </div>
-                            <div className="mt-1.5 h-1.5 rounded-full bg-muted">
-                              <div className="h-1.5 rounded-full bg-gradient-to-r from-success to-primary" style={{ width: `${barPct}%` }} />
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-semibold tabular-nums">{money(r.rate)} <span className="text-xs font-normal text-muted-foreground">/{meta.unit === "$/mile" ? "mi" : meta.unit === "per container" ? "cntr" : "unit"}</span></div>
-                            <div className="flex items-center justify-end gap-2 text-xs">
-                              <span className="inline-flex items-center gap-0.5 text-muted-foreground"><Star className="size-3 fill-warning text-warning" /> {r.vendor.rating}</span>
-                              <span className={cn("tabular-nums", delta === 0 ? "text-status-positive-fg" : "text-status-negative-fg")}>{delta === 0 ? "cheapest" : `+${delta}%`}</span>
-                            </div>
-                          </div>
-                        </div>
+                        <TableRow key={r.vendor.id}>
+                          <TableCell>
+                            <span className="flex items-center gap-2">
+                              <span className="font-medium">{r.vendor.name}</span>
+                              {i === 0 && (
+                                <StatusBadge tone="positive" dot={false}>
+                                  <Crown aria-hidden /> Best price
+                                </StatusBadge>
+                              )}
+                              {i === ranked.length - 1 && ranked.length > 1 && (
+                                <StatusBadge tone="warning" dot={false}>Premium</StatusBadge>
+                              )}
+                            </span>
+                          </TableCell>
+                          <TableCell><TierBadge tier={r.vendor.tier} /></TableCell>
+                          <TableCell className="text-muted-foreground">{r.vendor.coast}</TableCell>
+                          <TableCell numeric>
+                            <span className="inline-flex items-center gap-1">
+                              <Star aria-hidden className="size-3.5 fill-warning text-warning" /> {r.vendor.rating}
+                            </span>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell"><MeterBar pct={barPct} /></TableCell>
+                          <TableCell numeric className="font-medium">{money(r.rate)}</TableCell>
+                          <TableCell numeric className={cn(delta === 0 ? "text-status-positive-fg" : "text-status-negative-fg")}>
+                            {delta === 0 ? "cheapest" : `+${delta}%`}
+                          </TableCell>
+                        </TableRow>
                       );
                     })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  </TableBody>
+                </Table>
+              )}
+            </ReportCard>
 
-            <div className="grid gap-5 lg:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2">
               {/* Widget B */}
-              <Card>
-                <CardHeader className="pb-2"><CardTitle className="text-sm">Cheapest vendor per service</CardTitle></CardHeader>
-                <CardContent className="space-y-2">
-                  {cheapestPerService.map(({ meta: m, best }) => (
-                    <div key={m.service} className="flex items-center justify-between rounded-lg border p-2.5 text-sm">
-                      <span className="text-muted-foreground">{m.label}</span>
-                      {best ? (
-                        <span className="flex items-center gap-2"><span className="font-medium">{best.v.name}</span><span className="font-semibold tabular-nums">{money(best.rate)}</span></span>
-                      ) : <span className="text-xs text-muted-foreground">no data</span>}
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+              <ReportCard id="report-cheapest" title="Cheapest vendor per service">
+                <Table plain>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead>Service</TableHead>
+                      <TableHead>Vendor</TableHead>
+                      <TableHead numeric>Rate</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {cheapestPerService.map(({ meta: m, best }) => (
+                      <TableRow key={m.service}>
+                        <TableCell className="text-muted-foreground">{m.label}</TableCell>
+                        <TableCell className="font-medium">
+                          {best ? best.v.name : <span className="font-normal text-muted-foreground">No data</span>}
+                        </TableCell>
+                        <TableCell numeric className="font-medium">
+                          {best ? money(best.rate) : <span aria-hidden className="text-muted-foreground">—</span>}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ReportCard>
 
               {/* Widget C */}
-              <Card>
-                <CardHeader className="pb-2"><CardTitle className="text-sm">Invoice-variance leaderboard</CardTitle></CardHeader>
-                <CardContent className="space-y-2">
-                  {varianceBoard.map((row) => (
-                    <div key={row.vid} className="flex items-center justify-between rounded-lg border p-2.5 text-sm">
-                      <span className="truncate">{getVendor(row.vid)?.name ?? row.vid}</span>
-                      <span className={cn("font-semibold tabular-nums", row.variance > 0 ? "text-status-negative-fg" : row.variance < 0 ? "text-status-positive-fg" : "text-muted-foreground")}>
-                        {row.variance > 0 ? "+" : ""}{money(row.variance)} · {Math.round(row.pct * 100)}%
-                      </span>
-                    </div>
-                  ))}
-                  <p className="pt-1 text-caption text-muted-foreground">Higher = vendor over-billed vs quoted. Feeds QuickBooks reconciliation.</p>
-                </CardContent>
-              </Card>
+              <ReportCard
+                id="report-variance"
+                title="Invoice-variance leaderboard"
+                description="Higher = vendor over-billed vs quoted. Feeds QuickBooks reconciliation."
+              >
+                <Table plain>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead>Vendor</TableHead>
+                      <TableHead numeric>Variance</TableHead>
+                      <TableHead numeric>vs quoted</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {varianceBoard.map((row) => {
+                      const tone = row.variance > 0 ? "text-status-negative-fg"
+                        : row.variance < 0 ? "text-status-positive-fg" : "text-muted-foreground";
+                      return (
+                        <TableRow key={row.vid}>
+                          <TableCell>{getVendor(row.vid)?.name ?? row.vid}</TableCell>
+                          <TableCell numeric className={cn("font-medium", tone)}>
+                            {row.variance > 0 ? "+" : ""}{money(row.variance)}
+                          </TableCell>
+                          <TableCell numeric className={tone}>{Math.round(row.pct * 100)}%</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </ReportCard>
             </div>
 
             {/* Widget D */}
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Rate freshness by vendor</CardTitle></CardHeader>
-              <CardContent className="space-y-2">
-                {freshnessBoard.map(({ v, fresh, total, pct }) => (
-                  <div key={v.id} className="grid grid-cols-[1fr_auto] items-center gap-3">
-                    <div>
-                      <div className="flex items-center justify-between text-sm"><span>{v.name}</span><span className="text-xs text-muted-foreground">{fresh}/{total} actual</span></div>
-                      <div className="mt-1 h-1.5 rounded-full bg-muted"><div className={cn("h-1.5 rounded-full", pct >= 0.7 ? "bg-success" : pct >= 0.4 ? "bg-warning" : "bg-destructive")} style={{ width: `${Math.max(6, pct * 100)}%` }} /></div>
-                    </div>
-                    <span className="w-10 text-right text-sm font-medium tabular-nums">{Math.round(pct * 100)}%</span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            <Separator />
-            <p className="text-center text-xs text-muted-foreground">Cost comparisons are scoped to one service &amp; unit so figures are apples-to-apples. Carriers &amp; lane analytics coming next.</p>
+            <ReportCard
+              id="report-freshness"
+              title="Rate freshness by vendor"
+              description="Worst coverage first — these rate sheets are the ones due a refresh."
+            >
+              <Table plain>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>Vendor</TableHead>
+                    <TableHead className="hidden w-52 sm:table-cell">Coverage</TableHead>
+                    <TableHead numeric>Actual / total</TableHead>
+                    <TableHead numeric>Fresh</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {freshnessBoard.map(({ v, fresh, total, pct }) => (
+                    <TableRow key={v.id}>
+                      <TableCell>{v.name}</TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <MeterBar
+                          pct={Math.max(6, pct * 100)}
+                          className={pct >= 0.7 ? "bg-success" : pct >= 0.4 ? "bg-warning" : "bg-destructive"}
+                        />
+                      </TableCell>
+                      <TableCell numeric className="text-muted-foreground">{fresh}/{total}</TableCell>
+                      <TableCell numeric className="font-medium">{Math.round(pct * 100)}%</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ReportCard>
           </TabsContent>
         </Tabs>
       </div>
