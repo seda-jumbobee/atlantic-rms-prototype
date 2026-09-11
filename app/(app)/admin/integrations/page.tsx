@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { AdminGate } from "@/components/admin-gate";
 import { PageHeader } from "@/components/page-header";
-import { CarrierLogo } from "@/components/carrier-logo";
+import { CarrierName } from "@/components/carrier-name";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -141,7 +141,7 @@ export default function IntegrationsPage() {
               const carrier = getCarrier(id);
               return (
                 <div key={id} className="flex items-center justify-between rounded-lg border p-3">
-                  <CarrierLogo carrierId={id} size="sm" showName />
+                  <CarrierName carrierId={id} />
                   <StatusChip status={carrier?.hasApi ? "connected" : "mock"} />
                 </div>
               );

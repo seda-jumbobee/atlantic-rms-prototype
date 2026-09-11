@@ -363,7 +363,7 @@ function RenameDialog({ target, onClose, nameExists, onSave }: {
   const err = !trimmed ? "Enter a template title" : nameExists(name, target?.id) ? "A template with this name already exists" : null;
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-md">
+      <DialogContent>
         <DialogHeader><DialogTitle>Rename template</DialogTitle></DialogHeader>
         <div className="space-y-1.5">
           <Label htmlFor="rename-input">Template title</Label>
@@ -389,7 +389,7 @@ function DuplicateDialog({ target, onClose, nameExists, onSave }: {
   const err = !trimmed ? "Enter a template title" : nameExists(name) ? "A template with this name already exists" : null;
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Duplicate template</DialogTitle>
           <DialogDescription>Creates a separate copy you can edit independently.</DialogDescription>

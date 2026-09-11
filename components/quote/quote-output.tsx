@@ -11,7 +11,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { CarrierLogo } from "@/components/carrier-logo";
+import { CarrierName } from "@/components/carrier-name";
 import { LogoMark } from "@/components/logo";
 import { getCarrier } from "@/lib/data/carriers";
 import { money, fmtDate } from "@/lib/format";
@@ -70,7 +70,7 @@ export function PdfPreview({ payload: p, trigger }: { payload: OutputPayload; tr
       <DialogTrigger asChild>
         {trigger ?? <Button variant="outline" className="gap-1.5"><FileDown className="size-4" /> Preview PDF</Button>}
       </DialogTrigger>
-      <DialogContent className="max-h-[88vh] max-w-2xl overflow-y-auto">
+      <DialogContent>
         <DialogHeader className="sr-only"><DialogTitle>Quote PDF preview</DialogTitle></DialogHeader>
         {/* client document */}
         <div className="space-y-4 rounded-lg border bg-card p-6 text-sm text-card-foreground">
@@ -87,7 +87,7 @@ export function PdfPreview({ payload: p, trigger }: { payload: OutputPayload; tr
             <span><b>Commodity:</b> {p.ref.commodityLabel}</span>
             <span><b>Mode:</b> {p.ref.shipmentType}</span>
             <span><b>Transit:</b> ~{p.transitDays} days</span>
-            {p.showCarrier && p.carrierId && <span className="inline-flex items-center gap-1"><b>Carrier:</b> <CarrierLogo carrierId={p.carrierId} size="sm" /></span>}
+            {p.showCarrier && p.carrierId && <span className="inline-flex items-center gap-1"><b>Carrier:</b> <CarrierName carrierId={p.carrierId} /></span>}
           </div>
 
           {!p.allInOnly ? (
@@ -138,7 +138,7 @@ export function SendViaFrontDialog({ payload: p, trigger }: { payload: OutputPay
       <DialogTrigger asChild>
         {trigger ?? <Button className="gap-1.5"><Send className="size-4" /> Send via Front</Button>}
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Mail className="size-5 text-primary" /> Send quote via Front</DialogTitle>
           <DialogDescription>Composes the commercial offer in Front and attaches the PDF.</DialogDescription>
@@ -170,7 +170,7 @@ export function TextDialog({ payload: p, trigger }: { payload: OutputPayload; tr
       <DialogTrigger asChild>
         {trigger ?? <Button variant="outline" className="gap-1.5"><MessageSquareText className="size-4" /> Text message</Button>}
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><MessageSquareText className="size-5 text-primary" /> Text / WhatsApp message</DialogTitle>
           <DialogDescription>Short message for quick quoting over messengers.</DialogDescription>

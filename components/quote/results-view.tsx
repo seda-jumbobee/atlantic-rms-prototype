@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { RateResultCard } from "@/components/quote/rate-result-card";
 import { RequirementsPanel } from "@/components/quote/requirements-panel";
-import { CarrierLogo } from "@/components/carrier-logo";
+import { CarrierName } from "@/components/carrier-name";
 import { SourceBadge } from "@/components/status-badge";
 import { money } from "@/lib/format";
 import { getCarrier } from "@/lib/data/carriers";
@@ -225,7 +225,7 @@ export function ResultsView({
         {carriers.map((cid) => (
           <label key={cid} className="flex items-center gap-2 text-sm">
             <Checkbox checked={selectedCarriers.has(cid)} onCheckedChange={() => toggleCarrier(cid)} />
-            <CarrierLogo carrierId={cid} size="sm" />
+            <CarrierName carrierId={cid} />
             <span className="truncate">{getCarrier(cid)?.name}</span>
           </label>
         ))}

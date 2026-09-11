@@ -17,6 +17,24 @@ import { Input } from "@/components/ui/input"
      never colour alone.
    ========================================================================= */
 
+/** The required-field asterisk — THE one in the system. Semantic error red via
+    --c-input-required; never the brand colour, never a literal red.
+
+    Exported because not every required label can go through FieldLabel: the
+    shadcn Label is a flex container with gap-2, so a mark rendered as its
+    sibling would drift away from the text. Those call sites put this inside
+    the same inline span as the label text. Either route, one style. */
+export function RequiredMark({ className }: { className?: string }) {
+  return (
+    <>
+      <span aria-hidden className={cn("text-[var(--c-input-required)]", className)}>
+        *
+      </span>
+      <span className="sr-only"> (required)</span>
+    </>
+  )
+}
+
 export function FieldLabel({
   htmlFor,
   required,
@@ -34,14 +52,7 @@ export function FieldLabel({
       className={cn("flex items-center gap-0.5 text-label text-[var(--c-input-label)]", className)}
     >
       {children}
-      {required && (
-        <>
-          <span aria-hidden className="text-[var(--c-input-required)]">
-            *
-          </span>
-          <span className="sr-only">(required)</span>
-        </>
-      )}
+      {required && <RequiredMark />}
     </label>
   )
 }

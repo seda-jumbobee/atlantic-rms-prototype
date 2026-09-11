@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RequiredMark } from "@/components/ui/field";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -691,14 +692,14 @@ function SaveTemplateDialog({ open, onOpenChange, defaultName }: { open: boolean
   const err = !trimmed ? "Enter a template title" : dup ? "A template with this name already exists" : null;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Save as template</DialogTitle>
           <DialogDescription>Saves the reusable setup (lane, commodity, services) — not the status, send history, or deal state. The History record is unchanged.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="h-tpl-name"><span>Template title<span aria-hidden className="ml-0.5 text-sidebar-primary">*</span></span></Label>
+            <Label htmlFor="h-tpl-name"><span>Template title<RequiredMark /></span></Label>
             <Input id="h-tpl-name" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!err} aria-describedby={err ? "h-tpl-err" : undefined} />
             {err && <p id="h-tpl-err" role="alert" className="text-xs font-medium text-destructive">{err}</p>}
           </div>
@@ -724,7 +725,7 @@ function SaveTemplateDialog({ open, onOpenChange, defaultName }: { open: boolean
 function ResendDialog({ q, open, onOpenChange }: { q: QuoteHistoryItem; open: boolean; onOpenChange: (o: boolean) => void }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Resend quote {q.id}?</DialogTitle>
           <DialogDescription>Resends the exact current quote without changing its content.</DialogDescription>

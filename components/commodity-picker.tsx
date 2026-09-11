@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { RequiredMark } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -27,17 +28,10 @@ export interface CommoditySelection {
   condition?: "operable" | "inoperable";
 }
 
-/** Required-field asterisk — sidebar-primary in normal state per the DS rule.
-    Always render inside the same inline span as the label text (shadcn Label is
-    a flex container with gap-2, which would otherwise push the mark away). */
-export function RequiredMark() {
-  return (
-    <>
-      <span aria-hidden="true" className="ml-0.5 text-sidebar-primary">*</span>
-      <span className="sr-only"> (required)</span>
-    </>
-  );
-}
+/** Re-exported so existing call sites keep working; the asterisk itself lives
+    in the design system (components/ui/field.tsx), which is the only place its
+    colour is decided. */
+export { RequiredMark };
 
 // Commodity = WHAT it is (mode is derived from operability + dimensions, not chosen here).
 const KINDS: { value: CommodityKind; label: string }[] = [

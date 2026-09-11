@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { AdminGate } from "@/components/admin-gate";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
-import { CarrierLogo } from "@/components/carrier-logo";
+import { CarrierName } from "@/components/carrier-name";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge, type StatusTone } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -169,7 +169,7 @@ export default function RateLibraryPage() {
                       </TableCell>
                       <TableCell>
                         {r.carrierId ? (
-                          <CarrierLogo carrierId={r.carrierId} size="sm" showName />
+                          <CarrierName carrierId={r.carrierId} />
                         ) : vendor ? (
                           <span className="text-sm">{vendor.name}</span>
                         ) : (
@@ -259,7 +259,7 @@ function BulkUploadDialog() {
           <Upload className="size-4" /> Bulk upload
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Bulk upload rates</DialogTitle>
           <DialogDescription>

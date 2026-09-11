@@ -45,7 +45,7 @@ function AiRequestDialog({ req, lane }: { req: RouteRequirement; lane: string })
           <Wand2 className="size-3.5" /> Request quote with AI
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-xl">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bot className="size-5 text-primary" /> AI vendor quote request

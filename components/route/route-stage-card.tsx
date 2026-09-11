@@ -21,7 +21,7 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { StatusBadge } from "@/components/status-badge";
-import { CarrierLogo } from "@/components/carrier-logo";
+import { CarrierName } from "@/components/carrier-name";
 import { ChargeTable } from "@/components/quote/charge-table";
 import { AiSourcing, type AiState } from "@/components/route/ai-sourcing";
 import { stageStatus, STAGE_STATUS_META, provenanceBadge, PROVENANCE_META } from "@/components/route/route-status";
@@ -247,7 +247,7 @@ export function RouteStageCard({
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-1">
-              {step.carrierId && <CarrierLogo carrierId={step.carrierId} size="sm" />}
+              {step.carrierId && <CarrierName carrierId={step.carrierId} />}
               {canCollapse && (
                 <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" onClick={onToggleCollapse} aria-expanded>
                   Collapse

@@ -5,7 +5,7 @@ import { Plug, FileSpreadsheet, MessageSquare, Inbox, Search, Upload } from "luc
 import { toast } from "sonner";
 import { AdminGate } from "@/components/admin-gate";
 import { PageHeader } from "@/components/page-header";
-import { CarrierLogo } from "@/components/carrier-logo";
+import { CarrierName } from "@/components/carrier-name";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -109,7 +109,7 @@ function SourceTable({ sources }: { sources: DataSource[] }) {
               </TableCell>
               <TableCell>
                 {ds.carrierId ? (
-                  <CarrierLogo carrierId={ds.carrierId} size="sm" showName />
+                  <CarrierName carrierId={ds.carrierId} />
                 ) : vendor ? (
                   <span className="text-sm">{vendor.name}</span>
                 ) : (
@@ -265,7 +265,7 @@ function BulkUploadDialog() {
           <Upload className="size-4" /> Bulk upload contract
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Bulk upload contract</DialogTitle>
           <DialogDescription>

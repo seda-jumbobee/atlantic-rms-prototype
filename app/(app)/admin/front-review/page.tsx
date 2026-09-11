@@ -6,7 +6,7 @@ import { Check, X, Mail, Inbox, CheckCircle2, XCircle, Sparkles, Copy, User } fr
 import { AdminGate } from "@/components/admin-gate";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
-import { CarrierLogo } from "@/components/carrier-logo";
+import { CarrierName } from "@/components/carrier-name";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/status-badge";
@@ -67,7 +67,7 @@ function ReviewCard({
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
             {req.carrierId ? (
-              <CarrierLogo carrierId={req.carrierId} size="md" />
+              <CarrierName carrierId={req.carrierId} />
             ) : (
               <div className="grid size-9 place-items-center rounded-md bg-muted text-muted-foreground">
                 <Mail className="size-4" />

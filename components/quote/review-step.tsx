@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { RequiredMark } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
@@ -19,7 +20,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
-import { CarrierLogo } from "@/components/carrier-logo";
+import { CarrierName } from "@/components/carrier-name";
 import { CreateDealDialog } from "@/components/deals/create-deal-dialog";
 import { PdfPreview, SendViaFrontDialog, TextDialog, type OutputPayload } from "@/components/quote/quote-output";
 import { getCarrier } from "@/lib/data/carriers";
@@ -45,14 +46,14 @@ function SaveTemplateDialog({ defaultName, kindLabel, savedSummary }: { defaultN
           <LayoutTemplate className="size-4" /> Save as template
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Save as template</DialogTitle>
           <DialogDescription>Save this {kindLabel} to reuse for similar shipments from Templates.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="tpl-name"><span>Template title<span aria-hidden className="ml-0.5 text-sidebar-primary">*</span></span></Label>
+            <Label htmlFor="tpl-name"><span>Template title<RequiredMark /></span></Label>
             <Input id="tpl-name" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!err} placeholder="e.g. Combine · US Gulf → Poti" />
             {err && <p role="alert" className="text-xs font-medium text-destructive">{err}</p>}
           </div>
@@ -133,7 +134,7 @@ export function ReviewStep({
               <span><b className="text-foreground">Transit:</b> ~{meta.transitDays} days</span>
               <span><b className="text-foreground">Valid to:</b> {fmtDate(meta.validTo)}</span>
               {model.showCarrier && meta.carrierId && (
-                <span className="inline-flex items-center gap-1"><b className="text-foreground">Carrier:</b> <CarrierLogo carrierId={meta.carrierId} size="sm" /></span>
+                <span className="inline-flex items-center gap-1"><b className="text-foreground">Carrier:</b> <CarrierName carrierId={meta.carrierId} /></span>
               )}
             </div>
 

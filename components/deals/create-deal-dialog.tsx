@@ -99,7 +99,7 @@ export function CreateDealDialog({ trigger }: { trigger?: ReactNode }) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>New deal</DialogTitle>
           <DialogDescription>

@@ -18,7 +18,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { StatCard } from "@/components/stat-card";
-import { CarrierLogo } from "@/components/carrier-logo";
+import { CarrierName } from "@/components/carrier-name";
 import { StatusBadge } from "@/components/status-badge";
 import { MapPreview } from "@/components/map-preview";
 import { AddStepMenu } from "@/components/route/add-step-menu";
@@ -37,12 +37,12 @@ import type { RouteStep, RouteStepKind, ShipmentType } from "@/lib/types";
 function OceanSearchDialog({ open, onOpenChange, onPick }: { open: boolean; onOpenChange: (o: boolean) => void; onPick: (carrierId: string, cost: number, days: number) => void }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent>
         <DialogHeader><DialogTitle>Search shipping lines</DialogTitle><DialogDescription>Ocean rates for this stage. Pick a carrier to set the cost &amp; transit.</DialogDescription></DialogHeader>
         <div className="space-y-2">
           {[...OCEAN_OFFERS].sort((a, b) => a.cost - b.cost).map((o, i) => (
             <button key={o.carrierId} onClick={() => onPick(o.carrierId, o.cost, o.days)} className={cn("flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted/60", i === 0 && "border-primary/40 bg-primary/5")}>
-              <div className="flex items-center gap-3"><CarrierLogo carrierId={o.carrierId} size="md" showName />{i === 0 && <StatusBadge tone="positive" dot={false}>Cheapest</StatusBadge>}</div>
+              <div className="flex items-center gap-3"><CarrierName carrierId={o.carrierId} />{i === 0 && <StatusBadge tone="positive" dot={false}>Cheapest</StatusBadge>}</div>
               <div className="flex items-center gap-4 text-sm"><span className="flex items-center gap-1 text-muted-foreground"><Clock className="size-3.5" /> {o.days} d</span><span className="w-20 text-right font-semibold tabular-nums">{money(o.cost)}</span></div>
             </button>
           ))}

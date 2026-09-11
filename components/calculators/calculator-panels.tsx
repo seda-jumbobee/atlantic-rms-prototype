@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RequiredMark } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { LocationCombobox, type LocationValue } from "@/components/location-combobox";
 import { RateResultCard } from "@/components/quote/rate-result-card";
-import { CarrierLogo } from "@/components/carrier-logo";
+import { CarrierName } from "@/components/carrier-name";
 import { money } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
@@ -123,14 +124,14 @@ function ResultActions({ calcName, summary }: { calcName: string; summary: strin
       </div>
 
       <Dialog open={tplOpen} onOpenChange={setTplOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Save as template</DialogTitle>
             <DialogDescription>Save this {calcName} setup to reuse the inputs from Templates.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="calc-tpl-name"><span>Template title<span aria-hidden className="ml-0.5 text-sidebar-primary">*</span></span></Label>
+              <Label htmlFor="calc-tpl-name"><span>Template title<RequiredMark /></span></Label>
               <Input id="calc-tpl-name" value={title} onChange={(e) => setTitle(e.target.value)} aria-invalid={!!titleErr} aria-describedby={titleErr ? "calc-tpl-err" : undefined} />
               {titleErr && <p id="calc-tpl-err" role="alert" className="text-xs font-medium text-destructive">{titleErr}</p>}
             </div>
@@ -543,7 +544,7 @@ function OceanFreightPanel() {
       }
       right={
         <>
-          <CarrierLogo carrierId={carrierId} showName />
+          <CarrierName carrierId={carrierId} />
           <Separator />
           <ResultRow label="Base freight (BAS)" value={money(base)} />
           {oceanSurcharges

@@ -213,7 +213,7 @@ export function InvoiceComparison({ dealId }: { dealId: string }) {
       </CardContent>
 
       <Dialog open={review !== null} onOpenChange={(o) => !o && setReview(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Review line variance</DialogTitle>
             <DialogDescription>

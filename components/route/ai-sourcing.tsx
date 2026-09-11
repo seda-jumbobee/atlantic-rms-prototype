@@ -3,7 +3,7 @@
 import { Sparkles, Loader2, RefreshCw, Info, TriangleAlert, CheckCircle2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
-import { CarrierLogo } from "@/components/carrier-logo";
+import { CarrierName } from "@/components/carrier-name";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
@@ -107,7 +107,7 @@ function SuggestionCard({ s, onUse }: { s: AiSuggestion; onUse: () => void }) {
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            {s.carrierId && <CarrierLogo carrierId={s.carrierId} size="sm" />}
+            {s.carrierId && <CarrierName carrierId={s.carrierId} />}
             <span className="truncate font-medium">{suggestionName(s)}</span>
           </div>
           <StatusBadge tone={meta.tone} dot={false} className="mt-1">{meta.label}</StatusBadge>

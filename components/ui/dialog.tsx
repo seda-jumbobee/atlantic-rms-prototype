@@ -61,7 +61,17 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 overflow-clip rounded-lg bg-popover px-5 pt-[18px] pb-5 text-sm text-popover-foreground shadow-[0px_10px_24px_-6px_rgba(0,0,0,0.18)] duration-100 outline-none sm:max-w-[400px] data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          // flex column, not grid: it is what lets DialogBody take the leftover
+          // height and scroll on its own while the header and footer stay put.
+          "fixed top-1/2 left-1/2 z-50 flex w-full flex-col gap-4 overflow-clip rounded-lg bg-popover px-5 pt-[18px] pb-5 text-sm text-popover-foreground shadow-[0px_10px_24px_-6px_rgba(0,0,0,0.18)] duration-100 outline-none",
+          "-translate-x-1/2 -translate-y-1/2",
+          // One width for every modal in the product (RMS modal system).
+          // Below sm the viewport wins: 800px is a desktop figure, never a floor.
+          "max-w-[calc(100%-2rem)] sm:max-w-[var(--c-modal-width)]",
+          // Never taller than the viewport. svh, not vh, so a phone's collapsing
+          // browser chrome cannot push the footer out of reach.
+          "max-h-[calc(100svh-2rem)]",
+          "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className
         )}
         {...props}
@@ -91,7 +101,24 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="dialog-header"
       // pr-11 clears the close button (32px wide at right-2, so 40px in).
       // pr-6 was 24px and under-reserved it by 16.
-      className={cn("flex flex-col gap-1 pr-11", className)}
+      className={cn("flex shrink-0 flex-col gap-1 pr-11", className)}
+      {...props}
+    />
+  )
+}
+
+/** The scrolling region of a modal. Wrap the body in this whenever the content
+    may exceed the viewport: it takes the height left over by the header and
+    footer and scrolls alone, so the title and the actions stay reachable.
+    Short modals can skip it — they never reach the height cap. */
+function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="dialog-body"
+      // min-h-0 is what allows a flex child to shrink below its content height;
+      // without it the body refuses to scroll and pushes the footer off-screen.
+      // -mx-5/px-5 keeps focus rings and shadows from being clipped at the edge.
+      className={cn("-mx-5 min-h-0 flex-1 overflow-y-auto px-5", className)}
       {...props}
     />
   )
@@ -109,7 +136,7 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "flex flex-col-reverse gap-2 pt-1.5 sm:flex-row sm:justify-end",
+        "flex shrink-0 flex-col-reverse gap-2 pt-1.5 sm:flex-row sm:justify-end",
         className
       )}
       {...props}
@@ -158,6 +185,7 @@ function DialogDescription({
 
 export {
   Dialog,
+  DialogBody,
   DialogClose,
   DialogContent,
   DialogDescription,

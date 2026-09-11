@@ -14,7 +14,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CarrierLogo } from "@/components/carrier-logo";
+import { CarrierName } from "@/components/carrier-name";
 import { LegStages } from "@/components/quote/leg-stages";
 import { ChargeTable } from "@/components/quote/charge-table";
 import { SourceBadge } from "@/components/status-badge";
@@ -27,10 +27,10 @@ import type { RateOption } from "@/lib/types";
 function RateDetails({ rate }: { rate: RateOption }) {
   const included = rate.legs.filter((l) => l.included);
   return (
-    <DialogContent className="max-h-[88vh] max-w-2xl overflow-y-auto">
+    <DialogContent>
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2">
-          <CarrierLogo carrierId={rate.carrierId} showName /> <SourceBadge source={rate.sourceType} />
+          <CarrierName carrierId={rate.carrierId} /> <SourceBadge source={rate.sourceType} />
         </DialogTitle>
         <DialogDescription>Internal cost breakdown — before profit. Not shown to the client.</DialogDescription>
       </DialogHeader>
@@ -99,7 +99,7 @@ export function RateResultCard({
         {/* left: carrier, badges, service summary, metadata */}
         <div className="min-w-0 flex-1 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            <CarrierLogo carrierId={rate.carrierId} showName />
+            <CarrierName carrierId={rate.carrierId} />
             <SourceBadge source={rate.sourceType} />
             {rate.recommended && !rate.expired && (
               <Badge variant="status-positive" className="gap-1"><Star className="size-3" /> Recommended</Badge>

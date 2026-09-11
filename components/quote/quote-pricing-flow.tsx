@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { CarrierLogo } from "@/components/carrier-logo";
+import { CarrierName } from "@/components/carrier-name";
 import { SourceBadge } from "@/components/status-badge";
 import { PricingStep } from "@/components/quote/pricing-step";
 import { ReviewStep } from "@/components/quote/review-step";
@@ -41,7 +41,7 @@ export function QuotePricingFlow({
       <div className="min-w-0 space-y-1.5">
         <div className="text-caption font-medium uppercase tracking-wide text-muted-foreground">Selected rate</div>
         <div className="flex flex-wrap items-center gap-2">
-          <CarrierLogo carrierId={rate.carrierId} showName />
+          <CarrierName carrierId={rate.carrierId} />
           <SourceBadge source={rate.sourceType} />
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
@@ -60,7 +60,7 @@ export function QuotePricingFlow({
 
   const reminder = (
     <Card className="flex flex-row items-center gap-2 p-3 text-xs text-muted-foreground">
-      <CarrierLogo carrierId={rate.carrierId} size="sm" />
+      <CarrierName carrierId={rate.carrierId} />
       <span className="truncate">{getCarrier(rate.carrierId)?.name}</span>
       <SourceBadge source={rate.sourceType} />
     </Card>

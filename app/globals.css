@@ -106,6 +106,10 @@
   /* The only elevation in the Dashboard reference: a 1px lift under cards. */
   --shadow-card: 0 1px 2px 0 rgb(202 202 202 / 0.25);
   --shadow-shell: 0 1px 2px 0 rgb(202 202 202 / 0.35);
+  /* A bar pinned to the BOTTOM of the viewport casts upward: the same
+     dropdown elevation with the y-offset negated, so content scrolling
+     beneath it reads as passing under an edge rather than behind a panel. */
+  --shadow-bar: 0 -4px 12px -2px rgb(18 18 24 / 0.10), 0 -2px 4px -2px rgb(18 18 24 / 0.06);
 
   /* ── colour: surfaces ────────────────────────────────────────────────── */
   --color-shell: var(--shell);
@@ -210,6 +214,7 @@
   --shadow-dropdown: 0 4px 12px -2px rgb(18 18 24 / 0.10), 0 2px 4px -2px rgb(18 18 24 / 0.06);
   --shadow-modal: 0 12px 32px -4px rgb(18 18 24 / 0.16), 0 4px 8px -4px rgb(18 18 24 / 0.08);
   --shadow-tooltip: 0 2px 6px -1px rgb(18 18 24 / 0.14);
+  --shadow-bar: 0 -4px 12px -2px rgb(18 18 24 / 0.10), 0 -2px 4px -2px rgb(18 18 24 / 0.06);
 }
 
 /* ============================================================================
@@ -451,6 +456,11 @@
 
   --c-card-bg: var(--card);
   --c-card-border: var(--border-divider);
+
+  /* One width for every modal in the product. A desktop figure only — below
+     the sm breakpoint DialogContent lets the viewport win, so this is never a
+     floor that could force horizontal overflow on a phone. */
+  --c-modal-width: 800px;
 
   /* ── decorative accents ───────────────────────────────────────────────
      Tinted tiles behind a tool or category glyph. These carry NO meaning:
