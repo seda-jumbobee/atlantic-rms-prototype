@@ -120,7 +120,7 @@ function AccountMenu() {
         collapsed && "gap-0",
       )}
     >
-      <UserAvatar src={user.avatarUrl} name={user.name} size={48} shape="rounded" />
+      <UserAvatar src={user.avatarUrl} name={user.name} size={48} />
       {!collapsed && (
         <span className="min-w-0 flex-1">
           <span className="block truncate text-body font-semibold text-sidebar-foreground">

@@ -289,6 +289,22 @@ export function QuoteSearchWidget({
 
   const routeComplete = !!(origin && dest);
 
+  /* What is still outstanding, recomputed as the form changes — the same
+     validateForm the submit path uses, so the button's state and the errors it
+     would raise can never disagree. */
+  const outstanding = useMemo(() => validateForm(origin, dest, commodity), [origin, dest, commodity]);
+  const formValid = Object.keys(outstanding).length === 0;
+  /* A disabled button owes the reader a reason. Without this the step would
+     simply stop responding, with none of the guidance the inline errors used
+     to give on submit. */
+  const blockedBy: string | null = formValid
+    ? null
+    : outstanding.origin
+      ?? outstanding.dest
+      ?? (outstanding.kind ? "Choose a commodity type to continue" : null)
+      ?? (outstanding.details ? "Complete the commodity details to continue" : null)
+      ?? (outstanding.dims ? "Check the entered dimensions" : null);
+
   return (
     <div className={cn("flex flex-1 flex-col gap-6", className)}>
       <div className="grid items-start gap-6 lg:grid-cols-12">
@@ -428,7 +444,12 @@ export function QuoteSearchWidget({
       {/* The step's actions, held at the bottom of the viewport.
           A SIBLING of the grid, not a cell in it: sticky travels only inside
           its parent's content box, and a grid item alone in its row is
-          exactly as tall as the bar — 8px of travel, so it never pinned. */}
+          exactly as tall as the bar — 8px of travel, so it never pinned.
+
+          Nothing to act on until there is a route: before an origin and a
+          destination exist the step has no action to offer, so the bar stays
+          away rather than presenting a button that can only be refused. */}
+      {routeComplete && (
       <ActionBar
         aside={
           dirty && !loading ? (
@@ -454,16 +475,30 @@ export function QuoteSearchWidget({
           ) : undefined
         }
       >
-        <Button onClick={submit} disabled={loading} aria-busy={loading} className="sm:min-w-48">
-          {loading ? (
-            <>
-              <Spinner className="size-4" /> Checking available rates…
-            </>
-          ) : (
-            ctaLabel
+        <div className="flex flex-col gap-1.5 sm:items-end">
+          <Button
+            onClick={submit}
+            disabled={loading || !formValid}
+            aria-busy={loading}
+            aria-describedby={blockedBy ? "rq-cta-blocked" : undefined}
+            className="sm:min-w-48"
+          >
+            {loading ? (
+              <>
+                <Spinner className="size-4" /> Checking available rates…
+              </>
+            ) : (
+              ctaLabel
+            )}
+          </Button>
+          {blockedBy && (
+            <p id="rq-cta-blocked" className="text-caption text-muted-foreground">
+              {blockedBy}
+            </p>
           )}
-        </Button>
+        </div>
       </ActionBar>
+      )}
     </div>
   );
 }
