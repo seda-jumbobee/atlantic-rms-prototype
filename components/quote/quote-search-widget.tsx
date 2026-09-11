@@ -289,22 +289,6 @@ export function QuoteSearchWidget({
 
   const routeComplete = !!(origin && dest);
 
-  /* What is still outstanding, recomputed as the form changes — the same
-     validateForm the submit path uses, so the button's state and the errors it
-     would raise can never disagree. */
-  const outstanding = useMemo(() => validateForm(origin, dest, commodity), [origin, dest, commodity]);
-  const formValid = Object.keys(outstanding).length === 0;
-  /* A disabled button owes the reader a reason. Without this the step would
-     simply stop responding, with none of the guidance the inline errors used
-     to give on submit. */
-  const blockedBy: string | null = formValid
-    ? null
-    : outstanding.origin
-      ?? outstanding.dest
-      ?? (outstanding.kind ? "Choose a commodity type to continue" : null)
-      ?? (outstanding.details ? "Complete the commodity details to continue" : null)
-      ?? (outstanding.dims ? "Check the entered dimensions" : null);
-
   return (
     <div className={cn("flex flex-1 flex-col gap-6", className)}>
       <div className="grid items-start gap-6 lg:grid-cols-12">
@@ -475,28 +459,19 @@ export function QuoteSearchWidget({
           ) : undefined
         }
       >
-        <div className="flex flex-col gap-1.5 sm:items-end">
-          <Button
-            onClick={submit}
-            disabled={loading || !formValid}
-            aria-busy={loading}
-            aria-describedby={blockedBy ? "rq-cta-blocked" : undefined}
-            className="sm:min-w-48"
-          >
-            {loading ? (
-              <>
-                <Spinner className="size-4" /> Checking available rates…
-              </>
-            ) : (
-              ctaLabel
-            )}
-          </Button>
-          {blockedBy && (
-            <p id="rq-cta-blocked" className="text-caption text-muted-foreground">
-              {blockedBy}
-            </p>
+        {/* Enabled whatever is still missing. Pressing it validates, marks the
+            incomplete fields and moves focus to the first of them — which
+            tells the reader WHICH field is wrong, where a disabled button can
+            only say that something is. */}
+        <Button onClick={submit} disabled={loading} aria-busy={loading} className="sm:min-w-48">
+          {loading ? (
+            <>
+              <Spinner className="size-4" /> Checking available rates…
+            </>
+          ) : (
+            ctaLabel
           )}
-        </div>
+        </Button>
       </ActionBar>
       )}
     </div>

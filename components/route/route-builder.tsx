@@ -1,15 +1,12 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Route, Wand2, MoreHorizontal } from "lucide-react";
+import { Route, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
 import { StepBackButton } from "@/components/step-back-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { FlowProgress, type FlowStep } from "@/components/quote/flow-progress";
 import { ShipmentSummary } from "@/components/quote/shipment-summary";
 import { RouteShipmentStep } from "@/components/route/route-shipment-step";
@@ -141,16 +138,12 @@ export function RouteBuilder() {
         title="Custom Route"
         description="Build and price transportation stages manually using vendors, contracts, and AI-assisted sourcing."
       >
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground"><MoreHorizontal className="size-4" /> More</Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>More actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={loadSample}><Wand2 className="size-4" /> Load sample route</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* The menu held exactly one item, so it was a click in front of a
+            click. The action is the control now — 32px outline, the same
+            secondary size the back button uses. */}
+        <Button variant="outline" size="sm" onClick={loadSample}>
+          <Wand2 className="size-4" /> Load sample route
+        </Button>
       </PageHeader>
 
       {/* Same order as Rate Quote: the way back, then the map, then the

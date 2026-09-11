@@ -100,24 +100,28 @@ export function RouteShipmentStep({
             </div>
           </section>
 
-          {/* Commodity — type shown immediately; details revealed once the route is set */}
-          <section className="space-y-6">
-            <Separator />
-            <div>
-              <h3 className="text-lg font-semibold">Commodity</h3>
-              <p className="mt-1 text-xs text-muted-foreground">Commodity type helps filter the relevant vendors, contracts, and rate sources.</p>
-            </div>
-            <CommodityPicker
-              value={commodity}
-              onChange={setCommodity}
-              errors={{ kind: errors.kind, details: errors.details }}
-              sectionHeadings
-              showDetails={routeComplete}
-            />
-            {routeComplete === false && commodity && (
-              <p className="text-xs text-muted-foreground">Set the origin and final destination to add cargo and shipping details.</p>
-            )}
-          </section>
+          {/* Commodity — revealed once the route is complete, the same
+              disclosure Rate Quote step 1 uses. The commodity type filters
+              vendors and rate sources BY lane, so asking for it before the
+              lane exists asks the question in the wrong order. */}
+          {routeComplete && (
+            <section
+              aria-labelledby="cr-commodity-heading"
+              className="space-y-6 duration-300 animate-in fade-in slide-in-from-top-1"
+            >
+              <Separator />
+              <div>
+                <h3 id="cr-commodity-heading" className="text-lg font-semibold">Commodity</h3>
+                <p className="mt-1 text-xs text-muted-foreground">Commodity type helps filter the relevant vendors, contracts, and rate sources.</p>
+              </div>
+              <CommodityPicker
+                value={commodity}
+                onChange={setCommodity}
+                errors={{ kind: errors.kind, details: errors.details }}
+                sectionHeadings
+              />
+            </section>
+          )}
 
 
         </CardContent>
@@ -137,14 +141,18 @@ export function RouteShipmentStep({
 
       </div>
 
-      {/* Same shared bar as Rate Quote step 1 — Custom Route's own actions.
-          A sibling of the grid, so sticky has the page to travel in. */}
+      {/* Same shared bar as Rate Quote step 1 — Custom Route's own actions —
+          and it waits for a route for the same reason: until there is one the
+          step has nothing to continue to. A sibling of the grid, so sticky has
+          the page to travel in. */}
+      {routeComplete && (
       <ActionBar>
         <Button variant="outline" onClick={onSaveDraft}><Save className="size-4" /> Save draft</Button>
         <Button onClick={submit} className="sm:min-w-48">
           Continue to build route <ArrowRight className="size-4" />
         </Button>
       </ActionBar>
+      )}
 
       <AlertDialog open={!!pending} onOpenChange={(o) => !o && setPending(null)}>
         <AlertDialogContent>
