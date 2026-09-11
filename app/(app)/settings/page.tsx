@@ -152,7 +152,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <PageHeader title="Settings" description="Manage your Atlantic RMS account." />
 
       <SectionCard title="Profile" description="How you appear across Atlantic RMS.">
@@ -209,6 +209,10 @@ export default function SettingsPage() {
 
         {/* ── name + email ──────────────────────────────────────────────── */}
         <form onSubmit={onSaveName} noValidate className="flex flex-col gap-5">
+          {/* Two columns from sm up: the container now fills the content area,
+              and a lone full-width name field would stretch past any sensible
+              measure on a wide screen. */}
+          <div className="grid gap-5 sm:grid-cols-2">
           <TextField
             label="Full name"
             required
@@ -233,6 +237,7 @@ export default function SettingsPage() {
             <p className="text-caption text-muted-foreground">
               Your corporate account identifier. Contact your administrator to change it.
             </p>
+          </div>
           </div>
 
           {saveErr && (

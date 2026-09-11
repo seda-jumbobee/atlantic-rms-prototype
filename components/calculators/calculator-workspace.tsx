@@ -81,7 +81,7 @@ function SwitchCalculator({ currentId }: { currentId: CalculatorId }) {
 export function CalculatorWorkspace({ id }: { id: CalculatorId }) {
   const meta = getCalculator(id)!;
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="space-y-6">
       <Link
         href="/calculators"
         className="inline-flex items-center gap-1.5 rounded text-sm font-medium text-primary outline-none transition hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50"

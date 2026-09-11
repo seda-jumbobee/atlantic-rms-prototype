@@ -75,7 +75,7 @@ export default function CalculatorsPage() {
   );
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="space-y-6">
       <PageHeader
         title="Calculators"
         description="Estimate freight, equipment fit, shipment requirements, and additional costs."

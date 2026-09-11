@@ -255,7 +255,7 @@ function HistoryContent() {
   const resultCount = tab === "quotes" ? quotes.length : tab === "calculations" ? calcs.length : quotes.length + calcs.length;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="space-y-6">
       <PageHeader title="My History" description="Review your saved quotes and completed calculations." />
 
       {denied && (

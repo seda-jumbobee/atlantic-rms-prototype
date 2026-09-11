@@ -135,7 +135,7 @@ export function RouteBuilder() {
   );
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="space-y-6">
       <PageHeader
         title="Custom Route"
         description="Build and price transportation stages manually using vendors, contracts, and AI-assisted sourcing."

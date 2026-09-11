@@ -236,7 +236,7 @@ export default function DashboardPage() {
     c.unit ? c.result.toLocaleString() : money(c.result);
 
   return (
-    <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         title="Dashboard"
         description={`Hello, ${firstName}! Here's where your work stands.`}
