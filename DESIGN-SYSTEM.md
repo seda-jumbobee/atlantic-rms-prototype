@@ -106,3 +106,37 @@ Tailwind defaults; sanctioned spacing steps 0–6, 8, 10, 12, 16, 20, 24 (×4px)
 5. Icon-only controls need `aria-label`; min target 32px.
 
 Extraction specs (per-section detail dumps) archived from the Figma file on 2026-07-21.
+
+---
+
+> ⚠️ **The sections above are stale and predate the current brand.** They map the
+> earlier Figma file `RMS New` (`efgMLVK7m16t9Ey3ReIDCl`) with indigo `#282aab` /
+> orange `#ff4c00` and Inter. The product now follows `RMS | JB`
+> (`VsutChFUEo2WJj9U0Agrfk`) with primary `#232572`, secondary `#FFB051` and
+> **Satoshi**; `app/globals.css` is the source of truth for every token. The
+> tables above have not been re-derived — treat them as history, not as spec.
+
+## Shared components added or reshaped in the 2026-09-11 UI refinement
+
+| Component | File | What it owns |
+|---|---|---|
+| `RequiredMark` | `components/ui/field.tsx` | **The** required-field asterisk. Semantic error red via `--c-input-required` (= `--status-negative-fg`, the same red as the error message it predicts). `FieldLabel required` renders it; labels that cannot use `FieldLabel` import it directly, because the shadcn `Label` is `flex gap-2` and would push a sibling mark away from its text. There is no second implementation. |
+| `ActionBar` | `components/ui/action-bar.tsx` | A step's primary actions, held at the bottom of the viewport. **Sticky, not fixed** — so it keeps its place in layout and no page has to reserve bottom padding, and so it stays in the content column without being told the sidebar's width. Stacks full-width at 44px on mobile and clears `env(safe-area-inset-bottom)`. Requires no ancestor to be a scroll container: see `app/(app)/layout.tsx`, which uses `overflow-clip` rather than `overflow-hidden` for exactly this reason. |
+| `StepBackButton` | `components/step-back-button.tsx` | The one way a multi-step flow goes back. 32px outline (`Button size="sm" variant="outline"`), rendered **before** the progress stepper. |
+| `CarrierName` | `components/carrier-name.tsx` | A carrier, named. Replaced `CarrierLogo`'s invented colour monogram everywhere; `emphasis="strong"` where the carrier is the subject of the card. |
+| `LinkedTableRow` | `components/linked-table-row.tsx` | A table row that opens a record, without turning the `<tr>` into a button: the row's own id link stays the single tab stop, `focus-within` lights the row, and clicks starting on anything interactive are left alone so nested links reach their own destination. |
+| `LocationLabel` / `CountryFlag` / `LocationName` | `components/location-label.tsx` | How a place is drawn. Flag + place (regular) + country (medium) + LOCODE. |
+| `AccentTile` | `components/accent-tile.tsx` | Decorative tinted tile behind a tool glyph (`--c-accent-*`). Carries no meaning; the card always names the thing. |
+| `DialogBody` | `components/ui/dialog.tsx` | The scrolling region of a modal, so header and footer stay reachable. |
+
+### Tokens added
+
+| Token | Value | Notes |
+|---|---|---|
+| `--c-modal-width` | `800px` | One width for every `Dialog`. Desktop only — below `sm` the viewport wins. `AlertDialog` is deliberately excluded (a two-button confirmation at 800px is worse). |
+| `--shadow-bar` | dropdown elevation, y negated | A bar pinned to the bottom casts upward. |
+| `--c-accent-{indigo,violet,green,amber}-{bg,fg}` | see `globals.css` | Decorative only. Measured on their own tints: 9.5077 / 6.9974 / 4.8140 / 6.5881. No red — on a tool tile it reads as an error. |
+
+### Table API
+
+`Table` takes `plain` (drop card chrome), `density="compact"` (36px rows vs 52, for blocks of figures), and `TableHead`/`TableCell` take `numeric` (right-aligned, `tabular-nums`).
