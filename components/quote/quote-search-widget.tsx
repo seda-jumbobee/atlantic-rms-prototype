@@ -65,11 +65,9 @@ function LocationRow({ label, value }: { label: string; value: LocationValue }) 
       <dt className="shrink-0 text-muted-foreground">{label}</dt>
       <dd className="flex min-w-0 justify-end text-right">
         {point ? (
-          // The picked label is already composed (city, country · LOCODE), so
-          // the code is not repeated after it.
-          <LocationLabel point={point} name={value.label} showCode={false} />
+          <LocationLabel point={point} />
         ) : (
-          <span className="truncate font-bold">{value.label}</span>
+          <span className="truncate">{value.label}</span>
         )}
       </dd>
     </div>

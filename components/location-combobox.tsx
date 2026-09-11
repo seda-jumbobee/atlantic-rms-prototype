@@ -7,8 +7,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { CountryFlag, LOCATION_NAME_CLASS, locationPoint } from "@/components/location-label";
+import {
+  CountryFlag, LocationName, locationPoint, type LocationPoint,
+} from "@/components/location-label";
 import { PORTS, ADDRESSES } from "@/lib/data/ports";
+import type { AddressPoint, Port } from "@/lib/types";
 
 export interface LocationValue {
   kind: "port" | "address";
@@ -16,10 +19,28 @@ export interface LocationValue {
   label: string;
 }
 
+/* A row and the trigger show slightly different things for the two kinds, and
+   deliberately so: a port reads as city + country, but several addresses can
+   share a city, so an address reads as the street line that identifies it.
+   That leaves an address with no country to set in medium — the flag carries
+   it, and appending the country would only push the street into the ellipsis. */
+const portPoint = (p: Port): LocationPoint => ({
+  kind: "port", name: p.name, country: p.country, countryCode: p.countryCode, code: p.locode,
+});
+const addressPoint = (a: AddressPoint): LocationPoint => ({
+  kind: "address", name: a.label, countryCode: a.countryCode,
+});
+
+function pickedPoint(value: LocationValue): LocationPoint | null {
+  if (value.kind === "port") return locationPoint("port", value.id);
+  const a = ADDRESSES.find((x) => x.id === value.id);
+  return a ? addressPoint(a) : null;
+}
+
 /** Option name that truncates with an ellipsis and shows the project tooltip
     (full name · country · LOCODE) only when the text is actually clipped.
     Fires on hover; screen readers read the full text from the option content. */
-function OptionName({ text, full, className }: { text: string; full: string; className?: string }) {
+function OptionName({ full, className, children }: { full: string; className?: string; children: React.ReactNode }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [open, setOpen] = useState(false);
   return (
@@ -31,7 +52,7 @@ function OptionName({ text, full, className }: { text: string; full: string; cla
       }}
     >
       <TooltipTrigger asChild>
-        <span ref={ref} className={cn("truncate", className)}>{text}</span>
+        <span ref={ref} className={cn("truncate", className)}>{children}</span>
       </TooltipTrigger>
       <TooltipContent side="top" className="z-[70]">{full}</TooltipContent>
     </Tooltip>
@@ -71,6 +92,7 @@ export function LocationCombobox({
   const [open, setOpen] = useState(false);
   const [tipOpen, setTipOpen] = useState(false);
   const valueRef = useRef<HTMLSpanElement>(null);
+  const picked = value ? pickedPoint(value) : null;
   const disabledCls =
     "data-[disabled=true]:pointer-events-auto data-[disabled=true]:cursor-not-allowed data-[disabled=true]:opacity-100 data-[disabled=true]:text-muted-foreground";
 
@@ -90,10 +112,23 @@ export function LocationCombobox({
             <Button id={id} variant="outline" role="combobox" aria-describedby={describedBy} aria-invalid={invalid || undefined} className="h-10 w-full justify-between border-[var(--c-input-border)] text-left font-normal hover:border-[var(--c-input-border-hover)]">
               {value ? (
                 <span className="flex min-w-0 flex-1 items-center gap-1.5">
-                  <CountryFlag cc={locationPoint(value.kind, value.id)?.countryCode} />
+                  <CountryFlag cc={picked?.countryCode} />
                   <span className="sr-only">{value.kind === "port" ? "Port:" : "Address:"}</span>
-                  <span ref={valueRef} className={cn("min-w-0 truncate", LOCATION_NAME_CLASS)}>
-                    {value.label}
+                  {/* The LOCODE sits INSIDE the truncating span, so in a narrow
+                      field it is the first thing to go rather than squeezing
+                      the name it merely repeats. Being an inline run, it needs
+                      a real space in front of it: a margin is invisible to a
+                      screen reader and to a copied selection. */}
+                  <span ref={valueRef} className="min-w-0 truncate">
+                    {picked ? <LocationName point={picked} /> : value.label}
+                    {picked?.code && (
+                      <>
+                        {" "}
+                        <span className="ml-0.5 font-mono text-xs tabular-nums text-muted-foreground">
+                          {picked.code}
+                        </span>
+                      </>
+                    )}
                   </span>
                 </span>
               ) : (
@@ -127,7 +162,9 @@ export function LocationCombobox({
                     className={cn("[&>svg:last-child]:hidden", disabled && disabledCls)}
                   >
                     <CountryFlag cc={p.countryCode} />
-                    <OptionName text={`${p.name}, ${p.country}`} full={label} className={cn("min-w-0 flex-1", LOCATION_NAME_CLASS)} />
+                    <OptionName full={label} className="min-w-0 flex-1">
+                      <LocationName point={portPoint(p)} />
+                    </OptionName>
                     {disabled ? (
                       <span className="shrink-0 text-xs text-muted-foreground">{disabledReason}</span>
                     ) : (
@@ -152,7 +189,9 @@ export function LocationCombobox({
                     className={cn("[&>svg:last-child]:hidden", disabled && disabledCls)}
                   >
                     <CountryFlag cc={a.countryCode} />
-                    <OptionName text={a.label} full={a.label} className={cn("min-w-0 flex-1", LOCATION_NAME_CLASS)} />
+                    <OptionName full={a.label} className="min-w-0 flex-1">
+                      <LocationName point={addressPoint(a)} />
+                    </OptionName>
                     {disabled ? (
                       <span className="shrink-0 text-xs text-muted-foreground">{disabledReason}</span>
                     ) : (

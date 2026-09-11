@@ -1,7 +1,7 @@
 import {
   ClipboardCheck, Truck, Forklift, Warehouse, Ship, MapPin, TrainFront, Plane, ArrowRight,
 } from "lucide-react";
-import { CountryFlag } from "@/components/location-label";
+import { CountryFlag, LocationName } from "@/components/location-label";
 import { cn } from "@/lib/utils";
 import { money } from "@/lib/format";
 import { legTotal } from "@/lib/quote-engine";
@@ -65,10 +65,10 @@ export function LegStages({
                 {LEG_LABEL[leg.kind]}
               </div>
               <div className={cn("font-medium leading-tight", compact ? "text-xs" : "text-sm")}>
-                {leg.kind === "ocean" && leg.toCountryCode ? (
+                {leg.kind === "ocean" && leg.toPlace ? (
                   <span className="flex items-center gap-1">
-                    <CountryFlag cc={leg.toCountryCode} className="text-sm" />
-                    {leg.to}
+                    <CountryFlag cc={leg.toPlace.countryCode} className="text-sm" />
+                    <LocationName point={{ kind: "port", ...leg.toPlace }} />
                   </span>
                 ) : (
                   leg.to

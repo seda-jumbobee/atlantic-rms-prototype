@@ -5,19 +5,25 @@ import { cn } from "@/lib/utils";
 
 /* ============================================================================
    How a place is drawn — the one way a port or an address is named anywhere in
-   the product. Replaces the anchor/pin glyph with the country's own flag.
+   the product. The country is carried by its flag rather than a generic
+   anchor/pin glyph.
 
-   Two consequences the API has to answer for:
+   Three consequences the API has to answer for:
 
      • A flag is a picture of a COUNTRY, not of a KIND of place, so the
        port-vs-address distinction the glyph used to carry is restated in
        text: ports keep their UN/LOCODE beside the name, and `kind` adds a
        screen-reader word. Nothing is left to the picture alone.
 
+     • Place and country are separate fields, never one joined string. They
+       are set in different weights — the place regular, the country medium —
+       so a reader scanning a column of "…, United States" can find the row
+       by its country without the place names shouting over it.
+
      • Regional-indicator pairs have no glyph on Windows — the browser falls
        back to the two letters ("US"). Degraded, not wrong: the country is
-       spelled out in the name right beside it either way. The fixed-width box
-       keeps rows aligned under both renderings.
+       spelled out beside it either way. The fixed-width box keeps rows
+       aligned under both renderings.
    ========================================================================= */
 
 const REGIONAL_INDICATOR_A = 0x1f1e6;
@@ -30,11 +36,6 @@ export function countryFlag(cc?: string | null): string | null {
     ...[...cc.toUpperCase()].map((c) => REGIONAL_INDICATOR_A + c.charCodeAt(0) - 65),
   );
 }
-
-/** The weight a location name carries. Exported so surfaces that must render
-    the name themselves — the combobox needs its own truncating tooltip span —
-    still get it from here rather than hand-picking a weight. */
-export const LOCATION_NAME_CLASS = "font-bold text-foreground";
 
 export function CountryFlag({ cc, className }: { cc?: string | null; className?: string }) {
   const flag = countryFlag(cc);
@@ -53,28 +54,50 @@ export function CountryFlag({ cc, className }: { cc?: string | null; className?:
 
 export interface LocationPoint {
   kind: "port" | "address";
-  /** The full display name, already including the country where there is one. */
+  /** The place itself — a port/city name, or a street line. */
   name: string;
+  /** Country, where the record names one separately from `name`. */
+  country?: string;
   countryCode?: string;
   /** UN/LOCODE — ports only. */
   code?: string;
 }
 
+/** The name as one plain string, for a tooltip or an aria-label. */
+export function locationText(point: LocationPoint): string {
+  return point.country ? `${point.name}, ${point.country}` : point.name;
+}
+
+/** Inline content, so the caller's own span owns truncation and layout.
+    The place reads at regular weight and its country at medium. */
+export function LocationName({ point, className }: { point: LocationPoint; className?: string }) {
+  return (
+    <span className={cn("font-normal", className)}>
+      {point.name}
+      {point.country && (
+        <>
+          {", "}
+          <span className="font-medium">{point.country}</span>
+        </>
+      )}
+    </span>
+  );
+}
+
 function fromPortId(portId?: string): LocationPoint | null {
   const p = getPort(portId);
   return p
-    ? { kind: "port", name: `${p.name}, ${p.country}`, countryCode: p.countryCode, code: p.locode }
+    ? { kind: "port", name: p.name, country: p.country, countryCode: p.countryCode, code: p.locode }
     : null;
 }
 
 function fromAddressId(addressId?: string): LocationPoint | null {
   const a = getAddress(addressId);
-  if (!a) return null;
-  return {
-    kind: "address",
-    name: a.city ? `${a.city}, ${a.country}` : a.label,
-    countryCode: a.countryCode,
-  };
+  // The city, not the street line: this is the form a route summary shows,
+  // where the lane matters and the doorstep does not.
+  return a
+    ? { kind: "address", name: a.city || a.label, country: a.country, countryCode: a.countryCode }
+    : null;
 }
 
 /** Resolve an origin/destination end — exactly one of the two ids is set. */
@@ -82,21 +105,18 @@ export function resolveLocationPoint(portId?: string, addressId?: string): Locat
   return fromPortId(portId) ?? fromAddressId(addressId);
 }
 
-/** Resolve a picked `LocationValue` (kind + id) from the combobox. */
+/** Resolve a picked location (kind + id) into its summary form. */
 export function locationPoint(kind: "port" | "address", id: string): LocationPoint | null {
   return kind === "port" ? fromPortId(id) : fromAddressId(id);
 }
 
 export function LocationLabel({
   point,
-  /** Override the resolved name — the combobox stores its own composed label. */
-  name,
   showCode = true,
   className,
   flagClassName,
 }: {
   point: LocationPoint;
-  name?: string;
   showCode?: boolean;
   className?: string;
   flagClassName?: string;
@@ -105,10 +125,20 @@ export function LocationLabel({
     <span className={cn("flex min-w-0 items-center gap-1.5", className)}>
       <CountryFlag cc={point.countryCode} className={flagClassName} />
       <span className="sr-only">{point.kind === "port" ? "Port:" : "Address:"}</span>
-      <span className={cn("truncate", LOCATION_NAME_CLASS)}>{name ?? point.name}</span>
-      {showCode && point.code && (
-        <span className="shrink-0 font-mono text-caption text-muted-foreground">{point.code}</span>
-      )}
+      {/* The LOCODE sits INSIDE the truncating span: where space runs out it
+          should be the first thing dropped, not compete with the name. That
+          makes it an inline run rather than a flex item, so the gap before it
+          has to be a real space — a margin alone is invisible to a screen
+          reader and to anyone copying the row, who would get "…StatesUSHOU". */}
+      <span className="min-w-0 truncate">
+        <LocationName point={point} />
+        {showCode && point.code && (
+          <>
+            {" "}
+            <span className="ml-0.5 font-mono text-caption text-muted-foreground">{point.code}</span>
+          </>
+        )}
+      </span>
     </span>
   );
 }

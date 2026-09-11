@@ -154,7 +154,7 @@ function buildLegs(input: SearchInput, carrierId: string, seedBase: string): Quo
     id: cid("leg"), kind: "ocean", title: "Ocean Freight", mode: "Ocean",
     from: input.originPortId ? originLabel : `${cfs.nearestRampPort} Port`,
     to: dPort ? `${dPort.name}, ${dPort.country}` : destLabel,
-    toCountryCode: dPort?.countryCode,
+    toPlace: dPort ? { name: dPort.name, country: dPort.country, countryCode: dPort.countryCode } : undefined,
     carrierId, included: true, charges: oceanCharges, via,
     vessel: VESSELS[Math.floor(seeded(seedBase + "vs") * VESSELS.length)],
     voyage: `${Math.floor(100 + seeded(seedBase + "vy") * 800)}${seeded(seedBase) > 0.5 ? "W" : "E"}`,
