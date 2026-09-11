@@ -51,7 +51,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           leaving the document as the scrollport the action bars stick to. */}
       <SidebarInset className="min-w-0 gap-4 overflow-clip p-4 sm:gap-6 sm:p-6 md:gap-8 md:p-8">
         <AppTopbar />
-        <main className="min-w-0 flex-1">{children}</main>
+        {/* A flex column so a page can take the leftover height with flex-1 —
+            which is what lets a sticky action bar sit at the BOTTOM of a short
+            page instead of floating under the last card. */}
+        <main className="flex min-w-0 flex-1 flex-col">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

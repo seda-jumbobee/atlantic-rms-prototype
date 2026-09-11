@@ -42,7 +42,10 @@ export function ActionBar({
   return (
     <div
       className={cn(
-        "sticky bottom-0 z-30 mt-2",
+        // mt-auto pushes the bar to the bottom of its step when the step is
+        // shorter than the viewport; when it is taller there is no free space,
+        // mt-auto does nothing, and sticky takes over.
+        "sticky bottom-0 z-30 mt-auto pt-2",
         // the device's own bottom inset, so the bar clears a home indicator
         "pb-[max(0.5rem,env(safe-area-inset-bottom))]",
         className,

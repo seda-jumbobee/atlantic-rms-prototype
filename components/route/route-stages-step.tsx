@@ -169,7 +169,7 @@ export function RouteStagesStep({
   const mapMode = shipmentType === "Air" ? "air" : "ocean";
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-1 flex-col gap-6">
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
       {/* left: stages */}
       <div className="min-w-0 space-y-3">

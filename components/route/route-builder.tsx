@@ -136,7 +136,7 @@ export function RouteBuilder() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-1 flex-col gap-6">
       <PageHeader
         title="Custom Route"
         description="Build and price transportation stages manually using vendors, contracts, and AI-assisted sourcing."

@@ -131,7 +131,7 @@ export function PricingStep({
   const hasServices = calc.included.length > 0;
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-1 flex-col gap-5">
       {/* Two halves of the same question — what is shipping, and on which rate.
           Stacked below lg, side by side above it, each filling its column. */}
       {context ? (

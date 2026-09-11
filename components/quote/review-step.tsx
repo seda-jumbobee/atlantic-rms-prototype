@@ -116,7 +116,7 @@ export function ReviewStep({
   const [internalOpen, setInternalOpen] = useState(true);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-1 flex-col gap-5">
       <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
       {/* left: client preview + internal summary */}
       <div className="min-w-0 space-y-4">

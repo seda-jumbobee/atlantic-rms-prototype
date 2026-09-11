@@ -20,6 +20,7 @@ import { buildRateOptions, destinationRequirements, type SearchInput } from "@/l
 import { getPort, getAddress } from "@/lib/data/ports";
 import { getEquipment } from "@/lib/data/equipment";
 import { seeded } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { RateOption } from "@/lib/types";
 
 function locLabel(portId?: string, addrId?: string): string {
@@ -128,7 +129,7 @@ export function QuoteMaster() {
           : null;
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-1 flex-col gap-8">
       <PageHeader
         title="Rate Quote"
         description="Check available rates and create a client quote using commodity-specific formulas and contract rates."
@@ -203,7 +204,7 @@ export function QuoteMaster() {
           survives an unchanged edit round-trip; a changed search clears `selected`
           above, which unmounts and resets it. */}
       {selected && input && (
-        <div className={showSearch ? "hidden" : undefined}>
+        <div className={cn("flex flex-1 flex-col", showSearch && "hidden")}>
           <QuotePricingFlow
             key={selected.id}
             rate={selected}

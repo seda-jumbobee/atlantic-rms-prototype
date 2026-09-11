@@ -290,7 +290,7 @@ export function QuoteSearchWidget({
   const routeComplete = !!(origin && dest);
 
   return (
-    <div className={cn("flex flex-col gap-6", className)}>
+    <div className={cn("flex flex-1 flex-col gap-6", className)}>
       <div className="grid items-start gap-6 lg:grid-cols-12">
       {/* ── Form column ── */}
       <Card className="lg:col-span-7">
