@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import {
-  Ship, Clock, CalendarDays, Anchor, ChevronRight, Star, AlertTriangle, FileText, Loader2,
+  Anchor, ChevronRight, Star, AlertTriangle, Loader2,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader,
+  DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
@@ -20,54 +21,68 @@ import { ChargeTable } from "@/components/quote/charge-table";
 import { SourceBadge } from "@/components/status-badge";
 import { getCarrier } from "@/lib/data/carriers";
 import { money, fmtDate } from "@/lib/format";
-import { legTotal } from "@/lib/quote-engine";
+import { cn } from "@/lib/utils";
 import type { RateOption } from "@/lib/types";
 
-/** Full internal breakdown — opened by "View details". Does NOT select the rate. */
+/** Full internal breakdown — opened by "View details". Does NOT select the rate.
+    Header and footer stay put and only the body scrolls, so the carrier and
+    the total stay readable at any viewport height. */
 function RateDetails({ rate }: { rate: RateOption }) {
   const included = rate.legs.filter((l) => l.included);
   return (
     <DialogContent>
       <DialogHeader>
-        <DialogTitle className="flex items-center gap-2">
-          <CarrierName carrierId={rate.carrierId} /> <SourceBadge source={rate.sourceType} />
+        <DialogTitle className="flex flex-wrap items-center gap-2">
+          <CarrierName carrierId={rate.carrierId} emphasis="strong" />
+          <SourceBadge source={rate.sourceType} />
         </DialogTitle>
         <DialogDescription>Internal cost breakdown — before profit. Not shown to the client.</DialogDescription>
       </DialogHeader>
 
-      <LegStages legs={rate.legs} showPrices />
+      <DialogBody className="space-y-5">
+        <LegStages legs={rate.legs} showPrices />
 
-      <div className="space-y-4">
-        {included.map((leg) => (
-          <div key={leg.id} className="space-y-1.5">
-            <div className="text-sm font-medium">{leg.title} <span className="font-normal text-muted-foreground">· {leg.from} → {leg.to}</span></div>
-            <ChargeTable charges={leg.charges} onChange={() => {}} editable={false} />
-          </div>
-        ))}
-      </div>
+        <dl className="flex flex-wrap gap-x-8 gap-y-3 rounded-lg bg-muted/40 px-4 py-3">
+          <Fact label="Transit time" value={`${rate.transitDays} days`} />
+          {rate.sailingDate && <Fact label="Sailing" value={fmtDate(rate.sailingDate)} />}
+          <Fact label="Valid to" value={fmtDate(rate.validTo)} />
+          {rate.vessel && <Fact label="Vessel / voyage" value={rate.vessel} />}
+          <Fact label="Source" value={rate.sourceType} />
+          {rate.contractNo && <Fact label="Contract" value={rate.contractNo} mono />}
+        </dl>
 
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 border-t pt-3 text-sm">
-        <Meta label="Transit" value={`${rate.transitDays} days`} />
-        {rate.sailingDate && <Meta label="Sailing" value={fmtDate(rate.sailingDate)} />}
-        {rate.vessel && <Meta label="Vessel / voyage" value={rate.vessel} />}
-        <Meta label="Validity" value={`to ${fmtDate(rate.validTo)}`} />
-        <Meta label="Source" value={rate.sourceType} />
-        {rate.contractNo && <Meta label="Contract" value={rate.contractNo} mono />}
-      </dl>
+        <div className="space-y-4">
+          {included.map((leg) => (
+            <section key={leg.id} className="space-y-2">
+              <h3 className="text-body font-bold text-foreground">
+                {leg.title}{" "}
+                <span className="font-normal text-muted-foreground">· {leg.from} → {leg.to}</span>
+              </h3>
+              <ChargeTable charges={leg.charges} onChange={() => {}} editable={false} />
+            </section>
+          ))}
+        </div>
+      </DialogBody>
 
-      <div className="flex items-center justify-between border-t pt-3">
-        <span className="text-sm font-medium">Total internal cost</span>
-        <span className="text-lg font-bold tabular-nums">{money(rate.total)} <span className="text-sm font-normal text-muted-foreground">{rate.currency}</span></span>
-      </div>
+      <DialogFooter className="items-center border-t border-[var(--c-card-border)] pt-4 sm:justify-between">
+        <span className="text-body font-medium text-foreground">Total internal cost</span>
+        <span className="text-h3 tabular-nums text-foreground">
+          {money(rate.total)}{" "}
+          <span className="text-body font-normal text-muted-foreground">{rate.currency}</span>
+        </span>
+      </DialogFooter>
     </DialogContent>
   );
 }
 
-function Meta({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+/** One fact on a rate card: what it is, then what it says, the value bolder. */
+function Fact({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="flex items-baseline justify-between gap-3">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className={mono ? "font-mono text-xs" : "font-medium"}>{value}</dd>
+    <div className="min-w-0">
+      <dt className="text-caption text-muted-foreground">{label}</dt>
+      <dd className={cn("mt-0.5 text-body font-bold text-foreground", mono && "font-mono text-body-sm font-medium")}>
+        {value}
+      </dd>
     </div>
   );
 }
@@ -99,7 +114,7 @@ export function RateResultCard({
         {/* left: carrier, badges, service summary, metadata */}
         <div className="min-w-0 flex-1 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            <CarrierName carrierId={rate.carrierId} />
+            <CarrierName carrierId={rate.carrierId} emphasis="strong" />
             <SourceBadge source={rate.sourceType} />
             {rate.recommended && !rate.expired && (
               <Badge variant="status-positive" className="gap-1"><Star className="size-3" /> Recommended</Badge>
@@ -124,18 +139,17 @@ export function RateResultCard({
           {/* service / route summary — no per-leg prices here (breakdown is in View details) */}
           <LegStages legs={rate.legs} showPrices={false} compact />
 
-          {/* metadata */}
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs">
-            <span className="flex items-center gap-1.5"><Clock className="size-3.5 text-muted-foreground" /> <span className="font-medium">{rate.transitDays} days</span> transit</span>
-            {rate.sailingDate && <span className="flex items-center gap-1.5"><Ship className="size-3.5 text-muted-foreground" /> Sailing <span className="font-medium">{fmtDate(rate.sailingDate)}</span></span>}
-            {rate.vessel && <span className="flex items-center gap-1.5"><Anchor className="size-3.5 text-muted-foreground" /> {rate.vessel}</span>}
-            <span className="flex items-center gap-1.5"><CalendarDays className="size-3.5 text-muted-foreground" /> Valid to <span className="font-medium">{fmtDate(rate.validTo)}</span></span>
-          </div>
-          {rate.contractNo && (
-            <div className="flex items-center gap-1.5 pt-0.5 text-xs text-muted-foreground">
-              <FileText className="size-3.5" /> Contract <span className="font-mono text-foreground">{rate.contractNo}</span>
-            </div>
-          )}
+          {/* Facts, as label over value. The icons that used to lead each one
+              (a clock, a ship, an anchor, a calendar) decorated words that
+              already said the same thing, and four of them in a row read as a
+              toolbar. The value carries the weight instead. */}
+          <dl className="flex flex-wrap gap-x-8 gap-y-3">
+            <Fact label="Transit time" value={`${rate.transitDays} days`} />
+            {rate.sailingDate && <Fact label="Sailing" value={fmtDate(rate.sailingDate)} />}
+            <Fact label="Valid to" value={fmtDate(rate.validTo)} />
+            {rate.vessel && <Fact label="Vessel" value={rate.vessel} />}
+            {rate.contractNo && <Fact label="Contract" value={rate.contractNo} mono />}
+          </dl>
         </div>
 
         {/* right: internal cost + actions */}

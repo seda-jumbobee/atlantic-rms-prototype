@@ -1,11 +1,24 @@
 "use client";
 
-import { Plus, Trash2, GripVertical } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
 import { money } from "@/lib/format";
 import { chargeTotal } from "@/lib/quote-engine";
 import type { ChargeLine } from "@/lib/types";
+
+/* ============================================================================
+   Charge lines — the densest table in the product, and now the shared one.
+
+   It runs at density="compact" (36px rows against the default 52): this is a
+   block of figures to be read down a column, not a list of records to be
+   scanned a row at a time, and at the default height a six-charge service
+   filled a screen. Money columns are `numeric`, so they align on their right
+   edge and on their digits.
+   ========================================================================= */
 
 let n = 0;
 const newId = () => `ch-new-${++n}`;
@@ -28,76 +41,81 @@ export function ChargeTable({
   const subtotal = charges.reduce((s, c) => s + chargeTotal(c), 0);
 
   return (
-    <div className="overflow-hidden rounded-lg border">
-      <div className="overflow-x-auto">
-      <table className="w-full min-w-[440px] text-sm">
-        <thead className="bg-muted/50 text-xs text-muted-foreground">
-          <tr>
-            <th className="w-16 px-2 py-1.5 text-left font-medium">Code</th>
-            <th className="px-2 py-1.5 text-left font-medium">Charge</th>
-            <th className="hidden px-2 py-1.5 text-left font-medium sm:table-cell">Basis</th>
-            <th className="w-14 px-2 py-1.5 text-right font-medium">Qty</th>
-            <th className="w-28 px-2 py-1.5 text-right font-medium">Unit cost</th>
-            <th className="w-24 px-2 py-1.5 text-right font-medium">Total</th>
-            {editable && <th className="w-8" />}
-          </tr>
-        </thead>
-        <tbody className="divide-y">
+    <div className="overflow-hidden rounded-lg border border-[var(--c-table-border)]">
+      <Table plain density="compact" className="min-w-[440px]">
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="w-16">Code</TableHead>
+            <TableHead>Charge</TableHead>
+            <TableHead className="hidden sm:table-cell">Basis</TableHead>
+            <TableHead numeric className="w-14">Qty</TableHead>
+            <TableHead numeric className="w-28">Unit cost</TableHead>
+            <TableHead numeric className="w-24">Total</TableHead>
+            {editable && <TableHead className="w-9" aria-label="Row actions" />}
+          </TableRow>
+        </TableHeader>
+
+        <TableBody>
           {charges.map((c) => (
-            <tr key={c.id} className="hover:bg-muted/30">
-              <td className="px-2 py-1">
+            <TableRow key={c.id}>
+              <TableCell>
                 {editable ? (
                   <Input value={c.code ?? ""} onChange={(e) => update(c.id, { code: e.target.value })} aria-label={`Charge code for ${c.name || "charge"}`} size="xs" className="font-mono text-xs" />
                 ) : (
                   <span className="font-mono text-xs text-muted-foreground">{c.code}</span>
                 )}
-              </td>
-              <td className="px-2 py-1">
+              </TableCell>
+              <TableCell className="whitespace-normal">
                 {editable ? (
                   <Input value={c.name} onChange={(e) => update(c.id, { name: e.target.value })} aria-label="Charge name" size="xs" />
                 ) : (
                   c.name
                 )}
-              </td>
-              <td className="hidden px-2 py-1 text-muted-foreground sm:table-cell">{c.basis}</td>
-              <td className="px-2 py-1 text-right">
+              </TableCell>
+              <TableCell className="hidden text-muted-foreground sm:table-cell">{c.basis}</TableCell>
+              <TableCell numeric>
                 {editable ? (
                   <Input type="number" value={c.qty} onChange={(e) => update(c.id, { qty: Number(e.target.value) })} aria-label={`Quantity for ${c.name || "charge"}`} size="xs" className="text-right tabular-nums" />
                 ) : (
                   c.qty
                 )}
-              </td>
-              <td className="px-2 py-1 text-right">
+              </TableCell>
+              <TableCell numeric>
                 {editable ? (
                   <Input type="number" value={c.unitCost} onChange={(e) => update(c.id, { unitCost: Number(e.target.value) })} aria-label={`Unit cost for ${c.name || "charge"}`} size="xs" className="text-right tabular-nums" />
                 ) : (
                   money(c.unitCost)
                 )}
-              </td>
-              <td className="px-2 py-1 text-right font-medium tabular-nums">{money(chargeTotal(c))}</td>
+              </TableCell>
+              <TableCell numeric className="font-medium">{money(chargeTotal(c))}</TableCell>
               {editable && (
-                <td className="px-1 py-1">
+                <TableCell>
                   <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-destructive" onClick={() => remove(c.id)} aria-label={`Remove ${c.name || "charge"}`}>
                     <Trash2 className="size-3.5" />
                   </Button>
-                </td>
+                </TableCell>
               )}
-            </tr>
+            </TableRow>
           ))}
-        </tbody>
-        <tfoot>
-          <tr className="border-t bg-muted/30 text-sm font-medium">
-            <td colSpan={5} className="px-2 py-1.5 text-right">Service subtotal</td>
-            <td className="px-2 py-1.5 text-right tabular-nums">{money(subtotal)}</td>
-            {editable && <td />}
-          </tr>
-        </tfoot>
-      </table>
-      </div>
+        </TableBody>
+
+        <TableFooter>
+          <TableRow className="hover:bg-transparent">
+            <TableCell colSpan={editable ? 5 : 5} numeric className="font-medium">Service subtotal</TableCell>
+            <TableCell numeric className="font-bold text-foreground">{money(subtotal)}</TableCell>
+            {editable && <TableCell />}
+          </TableRow>
+        </TableFooter>
+      </Table>
+
       {editable && (
-        <button onClick={add} className="flex w-full items-center justify-center gap-1.5 border-t py-1.5 text-xs text-muted-foreground transition hover:bg-muted/50 hover:text-foreground">
-          <Plus className="size-3.5" /> Add charge
-        </button>
+        // A real button, not a strip of text: it is the only way to add a line,
+        // and it used to read as a caption under the table.
+        <div className="border-t border-[var(--c-table-border)] p-1.5">
+          <Button variant="ghost" size="sm" onClick={add} className="w-full justify-center">
+            <Plus className="size-4" /> Add charge
+          </Button>
+        </div>
       )}
     </div>
   );

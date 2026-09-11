@@ -19,7 +19,6 @@ import { RequirementsPanel } from "@/components/quote/requirements-panel";
 import { CarrierName } from "@/components/carrier-name";
 import { SourceBadge } from "@/components/status-badge";
 import { money } from "@/lib/format";
-import { getCarrier } from "@/lib/data/carriers";
 import type { RateOption, RouteRequirement } from "@/lib/types";
 
 type ViaMode = "all" | "direct";
@@ -142,8 +141,8 @@ export function ResultsView({
       </div>
 
       {/* Price range */}
-      <div className="space-y-2.5 text-sm">
-        <span className="text-xs font-medium text-muted-foreground">Price range</span>
+      <div className="text-sm">
+        <span className="mb-2.5 block text-body font-medium text-foreground">Price range</span>
         <Slider
           min={minP}
           max={maxP}
@@ -152,7 +151,7 @@ export function ResultsView({
           onValueChange={onSlider}
           thumbLabels={["Minimum price", "Maximum price"]}
         />
-        <div className="grid grid-cols-2 gap-2">
+        <div className="mt-3 grid grid-cols-2 gap-2">
           <div className="space-y-1">
             <Label htmlFor="rv-min" className="text-xs">Min price</Label>
             <div className="relative">
@@ -174,15 +173,15 @@ export function ResultsView({
             </div>
           </div>
         </div>
-        {priceError && <p role="alert" className="text-xs font-medium text-destructive">{priceError}</p>}
+        {priceError && <p role="alert" className="mt-2 text-xs font-medium text-destructive">{priceError}</p>}
       </div>
 
       <Separator className="my-3" />
 
       {/* Max transit */}
-      <div className="space-y-2 text-sm">
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span className="font-medium">Max transit</span>
+      <div className="text-sm">
+        <div className="mb-2.5 flex items-center justify-between gap-2">
+          <span className="text-body font-medium text-foreground">Max transit</span>
           <span className="tabular-nums text-foreground">≤ {maxTransitVal} days</span>
         </div>
         <Slider min={0} max={maxTransit} step={1} value={[maxTransitVal]} onValueChange={(v) => setMaxTransitVal(v[0])} thumbLabels={["Maximum transit days"]} />
@@ -190,7 +189,7 @@ export function ResultsView({
 
       <Separator className="my-3" />
 
-      <div className="mb-2 text-xs font-medium text-muted-foreground">Source ({sources.length})</div>
+      <div className="mb-2.5 text-body font-medium text-foreground">Source ({sources.length})</div>
       <div className="space-y-2">
         {sources.map((s) => (
           <label key={s} className="flex items-center gap-2 text-sm">
@@ -203,7 +202,7 @@ export function ResultsView({
       {hasTransshipment && (
         <>
           <Separator className="my-3" />
-          <div className="mb-2 text-xs font-medium text-muted-foreground">Routing</div>
+          <div className="mb-2.5 text-body font-medium text-foreground">Routing</div>
           <div className="flex gap-1.5">
             {(["all", "direct"] as const).map((m) => (
               <button key={m} type="button" onClick={() => setViaMode(m)} aria-pressed={viaMode === m}
@@ -220,13 +219,12 @@ export function ResultsView({
 
       <Separator className="my-3" />
 
-      <div className="mb-2 text-xs font-medium text-muted-foreground">Carriers ({carriers.length})</div>
+      <div className="mb-2.5 text-body font-medium text-foreground">Carriers ({carriers.length})</div>
       <div className="space-y-2">
         {carriers.map((cid) => (
           <label key={cid} className="flex items-center gap-2 text-sm">
             <Checkbox checked={selectedCarriers.has(cid)} onCheckedChange={() => toggleCarrier(cid)} />
             <CarrierName carrierId={cid} />
-            <span className="truncate">{getCarrier(cid)?.name}</span>
           </label>
         ))}
       </div>
