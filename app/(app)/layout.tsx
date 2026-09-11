@@ -42,7 +42,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           at md and up (Figma "04 - Screens / Dashboard"), stepping down to 24
           and 16 as the viewport narrows. The same step drives the gap between
           the two rows, which the reference also sets to 32. */}
-      <SidebarInset className="min-w-0 gap-4 overflow-hidden p-4 sm:gap-6 sm:p-6 md:gap-8 md:p-8">
+      {/* overflow-CLIP, not hidden. Both clip content to the rounded
+          surface, but `hidden` makes this element a scroll container — and a
+          scroll container captures every `position: sticky` descendant. Since
+          this one is sized to its content it never actually scrolls, so a
+          sticky bottom bar bound to it simply never pinned — measured, not
+          assumed. `clip` clips identically without establishing a scrollport,
+          leaving the document as the scrollport the action bars stick to. */}
+      <SidebarInset className="min-w-0 gap-4 overflow-clip p-4 sm:gap-6 sm:p-6 md:gap-8 md:p-8">
         <AppTopbar />
         <main className="min-w-0 flex-1">{children}</main>
       </SidebarInset>
