@@ -155,7 +155,7 @@ export function RouteStagesStep({
   const pendingAi = steps.filter((s) => aiFor(s.id).phase === "suggestions");
 
   const readiness: ReadinessItem[] = [
-    { key: "shipment", ok: shipmentComplete, label: shipmentComplete ? "Shipment details complete" : "Shipment details incomplete" },
+    { key: "shipment", ok: shipmentComplete, label: shipmentComplete ? "Shipping details complete" : "Shipping details incomplete" },
     { key: "stages", ok: steps.length > 0, label: steps.length > 0 ? `${steps.length} route stage${steps.length > 1 ? "s" : ""}` : "No route stages added yet" },
     { key: "priced", ok: unresolved.length === 0 && steps.length > 0, label: unresolved.length === 0 ? `${priced} stage${priced === 1 ? "" : "s"} priced` : `${unresolved.length} stage${unresolved.length > 1 ? "s" : ""} need a rate`, fixStageId: unresolved[0]?.id },
     ...(missingSource.length ? [{ key: "vendor", ok: false, label: `${missingSource.length} stage${missingSource.length > 1 ? "s" : ""} missing a vendor or source`, fixStageId: missingSource[0].id }] : []),

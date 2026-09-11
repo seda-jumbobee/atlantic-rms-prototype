@@ -54,7 +54,7 @@ export function ShipmentSummary({ input, onEdit }: { input: SearchInput; onEdit?
             onClick={onEdit}
             className="shrink-0 gap-1.5 self-start text-muted-foreground hover:text-foreground sm:self-center"
           >
-            <Pencil className="size-3.5" /> Edit shipment details
+            <Pencil className="size-3.5" /> Edit shipping details
           </Button>
         )}
       </CardContent>

@@ -287,7 +287,7 @@ export function ResultsView({
                     <RotateCcw className="size-4" /> Clear filters
                   </Button>
                 )}
-                <Button variant="ghost" size="sm" onClick={onEditShipment}>Back to shipment details</Button>
+                <Button variant="ghost" size="sm" onClick={onEditShipment}>Back to shipping details</Button>
               </div>
             }
           />

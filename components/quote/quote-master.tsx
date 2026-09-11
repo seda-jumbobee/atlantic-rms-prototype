@@ -29,7 +29,7 @@ function locLabel(portId?: string, addrId?: string): string {
   return a?.city ?? a?.label ?? "—";
 }
 
-// Rebuild the search form's values from an encoded search so "Edit shipment details"
+// Rebuild the search form's values from an encoded search so "Edit shipping details"
 // returns the Manager to a fully pre-filled form (nothing entered is lost).
 function widgetInitialFromInput(input: SearchInput) {
   const toLoc = (portId?: string, addrId?: string): LocationValue | undefined => {

@@ -299,7 +299,7 @@ function ShippingOptions({ value, onChange }: { value: CommoditySelection; onCha
           </Select>
         </Field>
       )}
-      <Field label={selfProp ? "Loading method" : "Shipment type"} htmlFor="cp-mode">
+      <Field label={selfProp ? "Loading method" : "Shipping type"} htmlFor="cp-mode">
         <Select value={value.shipmentType} onValueChange={(m) => setMode(m as ShipmentType)}>
           <SelectTrigger id="cp-mode"><SelectValue placeholder="Select loading method" /></SelectTrigger>
           <SelectContent>

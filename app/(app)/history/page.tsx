@@ -807,7 +807,7 @@ function QuoteDetailsSheet({ quote: q, onClose }: { quote: QuoteHistoryItem | nu
                   <DetailRow label="Origin" value={q.origin} />
                   <DetailRow label="Destination" value={q.destination} />
                   <DetailRow label="Commodity" value={q.commodity} />
-                  <DetailRow label="Shipment type" value={q.shipmentType} last />
+                  <DetailRow label="Shipping type" value={q.shipmentType} last />
                 </div>
               </section>
 
