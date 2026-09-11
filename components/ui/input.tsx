@@ -52,10 +52,36 @@ const inputVariants = cva(
   }
 )
 
+/* ============================================================================
+   A number field sitting at 0 has that 0 replaced by the first digit typed.
+
+   0 is what an empty numeric field holds — a cost not yet entered, a duration
+   of none — so it reads as a placeholder, but it is a real value and the caret
+   lands beside it. Typing 12 into a field showing 0 gave 012, or 120 with the
+   caret at the front, and clearing it first only put the 0 back, because
+   Number("") is 0.
+
+   The obvious fix — select the 0 on focus so typing replaces it — DOES NOT
+   WORK, and the reason is worth writing down: `input type="number"` does not
+   support the selection API. selectionStart and selectionEnd read back null
+   and select() is a no-op, per the spec's list of types that support
+   selection. Verified in the running app: focusing a 0 field left selection
+   null and typing still produced "07".
+
+   So the replacement happens at the keystroke instead. The digit is applied
+   through the native value setter plus an input event, which is what React's
+   onChange actually listens to — assigning to .value alone would be
+   overwritten on the next controlled render.
+
+   Only when the whole value is exactly "0": a field holding 4500 stays
+   editable. Only bare digits, so Ctrl/Cmd shortcuts, Tab, arrows, minus and
+   the decimal point behave normally — typing "." into 0 still gives "0.".
+   ========================================================================= */
 function Input({
   className,
   type,
   size = "default",
+  onKeyDown,
   ...props
 }: Omit<React.ComponentProps<"input">, "size"> &
   VariantProps<typeof inputVariants>) {
@@ -65,6 +91,24 @@ function Input({
       data-slot="input"
       data-size={size}
       className={cn(inputVariants({ size, className }))}
+      onKeyDown={(e) => {
+        const el = e.currentTarget
+        if (
+          type === "number" &&
+          el.value === "0" &&
+          /^[0-9]$/.test(e.key) &&
+          !e.ctrlKey && !e.metaKey && !e.altKey
+        ) {
+          e.preventDefault()
+          const setter = Object.getOwnPropertyDescriptor(
+            window.HTMLInputElement.prototype,
+            "value",
+          )?.set
+          setter?.call(el, e.key)
+          el.dispatchEvent(new Event("input", { bubbles: true }))
+        }
+        onKeyDown?.(e)
+      }}
       {...props}
     />
   )
