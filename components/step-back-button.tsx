@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -17,22 +18,32 @@ import { cn } from "@/lib/utils";
 export function StepBackButton({
   label,
   onClick,
+  href,
   className,
 }: {
   label: string;
-  onClick: () => void;
+  /** A step within a flow goes back by changing state… */
+  onClick?: () => void;
+  /** …a detail page goes back by navigating. Same control either way. */
+  href?: string;
   className?: string;
 }) {
-  return (
-    <Button
-      type="button"
-      variant="outline"
-      size="sm"
-      onClick={onClick}
-      className={cn("self-start", className)}
-    >
+  const body = (
+    <>
       <ArrowLeft aria-hidden data-icon="inline-start" className="size-4" />
       {label}
+    </>
+  );
+  return (
+    <Button
+      asChild={!!href}
+      type={href ? undefined : "button"}
+      variant="outline"
+      size="sm"
+      onClick={href ? undefined : onClick}
+      className={cn("self-start", className)}
+    >
+      {href ? <Link href={href}>{body}</Link> : body}
     </Button>
   );
 }

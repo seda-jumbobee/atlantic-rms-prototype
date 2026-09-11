@@ -117,3 +117,74 @@ export async function prepareAvatar(file: File): Promise<AvatarResult> {
     return { ok: false, error: { code: "encode", message: "We couldn’t process this image. Please try again." } };
   }
 }
+
+/* ============================================================================
+   Driver photos.
+
+   Same validation as an avatar — type first, then size, both before the file
+   is read into memory — but no crop: a photo of a loaded vehicle is evidence,
+   and cropping it to a square would throw away the part that matters. It is
+   only scaled down, and only when it is larger than the target.
+
+   The downscale is not cosmetic. These are stored as data URLs in the browser,
+   which has a few megabytes to spend for the whole origin, so a 4 MB phone
+   photo has to become ~150 KB before it is kept.
+   ========================================================================= */
+
+export const PHOTO_ACCEPTED_TYPES = AVATAR_ACCEPTED_TYPES;
+export const PHOTO_ACCEPT_ATTR = AVATAR_ACCEPT_ATTR;
+export const PHOTO_MAX_BYTES = 10 * 1024 * 1024; // 10 MB — a phone photo, uncompressed
+export const PHOTO_MAX_LABEL = "10 MB";
+/** Longest stored edge. Large enough to read a plate or a lashing point. */
+export const PHOTO_MAX_EDGE = 1024;
+
+export type PhotoError = AvatarError;
+export type PhotoResult =
+  | { ok: true; dataUrl: string; width: number; height: number }
+  | { ok: false; error: PhotoError };
+
+export function validatePhotoFile(file: File): PhotoError | null {
+  if (!(PHOTO_ACCEPTED_TYPES as readonly string[]).includes(file.type)) {
+    return { code: "type", message: "Unsupported file type. Upload a JPG, PNG, or WebP image." };
+  }
+  if (file.size > PHOTO_MAX_BYTES) {
+    return {
+      code: "size",
+      message: `Photo is too large. Upload an image smaller than ${PHOTO_MAX_LABEL}.`,
+    };
+  }
+  return null;
+}
+
+/** Validate → decode → scale the long edge to PHOTO_MAX_EDGE → JPEG data URL. */
+export async function preparePhoto(file: File): Promise<PhotoResult> {
+  const invalid = validatePhotoFile(file);
+  if (invalid) return { ok: false, error: invalid };
+
+  let img: HTMLImageElement;
+  try {
+    img = await loadImage(file);
+  } catch {
+    return { ok: false, error: { code: "decode", message: "That image couldn’t be read. Try another file." } };
+  }
+
+  const longest = Math.max(img.naturalWidth, img.naturalHeight);
+  // Never upscale: a small photo stays its own size rather than becoming a
+  // blurry large one.
+  const scale = longest > PHOTO_MAX_EDGE ? PHOTO_MAX_EDGE / longest : 1;
+  const w = Math.max(1, Math.round(img.naturalWidth * scale));
+  const h = Math.max(1, Math.round(img.naturalHeight * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return { ok: false, error: { code: "encode", message: "We couldn’t process that image. Please try again." } };
+  ctx.drawImage(img, 0, 0, w, h);
+
+  try {
+    return { ok: true, dataUrl: canvas.toDataURL("image/jpeg", 0.75), width: w, height: h };
+  } catch {
+    return { ok: false, error: { code: "encode", message: "We couldn’t process that image. Please try again." } };
+  }
+}

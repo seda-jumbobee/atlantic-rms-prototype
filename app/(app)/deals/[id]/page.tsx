@@ -4,15 +4,17 @@ import { use } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  ArrowLeft, Lock, Calendar, Ship, Package, FileText, DollarSign,
+  Lock, Calendar, Ship, Package, FileText, DollarSign,
   Link2, CheckCircle2, Circle, Workflow, ClipboardList, Truck, Anchor,
-  Clock, ChevronRight, Camera, ImageIcon,
+  Clock, ChevronRight,
 } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
+import { StepBackButton } from "@/components/step-back-button";
+import { DealPhotos } from "@/components/deals/deal-photos";
+import { DealNotes } from "@/components/deals/deal-notes";
 import { DealStageBadge } from "@/components/status-badge";
 import { ManagerAvatar } from "@/components/deals/manager-avatar";
 import { InvoiceComparison } from "@/components/deals/invoice-comparison";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useIsAdmin } from "@/components/session-provider";
@@ -103,24 +105,14 @@ function Economics({ deal }: { deal: Deal }) {
   );
 }
 
-function IntegrationChip({
-  label, value, connected,
-}: { label: string; value?: string; connected: boolean }) {
+/** Only rendered for a system this deal is actually linked to. */
+function IntegrationChip({ label, value }: { label: string; value: string }) {
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 rounded-lg border px-3 py-2",
-        connected ? "border-success/40 bg-success/5" : "bg-muted/40",
-      )}
-    >
-      {connected ? (
-        <CheckCircle2 className="size-4 text-success" />
-      ) : (
-        <Circle className="size-4 text-muted-foreground" />
-      )}
+    <div className="flex items-center gap-2 rounded-lg border border-success/40 bg-success/5 px-3 py-2">
+      <CheckCircle2 className="size-4 shrink-0 text-success" />
       <div className="min-w-0">
         <p className="text-xs font-medium">{label}</p>
-        <p className="truncate font-mono text-caption text-muted-foreground">{value ?? "Not linked"}</p>
+        <p className="truncate font-mono text-caption text-muted-foreground">{value}</p>
       </div>
     </div>
   );
@@ -134,11 +126,16 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
   const customer = getCustomer(deal.customerId);
   const manager = getUser(deal.managerId);
 
+  const linkedIntegrations = [
+    { label: "Kommo CRM", value: deal.id },
+    { label: "DemSys", value: deal.demsysNo },
+    { label: "Booking", value: deal.bookingNo },
+    { label: "Reference", value: deal.referenceNo },
+  ].filter((i): i is { label: string; value: string } => !!i.value);
+
   return (
     <div className="space-y-6">
-      <Link href="/deals" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="size-4" /> Back to deals
-      </Link>
+      <StepBackButton label="Back to deals" href="/deals" />
 
       <PageHeader title="Deal detail" description={`${deal.pipeline} · ${deal.commodityType}`}>
         <DealStageBadge stage={deal.stage} />
@@ -205,10 +202,18 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <IntegrationChip label="Kommo CRM" value={deal.id} connected />
-            <IntegrationChip label="DemSys" value={deal.demsysNo} connected={!!deal.demsysNo} />
-            <IntegrationChip label="Booking" value={deal.bookingNo} connected={!!deal.bookingNo} />
-            <IntegrationChip label="Reference" value={deal.referenceNo} connected={!!deal.referenceNo} />
+            {/* Only what is linked. A row reading "Not linked" listed a system
+                this deal has no relationship with, which is an absence the
+                card cannot act on and the reader cannot use. */}
+            {linkedIntegrations.length === 0 ? (
+              <p className="text-xs text-muted-foreground sm:col-span-2">
+                No systems linked to this deal yet.
+              </p>
+            ) : (
+              linkedIntegrations.map((i) => (
+                <IntegrationChip key={i.label} label={i.label} value={i.value} />
+              ))
+            )}
           </CardContent>
         </Card>
       </div>
@@ -216,6 +221,8 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
       <FinanceSection dealId={deal.id} />
 
       <OperationsSection deal={deal} />
+
+      <DealNotes dealId={deal.id} />
     </div>
   );
 }
@@ -380,23 +387,7 @@ function OperationsSection({ deal }: { deal: Deal }) {
 
         <Separator />
 
-        {/* Driver photos placeholder */}
-        <div className="space-y-2">
-          <p className="flex items-center gap-1.5 text-sm font-medium">
-            <Camera className="size-4 text-muted-foreground" /> Driver photos (Movauto)
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div
-                key={i}
-                className="flex size-20 items-center justify-center rounded-lg border bg-muted/50 text-muted-foreground"
-              >
-                <ImageIcon className="size-5" />
-              </div>
-            ))}
-          </div>
-          <p className="text-caption text-muted-foreground">Auto-synced to DemSys.</p>
-        </div>
+        <DealPhotos dealId={deal.id} />
 
         <div className="rounded-lg border bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground">
           Replaces the manual Word &ldquo;instructions doc&rdquo;: RMS → CRM → DemSys now carries
