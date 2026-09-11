@@ -169,7 +169,8 @@ export function RouteStagesStep({
   const mapMode = shipmentType === "Air" ? "air" : "ocean";
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+    <div className="flex flex-col gap-6">
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
       {/* left: stages */}
       <div className="min-w-0 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -315,15 +316,16 @@ export function RouteStagesStep({
         </Card>
       </div>
 
-      {/* The shared bar — same place, same shape, as every other step. */}
-      <div className="lg:col-span-2">
-        <ActionBar>
-          <Button variant="outline" onClick={onSaveDraft}><Save className="size-4" /> Save draft</Button>
-          <Button onClick={onContinue} disabled={!canContinue} className="sm:min-w-48">
-            Continue to pricing <ArrowRight className="size-4" />
-          </Button>
-        </ActionBar>
       </div>
+
+      {/* The shared bar — same place, same shape, as every other step.
+          A sibling of the grid, so sticky has the page to travel in. */}
+      <ActionBar>
+        <Button variant="outline" onClick={onSaveDraft}><Save className="size-4" /> Save draft</Button>
+        <Button onClick={onContinue} disabled={!canContinue} className="sm:min-w-48">
+          Continue to pricing <ArrowRight className="size-4" />
+        </Button>
+      </ActionBar>
 
       <OceanSearchDialog open={oceanDialogFor != null} onOpenChange={(o) => !o && setOceanDialogFor(null)} onPick={(c, cost, d) => oceanDialogFor && pickOcean(oceanDialogFor, c, cost, d)} />
     </div>

@@ -188,15 +188,20 @@ export function QuoteSearchWidget({
   const [dest, setDest] = useState<LocationValue | undefined>(initial?.dest);
   const [commodity, setCommodity] = useState<CommoditySelection | undefined>(initial?.commodity);
   /* Extended search is no longer a switch — it is explained in the Schedule &
-     rate sources section instead — so the flag takes a fixed value. It is ON,
-     because the copy beside it tells the Manager those sources ARE searched
-     and the UI must not claim something the search does not do.
+     rate sources section instead — so the flag is a CONSTANT, not seeded state.
 
-     CONSEQUENCE, the one non-visual effect in this change: a search now widens
-     to 8 rate options across contract, tariff, live-API and spot sources
-     rather than 5 contract/tariff ones (lib/quote-engine.ts:193-196).
-     Reverting is this one line. Flagged for product confirmation. */
-  const [advanced] = useState(initial?.advanced ?? true);
+     It must not read `initial.advanced`: a prefilled form (Back to shipping
+     details, Edit shipping details, any History deep link — quote-links.ts
+     encodes advancedSearch: false) would then submit false while the section
+     above it still says "Extended search included", which is exactly the lie
+     this copy must never tell. The old Switch could not lie because it showed
+     the real flag; a sentence can, so the flag is pinned to match it.
+
+     CONSEQUENCE, the one non-visual effect in this change: a search widens to
+     8 rate options across contract, tariff, live-API and spot sources rather
+     than 5 contract/tariff ones (lib/quote-engine.ts:193-196). Reverting means
+     restoring the control, not just this line. Flagged for product. */
+  const advanced = true;
   const [loadingDate, setLoadingDate] = useState(initial?.loadingDate ?? "");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [loading, setLoading] = useState(false);
@@ -285,7 +290,8 @@ export function QuoteSearchWidget({
   const routeComplete = !!(origin && dest);
 
   return (
-    <div className={cn("grid items-start gap-6 lg:grid-cols-12", className)}>
+    <div className={cn("flex flex-col gap-6", className)}>
+      <div className="grid items-start gap-6 lg:grid-cols-12">
       {/* ── Form column ── */}
       <Card className="lg:col-span-7">
         <CardContent className="space-y-7 p-5 sm:p-6">
@@ -417,45 +423,47 @@ export function QuoteSearchWidget({
         )}
       </aside>
 
-      {/* The step's actions, held at the bottom of the viewport. Spans both
-          columns so it is never trapped under the sticky context panel. */}
-      <div className="lg:col-span-12">
-        <ActionBar
-          aside={
-            dirty && !loading ? (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="ghost" className="gap-1.5 text-muted-foreground">
-                    <RotateCcw className="size-4" /> Start over
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Clear the entered shipping details?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      The route, commodity, and shipping details you entered will be removed.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Keep editing</AlertDialogCancel>
-                    <AlertDialogAction onClick={clearAll}>Clear form</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            ) : undefined
-          }
-        >
-          <Button onClick={submit} disabled={loading} aria-busy={loading} className="sm:min-w-48">
-            {loading ? (
-              <>
-                <Spinner className="size-4" /> Checking available rates…
-              </>
-            ) : (
-              ctaLabel
-            )}
-          </Button>
-        </ActionBar>
       </div>
+
+      {/* The step's actions, held at the bottom of the viewport.
+          A SIBLING of the grid, not a cell in it: sticky travels only inside
+          its parent's content box, and a grid item alone in its row is
+          exactly as tall as the bar — 8px of travel, so it never pinned. */}
+      <ActionBar
+        aside={
+          dirty && !loading ? (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" className="gap-1.5 text-muted-foreground">
+                  <RotateCcw className="size-4" /> Start over
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear the entered shipping details?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    The route, commodity, and shipping details you entered will be removed.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Keep editing</AlertDialogCancel>
+                  <AlertDialogAction onClick={clearAll}>Clear form</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : undefined
+        }
+      >
+        <Button onClick={submit} disabled={loading} aria-busy={loading} className="sm:min-w-48">
+          {loading ? (
+            <>
+              <Spinner className="size-4" /> Checking available rates…
+            </>
+          ) : (
+            ctaLabel
+          )}
+        </Button>
+      </ActionBar>
     </div>
   );
 }

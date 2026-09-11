@@ -49,7 +49,12 @@ export function decodeSearch(sp: URLSearchParams | Record<string, string | undef
     commodityLabel: get("cl") ?? "",
     shipmentType: st,
     container: get("ct") as ContainerCode | undefined,
-    advancedSearch: get("adv") === "1",
+    // Extended search is no longer user-controllable (the toggle became
+    // explanatory copy), so it is ON for every search however it arrives —
+    // a typed URL, a History deep link, or the form. Reading `adv` here would
+    // leave links made before the change running contract/tariff only while
+    // the form above them says extended search is included.
+    advancedSearch: true,
     loadingDate: get("ld"),
     condition: get("cond") === "n" ? "inoperable" : undefined,
     dimensions: hasDims

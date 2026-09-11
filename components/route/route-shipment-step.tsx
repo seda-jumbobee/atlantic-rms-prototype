@@ -75,7 +75,8 @@ export function RouteShipmentStep({
   };
 
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-12">
+    <div className="flex flex-col gap-6">
+      <div className="grid items-start gap-6 lg:grid-cols-12">
       {/* form */}
       <Card className="lg:col-span-7">
         <CardContent className="space-y-7 p-5 sm:p-6">
@@ -134,15 +135,16 @@ export function RouteShipmentStep({
         )}
       </aside>
 
-      {/* Same shared bar as Rate Quote step 1 — Custom Route's own actions. */}
-      <div className="lg:col-span-12">
-        <ActionBar>
-          <Button variant="outline" onClick={onSaveDraft}><Save className="size-4" /> Save draft</Button>
-          <Button onClick={submit} className="sm:min-w-48">
-            Continue to build route <ArrowRight className="size-4" />
-          </Button>
-        </ActionBar>
       </div>
+
+      {/* Same shared bar as Rate Quote step 1 — Custom Route's own actions.
+          A sibling of the grid, so sticky has the page to travel in. */}
+      <ActionBar>
+        <Button variant="outline" onClick={onSaveDraft}><Save className="size-4" /> Save draft</Button>
+        <Button onClick={submit} className="sm:min-w-48">
+          Continue to build route <ArrowRight className="size-4" />
+        </Button>
+      </ActionBar>
 
       <AlertDialog open={!!pending} onOpenChange={(o) => !o && setPending(null)}>
         <AlertDialogContent>

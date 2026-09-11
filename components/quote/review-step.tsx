@@ -116,7 +116,8 @@ export function ReviewStep({
   const [internalOpen, setInternalOpen] = useState(true);
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
+    <div className="flex flex-col gap-5">
+      <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
       {/* left: client preview + internal summary */}
       <div className="min-w-0 space-y-4">
         {/* Client preview */}
@@ -276,19 +277,20 @@ export function ReviewStep({
         {reminder}
       </div>
 
-      {/* Sending the quote is the point of this step, so it is held at the
-          bottom of the viewport rather than parked in a side rail that
-          scrolls. The lower-emphasis actions stay on the right. */}
-      <div className="lg:col-span-2">
-        <ActionBar innerClassName="sm:justify-center">
-          <PdfPreview payload={payload} trigger={
-            <Button variant="outline"><FileDown className="size-4" /> Preview PDF</Button>
-          } />
-          <SendViaFrontDialog payload={payload} trigger={
-            <Button className="sm:min-w-48"><Send className="size-4" /> Send via Front</Button>
-          } />
-        </ActionBar>
       </div>
+
+      {/* Sending the quote is the point of this step, so it is held at the
+          bottom of the viewport rather than parked in a side rail that scrolls.
+          A SIBLING of the grid: as a grid item it was its own row, exactly as
+          tall as itself, and sticky had nowhere to travel. */}
+      <ActionBar innerClassName="sm:justify-center">
+        <PdfPreview payload={payload} trigger={
+          <Button variant="outline"><FileDown className="size-4" /> Preview PDF</Button>
+        } />
+        <SendViaFrontDialog payload={payload} trigger={
+          <Button className="sm:min-w-48"><Send className="size-4" /> Send via Front</Button>
+        } />
+      </ActionBar>
     </div>
   );
 }

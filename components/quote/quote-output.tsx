@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader,
+  DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { CarrierName } from "@/components/carrier-name";
@@ -72,53 +73,57 @@ export function PdfPreview({ payload: p, trigger }: { payload: OutputPayload; tr
       </DialogTrigger>
       <DialogContent>
         <DialogHeader className="sr-only"><DialogTitle>Quote PDF preview</DialogTitle></DialogHeader>
-        {/* client document */}
-        <div className="space-y-4 rounded-lg border bg-card p-6 text-sm text-card-foreground">
-          <div className="flex items-start justify-between border-b pb-3">
-            <div>
-              <div className="text-lg font-semibold">Quote {p.quoteId}</div>
-              <div className="text-xs text-muted-foreground">Issued {fmtDate(new Date().toISOString())} · Valid through {fmtDate(p.validTo)}</div>
+        {/* The client document is the one long thing in this modal, so it
+            is the scrolling region — without it the height cap clips it and
+            takes Download PDF with it. */}
+        <DialogBody>
+          <div className="space-y-4 rounded-lg border bg-card p-6 text-sm text-card-foreground">
+            <div className="flex items-start justify-between border-b pb-3">
+              <div>
+                <div className="text-lg font-semibold">Quote {p.quoteId}</div>
+                <div className="text-xs text-muted-foreground">Issued {fmtDate(new Date().toISOString())} · Valid through {fmtDate(p.validTo)}</div>
+              </div>
+              <div className="flex items-center gap-2"><LogoMark className="size-9" /><div className="text-right text-xs leading-tight"><div className="font-semibold">Atlantic Project Cargo</div><div className="text-muted-foreground">Rate Management</div></div></div>
             </div>
-            <div className="flex items-center gap-2"><LogoMark className="size-9" /><div className="text-right text-xs leading-tight"><div className="font-semibold">Atlantic Project Cargo</div><div className="text-muted-foreground">Rate Management</div></div></div>
-          </div>
 
-          <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
-            <span><b>Lane:</b> {p.ref.origin} → {p.ref.destination}</span>
-            <span><b>Commodity:</b> {p.ref.commodityLabel}</span>
-            <span><b>Mode:</b> {p.ref.shipmentType}</span>
-            <span><b>Transit:</b> ~{p.transitDays} days</span>
-            {p.showCarrier && p.carrierId && <span className="inline-flex items-center gap-1"><b>Carrier:</b> <CarrierName carrierId={p.carrierId} /></span>}
-          </div>
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
+              <span><b>Lane:</b> {p.ref.origin} → {p.ref.destination}</span>
+              <span><b>Commodity:</b> {p.ref.commodityLabel}</span>
+              <span><b>Mode:</b> {p.ref.shipmentType}</span>
+              <span><b>Transit:</b> ~{p.transitDays} days</span>
+              {p.showCarrier && p.carrierId && <span className="inline-flex items-center gap-1"><b>Carrier:</b> <CarrierName carrierId={p.carrierId} /></span>}
+            </div>
 
-          {!p.allInOnly ? (
-            <>
-              {/* Client-facing: one price per service — surcharges consolidated, never itemized */}
-              <table className="w-full border-t text-xs">
-                <thead className="text-muted-foreground"><tr><th className="py-1 text-left">Service</th><th className="py-1 text-right">Amount</th></tr></thead>
-                <tbody>
-                  {p.lines.map((l) => (
-                    <tr key={l.id} className="border-t">
-                      <td className="py-1 font-medium">{l.title}</td>
-                      <td className="py-1 text-right tabular-nums">{money(l.amount)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <p className="text-caption text-muted-foreground">Each service is quoted all-in. Carrier surcharges are included in the service price.</p>
-            </>
-          ) : (
-            <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">All-in price only — itemized breakdown hidden for the client.</p>
-          )}
+            {!p.allInOnly ? (
+              <>
+                {/* Client-facing: one price per service — surcharges consolidated, never itemized */}
+                <table className="w-full border-t text-xs">
+                  <thead className="text-muted-foreground"><tr><th className="py-1 text-left">Service</th><th className="py-1 text-right">Amount</th></tr></thead>
+                  <tbody>
+                    {p.lines.map((l) => (
+                      <tr key={l.id} className="border-t">
+                        <td className="py-1 font-medium">{l.title}</td>
+                        <td className="py-1 text-right tabular-nums">{money(l.amount)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="text-caption text-muted-foreground">Each service is quoted all-in. Carrier surcharges are included in the service price.</p>
+              </>
+            ) : (
+              <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">All-in price only — itemized breakdown hidden for the client.</p>
+            )}
 
-          <div className="flex items-center justify-between border-t pt-3">
-            <span className="text-sm font-medium">All-in price</span>
-            <span className="text-xl font-bold">{money(p.clientTotal)} {p.currency}</span>
+            <div className="flex items-center justify-between border-t pt-3">
+              <span className="text-sm font-medium">All-in price</span>
+              <span className="text-xl font-bold">{money(p.clientTotal)} {p.currency}</span>
+            </div>
+            <p className="text-caption leading-relaxed text-muted-foreground">
+              Rates subject to space & equipment availability at time of booking. Surcharges valid as of issue date.
+              Generated by Atlantic RMS.
+            </p>
           </div>
-          <p className="text-caption leading-relaxed text-muted-foreground">
-            Rates subject to space & equipment availability at time of booking. Surcharges valid as of issue date.
-            Generated by Atlantic RMS.
-          </p>
-        </div>
+        </DialogBody>
         <DialogFooter>
           <Button className="gap-1.5" onClick={() => toast.success("PDF generated", { description: `${p.quoteId}.pdf ready to download.` })}>
             <FileDown className="size-4" /> Download PDF
