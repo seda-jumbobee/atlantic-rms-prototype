@@ -1,6 +1,7 @@
 import type { QuoteHistoryItem, CalcHistoryItem } from "@/lib/data/history";
 import type { ShipmentType } from "@/lib/types";
 import { CALCULATORS } from "@/lib/data/calculators";
+import { getPort } from "@/lib/data/ports";
 import { encodeSearch } from "@/lib/search-params";
 
 // Resolve a history lane back into Quote Master search params so a saved quote can be reopened & edited.
@@ -13,6 +14,17 @@ const PORT_BY_CITY: Record<string, string> = {
 
 function resolvePort(loc: string): string | undefined {
   return PORT_BY_CITY[loc.split(",")[0].trim()];
+}
+
+/** ISO2 for a history lane's origin/destination string.
+    History stores a lane as free text ("Houston, TX", "Shanghai, China") with
+    no country field, so the country is resolved through the port each city
+    already maps to above rather than by parsing the string — the inland US
+    cities point at their nearest US port, which is the right country anyway.
+    Undefined where a city has no mapping, so a flag is only ever drawn for a
+    location we can actually name a country for. */
+export function laneCountryCode(loc: string): string | undefined {
+  return getPort(resolvePort(loc))?.countryCode;
 }
 
 function shipmentFromLabel(s: string): ShipmentType {

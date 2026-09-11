@@ -3,7 +3,7 @@
 import Link from "next/link";
 import {
   Sparkles, Calculator, ArrowRight, FileText, Briefcase, TrendingUp,
-  LayoutTemplate, Pencil, Send, ExternalLink, Route,
+  LayoutTemplate, Route,
   type LucideIcon,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -12,6 +12,8 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { IconTile } from "@/components/stat-card";
 import { QuoteStatusBadge } from "@/components/status-badge";
+import { CountryFlag } from "@/components/location-label";
+import { LinkedTableRow } from "@/components/linked-table-row";
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
@@ -20,7 +22,7 @@ import { QUOTE_HISTORY, CALC_HISTORY } from "@/lib/data/history";
 import type { QuoteHistoryItem, CalcHistoryItem } from "@/lib/data/history";
 import { DEALS } from "@/lib/data/deals";
 import { money, fmtDate, relativeAge } from "@/lib/format";
-import { reopenHref, calculatorHref } from "@/lib/quote-links";
+import { laneCountryCode } from "@/lib/quote-links";
 
 /* ============================================================================
    Dashboard — Figma "04 - Screens / Dashboard" (77:1075).
@@ -37,6 +39,18 @@ const QUOTE_TYPE_LABEL: Record<QuoteHistoryItem["quoteType"], string> = {
 
 /** City without the state/country qualifier, for the narrow route columns. */
 const city = (loc: string) => loc.split(",")[0].trim();
+
+/** A lane end: the city, with the flag of the country it sits in. The flag is
+    set one step below the row text so it reads as a marker beside the place
+    rather than as the subject of the cell. */
+function LaneCell({ location }: { location: string }) {
+  return (
+    <span className="flex min-w-0 items-center gap-1.5">
+      <CountryFlag cc={laneCountryCode(location)} className="text-sm" />
+      <span className="truncate">{city(location)}</span>
+    </span>
+  );
+}
 
 /* ── KPI card ─────────────────────────────────────────────────────────── */
 function KpiCard({
@@ -84,15 +98,15 @@ function PromoCard() {
     // border-0, not a transparent border: a gradient is sized to the padding
     // box but painted to the border box and repeats, so a 1px border leaves a
     // strip of the next tile — the 100% stop — down the right edge.
-    <Card className="relative min-w-0 justify-end border-0 bg-[image:var(--c-promo-gradient)] bg-origin-border p-8">
+    <Card className="relative min-w-0 justify-end border-0 bg-[image:var(--c-promo-gradient)] bg-origin-border p-6">
       <div className="relative flex max-w-md flex-col gap-2">
-        <h2 className="text-h2 text-[color:var(--c-promo-foreground)]">Need to check rates?</h2>
+        <h2 className="text-h3 text-[color:var(--c-promo-foreground)]">Need to check rates?</h2>
         <p className="text-body text-[color:var(--c-promo-muted)]">
           Check available rates using commodity-specific formulas and contract rates, or use
           custom route.
         </p>
       </div>
-      <div className="relative mt-6 flex flex-wrap gap-3">
+      <div className="relative mt-5 flex flex-wrap gap-2">
         <Button asChild>
           <Link href="/quote-master">Create rate quote</Link>
         </Button>
@@ -211,25 +225,24 @@ export default function DashboardPage() {
   const historyHref = (params: Record<string, string>) =>
     `/history?${new URLSearchParams(uid ? { manager: uid, ...params } : params)}`;
 
+  // One destination for a quote from this page: its record in History, which is
+  // the quote's detail view and already carries every per-quote action the
+  // dashboard used to duplicate inline (continue editing, edit & resend,
+  // resend, duplicate, open deal).
+  const quoteDetailsHref = (q: QuoteHistoryItem) =>
+    historyHref({ tab: "quotes", record: q.id });
+  const calcDetailsHref = (c: CalcHistoryItem) =>
+    historyHref({ tab: "calculations", record: c.id });
+
+  // Every row offers the same thing, so a reader learns the column once.
+  // Previously a row showed Edit or Resend depending on status, plus a Deal
+  // button only where a deal existed — three different rows in one column.
   const quoteActions = (q: QuoteHistoryItem) => (
-    <div className="flex items-center gap-1">
-      {q.dealId && (
-        <Button asChild variant="ghost" size="sm" className="px-2">
-          <Link href={`/deals/${q.dealId}`} aria-label={`Open the deal for ${q.id}`}>
-            <ExternalLink aria-hidden className="size-4" /> Deal
-          </Link>
-        </Button>
-      )}
-      <Button asChild variant="ghost" size="sm" className="px-2">
-        <Link
-          href={reopenHref(q)}
-          aria-label={`${q.status === "sent" ? "Resend" : "Edit"} quote ${q.id}`}
-        >
-          {q.status === "sent" ? <Send aria-hidden className="size-4" /> : <Pencil aria-hidden className="size-4" />}
-          {q.status === "sent" ? "Resend" : "Edit"}
-        </Link>
-      </Button>
-    </div>
+    <Button asChild variant="ghost" size="sm" className="px-2">
+      <Link href={quoteDetailsHref(q)} aria-label={`Open quote ${q.id}`}>
+        Open <ArrowRight aria-hidden className="size-4" />
+      </Link>
+    </Button>
   );
 
   const calcResult = (c: CalcHistoryItem) =>
@@ -244,8 +257,8 @@ export default function DashboardPage() {
 
       {/* 1 · Overview + promo. The KPI block and the promo sit side by side on
              wide screens, exactly as in the reference; below xl they stack. */}
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-        <section aria-label="Overview" className="grid gap-6 sm:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <section aria-label="Overview" className="grid gap-4 sm:grid-cols-2">
           <KpiCard
             label="Active quotes"
             value={activeQuotes.length}
@@ -306,10 +319,9 @@ export default function DashboardPage() {
                   <TableRow className="hover:bg-transparent">
                     <TableHead>Quote</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead>Customer</TableHead>
                     <TableHead>Origin</TableHead>
                     <TableHead>Destination</TableHead>
-                    <TableHead className="text-right">Client total</TableHead>
+                    <TableHead>Total price</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Last updated</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -317,10 +329,10 @@ export default function DashboardPage() {
                 </TableHeader>
                 <TableBody>
                   {recentQuotes.map((q) => (
-                    <TableRow key={q.id}>
+                    <LinkedTableRow key={q.id} href={quoteDetailsHref(q)}>
                       <TableCell>
                         <Link
-                          href={reopenHref(q)}
+                          href={quoteDetailsHref(q)}
                           className="font-mono text-caption font-medium text-primary hover:underline"
                         >
                           {q.id}
@@ -329,10 +341,9 @@ export default function DashboardPage() {
                       <TableCell className="text-body text-muted-foreground">
                         {QUOTE_TYPE_LABEL[q.quoteType]}
                       </TableCell>
-                      <TableCell className="max-w-56 truncate text-body">{q.customer}</TableCell>
-                      <TableCell className="text-body">{city(q.origin)}</TableCell>
-                      <TableCell className="text-body">{city(q.destination)}</TableCell>
-                      <TableCell className="text-right font-medium tabular-nums">{money(q.total)}</TableCell>
+                      <TableCell className="text-body"><LaneCell location={q.origin} /></TableCell>
+                      <TableCell className="text-body"><LaneCell location={q.destination} /></TableCell>
+                      <TableCell className="font-medium tabular-nums">{money(q.total)}</TableCell>
                       <TableCell><QuoteStatusBadge status={q.status} /></TableCell>
                       <TableCell className="text-body text-muted-foreground">
                         <span title={fmtDate(q.updatedAt)}>{relativeAge(q.updatedAt)}</span>
@@ -340,7 +351,7 @@ export default function DashboardPage() {
                       <TableCell>
                         <div className="flex justify-end">{quoteActions(q)}</div>
                       </TableCell>
-                    </TableRow>
+                    </LinkedTableRow>
                   ))}
                 </TableBody>
               </Table>
@@ -352,15 +363,14 @@ export default function DashboardPage() {
                 <MobileRow key={q.id}>
                   <dl className="col-span-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
                     <Cell label="Quote">
-                      <Link href={reopenHref(q)} className="font-mono text-caption font-medium text-primary">
+                      <Link href={quoteDetailsHref(q)} className="font-mono text-caption font-medium text-primary">
                         {q.id}
                       </Link>
                     </Cell>
                     <Cell label="Type">{QUOTE_TYPE_LABEL[q.quoteType]}</Cell>
-                    <Cell label="Customer">{q.customer}</Cell>
-                    <Cell label="Origin">{city(q.origin)}</Cell>
-                    <Cell label="Destination">{city(q.destination)}</Cell>
-                    <Cell label="Client total"><span className="tabular-nums">{money(q.total)}</span></Cell>
+                    <Cell label="Origin"><LaneCell location={q.origin} /></Cell>
+                    <Cell label="Destination"><LaneCell location={q.destination} /></Cell>
+                    <Cell label="Total price"><span className="tabular-nums">{money(q.total)}</span></Cell>
                     <Cell label="Status"><QuoteStatusBadge status={q.status} /></Cell>
                     <Cell label="Last updated">{relativeAge(q.updatedAt)}</Cell>
                   </dl>
@@ -401,7 +411,7 @@ export default function DashboardPage() {
                   <TableRow className="hover:bg-transparent">
                     <TableHead>Calculator</TableHead>
                     <TableHead>Inputs</TableHead>
-                    <TableHead className="text-right">Result</TableHead>
+                    <TableHead>Total price</TableHead>
                     <TableHead>Unit</TableHead>
                     <TableHead>Related quote</TableHead>
                     <TableHead>Calculated</TableHead>
@@ -410,20 +420,24 @@ export default function DashboardPage() {
                 </TableHeader>
                 <TableBody>
                   {recentCalcs.map((c) => (
-                    <TableRow key={c.id}>
+                    <LinkedTableRow key={c.id} href={calcDetailsHref(c)}>
                       <TableCell className="font-medium">{c.calculator}</TableCell>
                       <TableCell className="max-w-80 truncate text-body text-muted-foreground">
                         {c.summary}
                       </TableCell>
-                      <TableCell className="text-right font-medium tabular-nums">{calcResult(c)}</TableCell>
+                      <TableCell className="font-medium tabular-nums">{calcResult(c)}</TableCell>
                       <TableCell className="text-body text-muted-foreground">
                         {c.unit ?? <span aria-hidden>—</span>}
                         {!c.unit && <span className="sr-only">not applicable</span>}
                       </TableCell>
                       <TableCell>
                         {c.relatedQuoteId ? (
+                          // Opens the QUOTE, not the calculation. LinkedTableRow
+                          // leaves clicks that start on a link alone, so this
+                          // reaches its own destination rather than the row's.
                           <Link
                             href={historyHref({ tab: "quotes", record: c.relatedQuoteId })}
+                            aria-label={`Open related quote ${c.relatedQuoteId}`}
                             className="font-mono text-caption font-medium text-primary hover:underline"
                           >
                             {c.relatedQuoteId}
@@ -441,13 +455,13 @@ export default function DashboardPage() {
                       <TableCell>
                         <div className="flex justify-end">
                           <Button asChild variant="ghost" size="sm" className="px-2">
-                            <Link href={calculatorHref(c)} aria-label={`Open ${c.calculator}`}>
-                              <Calculator aria-hidden className="size-4" /> Open
+                            <Link href={calcDetailsHref(c)} aria-label={`Open calculation ${c.id}`}>
+                              Open <ArrowRight aria-hidden className="size-4" />
                             </Link>
                           </Button>
                         </div>
                       </TableCell>
-                    </TableRow>
+                    </LinkedTableRow>
                   ))}
                 </TableBody>
               </Table>
@@ -459,15 +473,24 @@ export default function DashboardPage() {
                   <dl className="col-span-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
                     <Cell label="Calculator"><span className="font-medium">{c.calculator}</span></Cell>
                     <Cell label="Inputs">{c.summary}</Cell>
-                    <Cell label="Result"><span className="tabular-nums">{calcResult(c)}</span></Cell>
+                    <Cell label="Total price"><span className="tabular-nums">{calcResult(c)}</span></Cell>
                     <Cell label="Unit">{c.unit ?? "—"}</Cell>
-                    <Cell label="Related quote">{c.relatedQuoteId ?? "—"}</Cell>
+                    <Cell label="Related quote">
+                      {c.relatedQuoteId ? (
+                        <Link
+                          href={historyHref({ tab: "quotes", record: c.relatedQuoteId })}
+                          className="font-mono text-caption font-medium text-primary"
+                        >
+                          {c.relatedQuoteId}
+                        </Link>
+                      ) : "—"}
+                    </Cell>
                     <Cell label="Calculated">{relativeAge(c.createdAt)}</Cell>
                   </dl>
                   <div className="col-span-2 pt-1">
                     <Button asChild variant="ghost" size="sm" className="px-2">
-                      <Link href={calculatorHref(c)}>
-                        <Calculator aria-hidden className="size-4" /> Open
+                      <Link href={calcDetailsHref(c)}>
+                        Open <ArrowRight aria-hidden className="size-4" />
                       </Link>
                     </Button>
                   </div>
