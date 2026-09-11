@@ -452,6 +452,23 @@
   --c-card-bg: var(--card);
   --c-card-border: var(--border-divider);
 
+  /* ── decorative accents ───────────────────────────────────────────────
+     Tinted tiles behind a tool or category glyph. These carry NO meaning:
+     every surface that uses them also names the thing in words and badges
+     its category, so the hue is free to vary purely so a dense grid of
+     cards reads as a grid rather than a wall. Red is deliberately absent —
+     on a tool tile it would read as an error.
+     Each glyph was measured on its own tint; all clear 4.5, far past the
+     3:1 that WCAG 1.4.11 asks of a meaningful graphic. */
+  --c-accent-indigo-bg: var(--p-primary-100);
+  --c-accent-indigo-fg: var(--p-primary-700);   /* 9.5077 */
+  --c-accent-violet-bg: var(--p-info-subtle);
+  --c-accent-violet-fg: var(--p-info-text);     /* 6.9974 */
+  --c-accent-green-bg: var(--p-success-subtle);
+  --c-accent-green-fg: var(--p-success-text);   /* 4.8140 */
+  --c-accent-amber-bg: var(--p-secondary-100);
+  --c-accent-amber-fg: var(--p-secondary-700);  /* 6.5881 */
+
   /* promo/hero surface — the one gradient in the system. Warm secondary tint
      into brand indigo; text on it is always white or neutral/200. */
   --c-promo-from: var(--p-secondary-100);

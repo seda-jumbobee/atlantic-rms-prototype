@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/page-header";
+import { AccentTile, accentAt, type Accent } from "@/components/accent-tile";
 import { CALCULATORS, CALCULATOR_CATEGORY_LABEL, CALC_HISTORY } from "@/lib/data";
 import { calculatorHref } from "@/lib/quote-links";
 import { useSession } from "@/components/session-provider";
@@ -23,6 +24,13 @@ const ICONS: Record<string, LucideIcon> = {
   Ship, Truck, Forklift, CarFront, Container, Maximize, Box, TruckElectric, Ruler, Plane, Timer, ShieldCheck, Landmark, Calculator,
 };
 const iconFor = (name: string) => ICONS[name] ?? Calculator;
+
+/* Accent per calculator, keyed off its position in the full catalogue rather
+   than the filtered view — so a card keeps its colour when you switch tab or
+   type a search, and the unfiltered grid never repeats a hue side by side. */
+const ACCENT_BY_ID: Record<string, Accent> = Object.fromEntries(
+  CALCULATORS.map((c, i) => [c.id, accentAt(i)]),
+);
 
 type Tab = "all" | CalculatorCategory | "recent";
 const CAT_ORDER: CalculatorCategory[] = ["freight-routing", "cargo-equipment", "costs-compliance"];
@@ -124,12 +132,12 @@ function Count({ n }: { n: number }) {
 function CalculatorCard({ c }: { c: CalculatorMeta }) {
   const Icon = iconFor(c.icon);
   return (
-    <Link href={`/calculators/${c.id}`} className="group rounded-lg outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
+    <Link href={`/calculators/${c.id}`} className="group rounded-card outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
       <Card className="flex h-full flex-col gap-3 p-4 transition group-hover:border-primary/40 group-hover:shadow-sm">
         <div className="flex items-start justify-between gap-3">
-          <div className="grid size-10 place-items-center rounded-lg bg-muted text-primary transition group-hover:bg-primary/10">
-            <Icon className="size-5" />
-          </div>
+          <AccentTile accent={ACCENT_BY_ID[c.id]}>
+            <Icon aria-hidden className="size-5" />
+          </AccentTile>
           <div className="flex flex-wrap items-center justify-end gap-1.5">
             {c.toolType === "rate-search" && <Badge variant="status-info" className="text-caption">Rate search</Badge>}
             <Badge variant="secondary" className="text-caption">{CALCULATOR_CATEGORY_LABEL[c.category]}</Badge>
@@ -139,9 +147,12 @@ function CalculatorCard({ c }: { c: CalculatorMeta }) {
           <div className="font-medium leading-snug">{c.name}</div>
           <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{c.description}</p>
         </div>
-        <div className="flex items-center gap-1 text-sm font-medium text-primary">
+        {/* Divider, then the action: the footer reads as a control rather than
+            as one more line of the description. The arrow is present at rest —
+            it is what marks the row as something you can press. */}
+        <div className="flex items-center gap-1 border-t border-[var(--c-card-border)] pt-3 text-sm font-medium text-primary">
           {c.toolType === "rate-search" ? "Find rates" : "Open"}
-          <ArrowRight className="size-4 -translate-x-1 opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100" />
+          <ArrowRight aria-hidden className="size-4 transition-transform group-hover:translate-x-0.5" />
         </div>
       </Card>
     </Link>

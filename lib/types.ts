@@ -277,6 +277,10 @@ export interface QuoteLeg {
   mode?: "Truck" | "Rail" | "Ocean" | "Air" | "Handling";
   from: string;
   to: string;
+  /** ISO2 of the country `to` names, where it names a real place. Display
+      only — it lets the leg draw the same country flag every other location
+      in the product draws, and is never read by the pricing engine. */
+  toCountryCode?: string;
   vendorId?: string;
   carrierId?: string;
   dataSourceId?: string;

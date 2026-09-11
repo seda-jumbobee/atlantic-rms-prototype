@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Anchor, ArrowLeftRight, Info, MapPin, RotateCcw } from "lucide-react";
+import { ArrowLeftRight, Info, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,7 @@ import {
   CommodityPicker, RequiredMark, COMMODITY_KIND_LABEL, type CommoditySelection,
 } from "@/components/commodity-picker";
 import { MapPreview, type MapPoint } from "@/components/map-preview";
+import { LocationLabel, locationPoint } from "@/components/location-label";
 import { PORTS, ADDRESSES } from "@/lib/data/ports";
 import { CONTAINER_LABEL } from "@/lib/data/containers";
 import type { SearchInput } from "@/lib/quote-engine";
@@ -57,24 +58,19 @@ function mapPoint(v?: LocationValue): MapPoint | undefined {
   return rec ? { lat: rec.lat, lng: rec.lng, label: shortLoc(v) } : undefined;
 }
 
-/** Emoji flag derived from the location's ISO country code (dynamic per selection). */
-function flagEmoji(v?: LocationValue): string | null {
-  if (!v) return null;
-  const rec = v.kind === "port" ? PORTS.find((p) => p.id === v.id) : ADDRESSES.find((a) => a.id === v.id);
-  const cc = rec?.countryCode;
-  if (!cc || cc.length !== 2) return null;
-  return String.fromCodePoint(...[...cc.toUpperCase()].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
-}
-
 function LocationRow({ label, value }: { label: string; value: LocationValue }) {
-  const Icon = value.kind === "port" ? Anchor : MapPin;
+  const point = locationPoint(value.kind, value.id);
   return (
     <div className="flex items-center justify-between gap-3 text-sm">
       <dt className="shrink-0 text-muted-foreground">{label}</dt>
-      <dd className="flex min-w-0 items-center justify-end gap-1.5 text-right font-medium">
-        <Icon aria-hidden className="size-3.5 shrink-0 text-primary" />
-        {flagEmoji(value) && <span aria-hidden className="shrink-0 text-sm leading-none">{flagEmoji(value)}</span>}
-        <span className="truncate">{value.label}</span>
+      <dd className="flex min-w-0 justify-end text-right">
+        {point ? (
+          // The picked label is already composed (city, country · LOCODE), so
+          // the code is not repeated after it.
+          <LocationLabel point={point} name={value.label} showCode={false} />
+        ) : (
+          <span className="truncate font-bold">{value.label}</span>
+        )}
       </dd>
     </div>
   );

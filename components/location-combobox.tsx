@@ -1,12 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Anchor, MapPin, Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { CountryFlag, LOCATION_NAME_CLASS, locationPoint } from "@/components/location-label";
 import { PORTS, ADDRESSES } from "@/lib/data/ports";
 
 export interface LocationValue {
@@ -88,9 +89,12 @@ export function LocationCombobox({
           <PopoverTrigger asChild>
             <Button id={id} variant="outline" role="combobox" aria-describedby={describedBy} aria-invalid={invalid || undefined} className="h-10 w-full justify-between border-[var(--c-input-border)] text-left font-normal hover:border-[var(--c-input-border-hover)]">
               {value ? (
-                <span className="flex min-w-0 flex-1 items-center gap-2">
-                  {value.kind === "port" ? <Anchor className="size-4 shrink-0 text-primary" /> : <MapPin className="size-4 shrink-0 text-status-info-fg" />}
-                  <span ref={valueRef} className="min-w-0 truncate">{value.label}</span>
+                <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                  <CountryFlag cc={locationPoint(value.kind, value.id)?.countryCode} />
+                  <span className="sr-only">{value.kind === "port" ? "Port:" : "Address:"}</span>
+                  <span ref={valueRef} className={cn("min-w-0 truncate", LOCATION_NAME_CLASS)}>
+                    {value.label}
+                  </span>
                 </span>
               ) : (
                 <span className="min-w-0 flex-1 truncate text-left text-muted-foreground">{placeholder}</span>
@@ -122,8 +126,8 @@ export function LocationCombobox({
                     onSelect={disabled ? undefined : () => { onChange({ kind: "port", id: p.id, label }); setOpen(false); }}
                     className={cn("[&>svg:last-child]:hidden", disabled && disabledCls)}
                   >
-                    <Anchor className="size-4 shrink-0 text-primary" />
-                    <OptionName text={`${p.name}, ${p.country}`} full={label} className="min-w-0 flex-1" />
+                    <CountryFlag cc={p.countryCode} />
+                    <OptionName text={`${p.name}, ${p.country}`} full={label} className={cn("min-w-0 flex-1", LOCATION_NAME_CLASS)} />
                     {disabled ? (
                       <span className="shrink-0 text-xs text-muted-foreground">{disabledReason}</span>
                     ) : (
@@ -147,8 +151,8 @@ export function LocationCombobox({
                     onSelect={disabled ? undefined : () => { onChange({ kind: "address", id: a.id, label: a.label }); setOpen(false); }}
                     className={cn("[&>svg:last-child]:hidden", disabled && disabledCls)}
                   >
-                    <MapPin className="size-4 shrink-0 text-status-info-fg" />
-                    <OptionName text={a.label} full={a.label} className="min-w-0 flex-1" />
+                    <CountryFlag cc={a.countryCode} />
+                    <OptionName text={a.label} full={a.label} className={cn("min-w-0 flex-1", LOCATION_NAME_CLASS)} />
                     {disabled ? (
                       <span className="shrink-0 text-xs text-muted-foreground">{disabledReason}</span>
                     ) : (

@@ -152,6 +152,9 @@ export function RouteBuilder() {
         </DropdownMenu>
       </PageHeader>
 
+      {/* Progress first — where you are in the flow reads before what you are routing. */}
+      <FlowProgress steps={STEPS} current={step} onStepClick={onStepClick} ariaLabel="Custom route progress" />
+
       {/* Shared back nav + shipment summary across Build route / Set pricing / Review & send */}
       {step > 0 && input && (
         <div className="space-y-4">
@@ -167,8 +170,6 @@ export function RouteBuilder() {
           <ShipmentSummary input={input} onEdit={() => setStep(0)} />
         </div>
       )}
-
-      <FlowProgress steps={STEPS} current={step} onStepClick={onStepClick} ariaLabel="Custom route progress" />
 
       {step === 0 && (
         <RouteShipmentStep

@@ -1,7 +1,6 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { StatusBadge } from "@/components/status-badge";
 import { cn } from "@/lib/utils";
 
 export interface FlowStep {
@@ -13,6 +12,10 @@ type State = "done" | "active" | "upcoming";
 
 /* ============================================================================
    Step progress for the Rate Quote and Custom Route flows.
+
+   Layout: every step is flush to the left of its column — node, caption and
+   label share one left edge, and the connector fills the gap to the right.
+   Nothing is centred, so the track starts at the content's left margin.
 
    Colour follows the supplied reference: finished steps are the design
    system's success green, the step underway is the brand secondary accent.
@@ -26,14 +29,15 @@ type State = "done" | "active" | "upcoming";
        ramp, visible at stroke width.
    Success green carries a white check at 4.5184 and rules at 4.5184.
 
-   State is never carried by colour alone: each node also has a distinct
-   glyph, each step a written status, and the current one aria-current.
+   State is never carried by colour alone: each node has a distinct glyph, the
+   current step is aria-current, and the written status — no longer drawn as a
+   chip — is still announced via an sr-only word.
    ========================================================================= */
 
-const STATUS: Record<State, { label: string; tone: "positive" | "brand" | "neutral" }> = {
-  done: { label: "Completed", tone: "positive" },
-  active: { label: "In progress", tone: "brand" },
-  upcoming: { label: "Pending", tone: "neutral" },
+const STATUS: Record<State, string> = {
+  done: "Completed",
+  active: "In progress",
+  upcoming: "Pending",
 };
 
 function Node({ state }: { state: State }) {
@@ -58,8 +62,8 @@ function Node({ state }: { state: State }) {
   );
 }
 
-/** One half of the rule that runs between two nodes. */
-function Rule({ tone }: { tone: "done" | "active" | "idle" | "none" }) {
+/** The connector leaving a node, filling the rest of that step's column. */
+function Rule({ tone }: { tone: "done" | "active" | "idle" }) {
   return (
     <span
       aria-hidden
@@ -68,7 +72,6 @@ function Rule({ tone }: { tone: "done" | "active" | "idle" | "none" }) {
         tone === "done" && "bg-success",
         tone === "active" && "bg-gradient-to-r from-brand-secondary-active to-border-divider",
         tone === "idle" && "bg-border-divider",
-        tone === "none" && "bg-transparent",
       )}
     />
   );
@@ -97,9 +100,8 @@ export function FlowProgress({
       >
         {steps.map((s, i) => {
           const state = stateOf(i);
-          const status = STATUS[state];
           const body = (
-            <span className="flex flex-col items-center gap-1 px-1 text-center">
+            <span className="flex flex-col items-start gap-1 pr-3 text-left">
               <span className="text-caption tracking-wide text-fg-tertiary uppercase">
                 Step {i + 1}
               </span>
@@ -111,22 +113,19 @@ export function FlowProgress({
               >
                 {s.label}
               </span>
-              <StatusBadge tone={status.tone} dot={false} className="mt-0.5">
-                {status.label}
-              </StatusBadge>
+              {/* The chip is gone from the design; the word is not, or state
+                  would reach a screen reader as colour only. */}
+              <span className="sr-only">{STATUS[state]}</span>
             </span>
           );
 
           return (
-            <li key={s.key} className="flex min-w-0 flex-col items-center gap-3">
-              <span className="flex w-full items-center gap-1">
-                <Rule tone={i === 0 ? "none" : i <= current ? "done" : "idle"} />
+            <li key={s.key} className="flex min-w-0 flex-col items-start gap-3">
+              <span className="flex w-full items-center gap-2">
                 <Node state={state} />
-                <Rule
-                  tone={
-                    i === steps.length - 1 ? "none" : state === "done" ? "done" : state === "active" ? "active" : "idle"
-                  }
-                />
+                {i < steps.length - 1 && (
+                  <Rule tone={state === "done" ? "done" : state === "active" ? "active" : "idle"} />
+                )}
               </span>
 
               {state === "done" ? (
@@ -134,7 +133,7 @@ export function FlowProgress({
                   type="button"
                   onClick={() => onStepClick(i)}
                   aria-label={`Back to ${s.label}`}
-                  className="rounded-md transition-opacity hover:opacity-75"
+                  className="rounded-md text-left transition-opacity hover:opacity-75"
                 >
                   {body}
                 </button>
@@ -149,11 +148,11 @@ export function FlowProgress({
       {/* below sm — four columns of labels will not fit, so the nodes carry the
           shape of the flow and one line says where you are */}
       <div className="flex flex-col gap-2 sm:hidden">
-        <ol className="flex items-center gap-1">
+        <ol className="flex items-center gap-2">
           {steps.map((s, i) => {
             const state = stateOf(i);
             return (
-              <li key={s.key} className="flex min-w-0 flex-1 items-center gap-1 last:flex-none">
+              <li key={s.key} className="flex min-w-0 flex-1 items-center gap-2 last:flex-none">
                 {state === "done" ? (
                   <button
                     type="button"

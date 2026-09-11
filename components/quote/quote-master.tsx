@@ -133,6 +133,10 @@ export function QuoteMaster() {
         description="Check available rates and create a client quote using commodity-specific formulas and contract rates."
       />
 
+      {/* Progress first — where you are in the flow reads before what you are
+          quoting. Full main-content width. */}
+      <FlowProgress steps={STEPS} current={stepIndex} onStepClick={goToStep} ariaLabel="Quote progress" />
+
       {/* Shared back navigation + shipment summary — consistent across Choose rate,
           Set pricing, and Review & send so the Manager always knows the context. */}
       {input && !showSearch && (
@@ -149,9 +153,6 @@ export function QuoteMaster() {
           <ShipmentSummary input={input} onEdit={() => setEditingSearch(true)} />
         </div>
       )}
-
-      {/* Progress — full main-content width. */}
-      <FlowProgress steps={STEPS} current={stepIndex} onStepClick={goToStep} ariaLabel="Quote progress" />
 
       {showSearch && (
         <QuoteSearchWidget
