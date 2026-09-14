@@ -8,7 +8,7 @@ import { AdminGate } from "@/components/admin-gate";
 import { PageHeader } from "@/components/page-header";
 import { StatCard, IconTile } from "@/components/stat-card";
 import { CarrierName } from "@/components/carrier-name";
-import { CountryFlag } from "@/components/location-label";
+import { CountryFlag, LocodeLane } from "@/components/location-label";
 import { EmptyState } from "@/components/empty-state";
 import { Card } from "@/components/ui/card";
 import { StatusBadge, type StatusTone } from "@/components/status-badge";
@@ -463,7 +463,7 @@ function BulkUploadDialog() {
                   {PARSED_PREVIEW.map((row, i) => (
                     <TableRow key={i}>
                       <TableCell className="capitalize">{row.type}</TableCell>
-                      <TableCell className="tabular-nums">{row.lane}</TableCell>
+                      <TableCell><LocodeLane lane={row.lane} /></TableCell>
                       <TableCell>{row.carrier}</TableCell>
                       <TableCell className="tabular-nums">{row.rate}</TableCell>
                     </TableRow>

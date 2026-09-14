@@ -1,6 +1,6 @@
 "use client";
 
-import { getAddress, getPort } from "@/lib/data/ports";
+import { findPortByLocode, getAddress, getPort } from "@/lib/data/ports";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
@@ -108,6 +108,37 @@ export function resolveLocationPoint(portId?: string, addressId?: string): Locat
 /** Resolve a picked location (kind + id) into its summary form. */
 export function locationPoint(kind: "port" | "address", id: string): LocationPoint | null {
   return kind === "port" ? fromPortId(id) : fromAddressId(id);
+}
+
+/** A lane written as UN/LOCODEs — "USHOU → AUBNE" — with each end flagged by
+    the country its code resolves to. Admin surfaces store lanes this way rather
+    than as picked locations, so the country comes from the port record.
+
+    An end that resolves to no port (a CFS, a region like "US exports", an
+    em-dash placeholder) correctly gets no flag: a flag is only ever drawn for
+    a country we can actually name. */
+export function LocodeLane({ lane, className }: { lane: string; className?: string }) {
+  const ends = lane.split("→").map((e) => e.trim()).filter(Boolean);
+  if (!ends.length) return null;
+  return (
+    <span className={cn("inline-flex flex-wrap items-center gap-x-1.5", className)}>
+      {ends.map((end, i) => {
+        const port = findPortByLocode(end);
+        return (
+          <span key={`${end}-${i}`} className="inline-flex items-center gap-1.5">
+            {i > 0 && <span aria-hidden className="text-muted-foreground">→</span>}
+            <CountryFlag cc={port?.countryCode} className="text-sm" />
+            <span
+              className="tabular-nums"
+              title={port ? `${port.name}, ${port.country}` : undefined}
+            >
+              {end}
+            </span>
+          </span>
+        );
+      })}
+    </span>
+  );
 }
 
 export function LocationLabel({

@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminGate } from "@/components/admin-gate";
+import { LocodeLane } from "@/components/location-label";
 import { PageHeader } from "@/components/page-header";
 import { CarrierName } from "@/components/carrier-name";
 import { EmptyState } from "@/components/empty-state";
@@ -364,7 +365,7 @@ function BulkUploadDialog() {
               <TableBody>
                 {PARSED_PREVIEW.map((row) => (
                   <TableRow key={`${row.lane}-${row.item}`}>
-                    <TableCell className="text-body">{row.lane}</TableCell>
+                    <TableCell className="text-body"><LocodeLane lane={row.lane} /></TableCell>
                     <TableCell className="text-body">{row.item}</TableCell>
                     <TableCell className="text-body tabular-nums">{row.rate}</TableCell>
                   </TableRow>
