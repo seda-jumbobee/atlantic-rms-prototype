@@ -30,6 +30,13 @@ const nextConfig: NextConfig = {
   // static file server needs to resolve /admin/vendors without a rewrite rule.
   trailingSlash: true,
 
+  // Next prefixes <Link>, router navigation and next/image with basePath, but
+  // leaves every hand-written URL alone — so a plain <img src="/brand/x.svg">
+  // would 404 on Pages. lib/asset.ts prefixes those, and reads this. Pinning it
+  // here rather than letting it fall back separately means the two cannot
+  // disagree: if they did, every image on the site would break at once.
+  env: { NEXT_PUBLIC_BASE_PATH: basePath },
+
   // The dev-only overlay badge sits bottom-left, exactly where the account
   // block now lives, and covers it during local review. Production builds
   // never render it, so turning it off only affects `npm run dev`.

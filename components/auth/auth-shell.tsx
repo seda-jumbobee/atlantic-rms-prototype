@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { asset } from "@/lib/asset";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
@@ -27,7 +28,7 @@ export function CalculatorMark({
   return (
     // eslint-disable-next-line @next/next/no-img-element -- local static SVG; no optimisation needed
     <img
-      src="/brand/calculator-64.svg"
+      src={asset("/brand/calculator-64.svg")}
       alt=""
       aria-hidden
       width={size}
@@ -53,13 +54,13 @@ function Banner() {
       {/* Decorative shapes, positioned proportionally to the Figma 768x1000 frame */}
       {/* eslint-disable @next/next/no-img-element -- local static SVGs, absolutely positioned; next/image adds no value here */}
       <img
-        src="/brand/auth-banner-swoosh.svg"
+        src={asset("/brand/auth-banner-swoosh.svg")}
         alt=""
         aria-hidden
         className="pointer-events-none absolute -top-[16.45%] -left-[4.8%] h-[78.6%] w-[128.7%] max-w-none"
       />
       <img
-        src="/brand/auth-banner-ellipse.svg"
+        src={asset("/brand/auth-banner-ellipse.svg")}
         alt=""
         aria-hidden
         className="pointer-events-none absolute -top-[41.6%] left-[37.5%] h-[83.2%] w-[90.9%] max-w-none"

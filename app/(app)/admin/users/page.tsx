@@ -73,6 +73,7 @@ import {
   roleHas,
   type Permission,
 } from "@/lib/data";
+import { asset } from "@/lib/asset";
 import { companyById } from "@/lib/auth/companies";
 import {
   getRequests, approveRequest, rejectRequest, type AccessRequest, type AccessStatus,
@@ -254,7 +255,8 @@ export default function UsersPage() {
     toast.success(`Approved ${approveTarget.name}`, {
       // Honest: no email provider — the setup email is queued to the dev preview, not delivered.
       description: "Setup email queued to the development preview.",
-      action: { label: "View email", onClick: () => window.open("/dev/email-preview", "_blank") },
+      // window.open bypasses the router, so the base path has to be added here.
+      action: { label: "View email", onClick: () => window.open(asset("/dev/email-preview"), "_blank") },
     });
     setApproveTarget(null);
   }

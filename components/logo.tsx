@@ -1,3 +1,4 @@
+import { asset } from "@/lib/asset";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
@@ -22,7 +23,7 @@ export function LogoMark({
   return (
     // eslint-disable-next-line @next/next/no-img-element -- local static SVG; next/image adds nothing
     <img
-      src="/brand/calculator-64.svg"
+      src={asset("/brand/calculator-64.svg")}
       alt=""
       aria-hidden
       width={px}
