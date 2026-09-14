@@ -13,6 +13,7 @@
 //   • Company/domain/role/status must be re-validated server-side.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { asset } from "@/lib/asset";
 import { COMPANIES, companyById, normalizeEmail, ACTIVATION_TOKEN_TTL_HOURS, RESET_TOKEN_TTL_HOURS } from "@/lib/auth/companies";
 import { USERS } from "@/lib/data/users";
 import { PENDING_REGISTRATIONS } from "@/lib/data/permissions";
@@ -404,13 +405,24 @@ export function getDevEmails(): DevEmail[] {
 
 // ── link + name helpers ──────────────────────────────────────────────────────
 
+/**
+ * An absolute link into the app, for a message that is read outside it.
+ *
+ * `window.location.origin` stops at the host, so on a site served from a
+ * subdirectory it lands one level above the app — asset() adds the rest.
+ * The trailing slash matches next.config's trailingSlash, which saves the
+ * recipient a redirect on the way in.
+ */
+function appLink(path: string, token: string): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}${asset(`${path}/`)}?token=${token}`;
+}
+
 export function activationLink(token: string): string {
-  const base = typeof window !== "undefined" ? window.location.origin : "";
-  return `${base}/activate?token=${token}`;
+  return appLink("/activate", token);
 }
 export function resetLink(token: string): string {
-  const base = typeof window !== "undefined" ? window.location.origin : "";
-  return `${base}/reset-password?token=${token}`;
+  return appLink("/reset-password", token);
 }
 export function firstName(fullName: string): string {
   return fullName.trim().split(/\s+/)[0] || fullName;
