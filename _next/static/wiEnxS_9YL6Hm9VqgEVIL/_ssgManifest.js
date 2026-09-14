@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Fadmin\u002Frate-library\u002F[id]","\u002Fadmin\u002Fvendors\u002F[id]","\u002Fcalculators\u002F[id]","\u002Fdeals\u002F[id]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()
