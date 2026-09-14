@@ -14,9 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { LocationCombobox, type LocationValue } from "@/components/location-combobox";
 import { CommodityPicker, type CommoditySelection } from "@/components/commodity-picker";
-import { ShipmentSummary } from "@/components/quote/shipment-summary";
-import { MapPreview } from "@/components/map-preview";
-import { routeSearchInput, pointFromLocation } from "@/components/route/route-data";
+import { RouteOverviewCard, CommodityDetailsCard } from "@/components/shipment-context-cards";
 
 type Errors = Partial<Record<"origin" | "dest" | "kind" | "details", string>>;
 
@@ -57,7 +55,6 @@ export function RouteShipmentStep({
   const [pending, setPending] = useState<{ which: "origin" | "dest"; value: LocationValue } | null>(null);
 
   const routeComplete = !!(origin && destination);
-  const input = routeSearchInput(origin, destination, commodity);
 
   const applyOrigin = (v: LocationValue) => (hasStages ? setPending({ which: "origin", value: v }) : setOrigin(v));
   const applyDest = (v: LocationValue) => (hasStages ? setPending({ which: "dest", value: v }) : setDestination(v));
@@ -127,15 +124,19 @@ export function RouteShipmentStep({
         </CardContent>
       </Card>
 
-      {/* live context panel */}
+      {/* Live context — the same two cards Rate Quote step 1 shows, from the
+          shared module. Both flows ask for the same two facts first, so what
+          you have entered so far should look identical in either. */}
       <aside className="space-y-4 lg:col-span-5 lg:sticky lg:top-20 lg:self-start" aria-label="Shipping preview">
-        {input && <ShipmentSummary input={input} />}
         {routeComplete && (
-          <Card className="overflow-hidden p-0">
-            <CardContent className="p-3">
-              <MapPreview origin={pointFromLocation(origin)} destination={pointFromLocation(destination)} className="h-56" />
-            </CardContent>
-          </Card>
+          <div className="duration-300 animate-in fade-in">
+            <RouteOverviewCard origin={origin!} dest={destination!} />
+          </div>
+        )}
+        {routeComplete && commodity && (
+          <div className="duration-300 animate-in fade-in">
+            <CommodityDetailsCard commodity={commodity} />
+          </div>
         )}
       </aside>
 
