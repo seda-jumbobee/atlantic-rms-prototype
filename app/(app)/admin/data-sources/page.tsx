@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Plug, FileSpreadsheet, MessageSquare, Inbox, Search, Upload, AlertTriangle,
 } from "lucide-react";
@@ -11,6 +12,7 @@ import { PageHeader } from "@/components/page-header";
 import { CarrierName } from "@/components/carrier-name";
 import { EmptyState } from "@/components/empty-state";
 import { AccentTile, accentAt } from "@/components/accent-tile";
+import { FilterBar, FilterField } from "@/components/filter-bar";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -80,6 +82,32 @@ function isExpired(ds: DataSource): boolean {
   return !!ds.validTo && new Date(ds.validTo).getTime() < TODAY;
 }
 
+/** Both ends, or whichever single end the record actually carries. Printed
+    blind the missing end became a dash, so a custom quote good "until 31 Jul"
+    read as "— → 31 Jul 2026": a range whose start we had lost, rather than an
+    open-ended validity. */
+function validityText(ds: DataSource): string | null {
+  if (ds.validFrom && ds.validTo) return `${fmtDate(ds.validFrom)} → ${fmtDate(ds.validTo)}`;
+  if (ds.validTo) return `Until ${fmtDate(ds.validTo)}`;
+  if (ds.validFrom) return `From ${fmtDate(ds.validFrom)}`;
+  return null;
+}
+
+/** Which columns this set of sources has anything to say in. A kind whose
+    records never sync (a signed contract, an emailed quote) would otherwise
+    carry a Last sync column of nothing but dashes, paying table width for a
+    value that does not exist for it. Driven by the rows, not by the kind, so
+    nothing is ever hidden: a column is dropped only when every row in it is
+    empty. */
+function columnsFor(sources: DataSource[]) {
+  return {
+    party: sources.some((d) => d.carrierId || d.vendorId),
+    validity: sources.some((d) => d.validFrom || d.validTo),
+    rates: sources.some((d) => d.rateCount != null),
+    sync: sources.some((d) => d.lastSync),
+  };
+}
+
 function SourceStatusBadge({ status }: { status: DataSourceStatus }) {
   return <StatusBadge tone={STATUS_TONE[status]}>{STATUS_LABEL[status]}</StatusBadge>;
 }
@@ -95,7 +123,64 @@ function NoValue() {
   );
 }
 
+/** The source itself: what it is called, what it arrives as, and the line the
+    record describes it with. Format rides here rather than in a column of its
+    own — it is an attribute of the feed, not of the party that sent it, and a
+    column that only ever says "API" costs width the wide rows need. */
+function SourceIdentity({ ds }: { ds: DataSource }) {
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="text-body font-medium text-foreground">{ds.name}</span>
+        {/* A format is a kind, not a judgement, so it takes the neutral chip
+            without the state dot — as SourceBadge does for sources. */}
+        {ds.format && (
+          <StatusBadge tone="neutral" dot={false}>{ds.format}</StatusBadge>
+        )}
+      </div>
+      {ds.description && (
+        <p className="mt-0.5 text-caption text-muted-foreground">{ds.description}</p>
+      )}
+    </>
+  );
+}
+
+/** Who the rates came from. A carrier is named and nothing more — carriers
+    have no record page — while a vendor links to its own, which lists this
+    very source under "Rate sources". */
+function SourceParty({ ds }: { ds: DataSource }) {
+  const vendor = getVendor(ds.vendorId);
+  if (ds.carrierId) return <CarrierName carrierId={ds.carrierId} />;
+  if (vendor) {
+    return (
+      <Link
+        href={`/admin/vendors/${vendor.id}`}
+        className="rounded-sm text-body font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      >
+        {vendor.name}
+      </Link>
+    );
+  }
+  return <NoValue />;
+}
+
+function Validity({ ds }: { ds: DataSource }) {
+  const text = validityText(ds);
+  if (!text) return <NoValue />;
+  return (
+    <>
+      <div className="text-body tabular-nums">{text}</div>
+      {isExpired(ds) && (
+        <div className="mt-0.5 text-caption font-medium text-status-warning-fg">
+          Expired — still quotable
+        </div>
+      )}
+    </>
+  );
+}
+
 function SourceTable({ sources }: { sources: DataSource[] }) {
+  const cols = columnsFor(sources);
   return (
     // `plain` because the table sits inside the section Card — otherwise the two
     // stack a border and a radius on the same edge.
@@ -103,74 +188,107 @@ function SourceTable({ sources }: { sources: DataSource[] }) {
       <TableHeader>
         <TableRow className="hover:bg-transparent">
           <TableHead>Source</TableHead>
-          <TableHead>Carrier / Vendor</TableHead>
-          <TableHead>Format</TableHead>
+          {cols.party && <TableHead>Carrier / Vendor</TableHead>}
           <TableHead>Status</TableHead>
-          <TableHead>Validity</TableHead>
-          <TableHead numeric>Rates</TableHead>
-          <TableHead>Last sync</TableHead>
+          {cols.validity && <TableHead>Validity</TableHead>}
+          {cols.rates && <TableHead numeric>Rates</TableHead>}
+          {cols.sync && <TableHead>Last sync</TableHead>}
         </TableRow>
       </TableHeader>
       <TableBody>
-        {sources.map((ds) => {
-          const vendor = getVendor(ds.vendorId);
-          const expired = isExpired(ds);
-          return (
-            <TableRow key={ds.id}>
-              {/* The only cell allowed to wrap. Cells are nowrap by default, so a
-                  long file name and its description used to push the whole table
-                  sideways rather than fill the width they were capped at. The
-                  floor is what stops auto-layout from paying for the narrow
-                  viewport out of this one column — the table scrolls instead. */}
-              <TableCell className="min-w-[220px] max-w-[280px] whitespace-normal">
-                <div className="text-body font-medium text-foreground">{ds.name}</div>
-                {ds.description && (
-                  <div className="mt-0.5 text-caption text-muted-foreground">{ds.description}</div>
-                )}
-              </TableCell>
-              <TableCell>
-                {ds.carrierId ? (
-                  <CarrierName carrierId={ds.carrierId} />
-                ) : vendor ? (
-                  <span className="text-body">{vendor.name}</span>
-                ) : (
-                  <NoValue />
-                )}
-              </TableCell>
-              <TableCell>
-                {/* A format is a kind, not a judgement, so it takes the neutral
-                    chip without the state dot — as SourceBadge does for sources. */}
-                {ds.format ? (
-                  <StatusBadge tone="neutral" dot={false}>{ds.format}</StatusBadge>
-                ) : (
-                  <NoValue />
-                )}
-              </TableCell>
-              <TableCell><SourceStatusBadge status={ds.status} /></TableCell>
-              {/* Allowed to break at the arrow. Held on one line it is the
-                  widest nowrap column on the row, and it alone pushed the table
-                  past its container at 1280. */}
-              <TableCell className="whitespace-normal">
-                <div className="text-body tabular-nums">
-                  {fmtDate(ds.validFrom)} → {fmtDate(ds.validTo)}
-                </div>
-                {expired && (
-                  <div className="mt-0.5 text-caption font-medium text-status-warning-fg">
-                    Expired — still quotable
-                  </div>
-                )}
-              </TableCell>
+        {sources.map((ds) => (
+          // NOT a LinkedTableRow: a data source has no record page to open.
+          // Every field the record holds is already on the row, so the row is
+          // left inert rather than sent somewhere that is not this source.
+          <TableRow key={ds.id}>
+            {/* The only cell allowed to wrap. Cells are nowrap by default, so a
+                long file name and its description used to push the whole table
+                sideways rather than fill the width they were capped at. The
+                floor is what stops auto-layout from paying for the narrow
+                viewport out of this one column — the table scrolls instead. */}
+            <TableCell className="min-w-[240px] max-w-[340px] whitespace-normal">
+              <SourceIdentity ds={ds} />
+            </TableCell>
+            {cols.party && (
+              <TableCell><SourceParty ds={ds} /></TableCell>
+            )}
+            <TableCell><SourceStatusBadge status={ds.status} /></TableCell>
+            {/* Allowed to break at the arrow. Held on one line it is the
+                widest nowrap column on the row, and it alone pushed the table
+                past its container at 1280. */}
+            {cols.validity && (
+              <TableCell className="whitespace-normal"><Validity ds={ds} /></TableCell>
+            )}
+            {cols.rates && (
               <TableCell numeric className="text-body">
                 {ds.rateCount != null ? ds.rateCount.toLocaleString() : <NoValue />}
               </TableCell>
+            )}
+            {cols.sync && (
               <TableCell className="text-body tabular-nums text-muted-foreground">
                 {ds.lastSync ? fmtDate(ds.lastSync) : <NoValue />}
               </TableCell>
-            </TableRow>
-          );
-        })}
+            )}
+          </TableRow>
+        ))}
       </TableBody>
     </Table>
+  );
+}
+
+/** One field of the stacked presentation of a row. */
+function ListField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <>
+      <dt className="text-caption text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 text-body text-foreground">{children}</dd>
+    </>
+  );
+}
+
+/** The same rows, stacked. Six columns inside a narrow card would be all
+    sideways scrolling, so under a certain width each source stacks its fields
+    instead — the treatment the invoices table already set.
+
+    Keyed to the CARD's width, not the viewport's: at 768 the sidebar is still
+    open and leaves this card ~380px, which is a phone's worth of room on a
+    tablet-width screen. A media query would have shown the table there. */
+function SourceList({ sources }: { sources: DataSource[] }) {
+  const cols = columnsFor(sources);
+  return (
+    <ul className="@2xl/sources:hidden">
+      {sources.map((ds) => (
+        <li
+          key={ds.id}
+          className="flex flex-col gap-3 border-t border-[var(--c-table-border)] px-5 py-4"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0"><SourceIdentity ds={ds} /></div>
+            {/* The chip keeps its width against a long file name rather than
+                being squeezed into two lines of its own. */}
+            <span className="shrink-0"><SourceStatusBadge status={ds.status} /></span>
+          </div>
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
+            {cols.party && (
+              <ListField label="Carrier / Vendor"><SourceParty ds={ds} /></ListField>
+            )}
+            {cols.validity && <ListField label="Validity"><Validity ds={ds} /></ListField>}
+            {cols.rates && (
+              <ListField label="Rates">
+                <span className="tabular-nums">
+                  {ds.rateCount != null ? ds.rateCount.toLocaleString() : <NoValue />}
+                </span>
+              </ListField>
+            )}
+            {cols.sync && (
+              <ListField label="Last sync">
+                <span className="tabular-nums">{ds.lastSync ? fmtDate(ds.lastSync) : <NoValue />}</span>
+              </ListField>
+            )}
+          </dl>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -188,6 +306,8 @@ export default function DataSourcesPage() {
         .some((v) => String(v).toLowerCase().includes(q));
     });
   }, [query]);
+
+  const searching = query.trim().length > 0;
 
   return (
     <AdminGate>
@@ -220,27 +340,8 @@ export default function DataSourcesPage() {
           })}
         </section>
 
-        {/* Search sits directly above the tabs it filters — the counts in the
-            tab labels move with it, so the two have to be read together. */}
-        <div className="flex flex-col gap-2.5">
-          <label htmlFor="source-search" className="text-body font-medium text-foreground">
-            Search sources
-          </label>
-          <div className="relative w-full sm:max-w-md">
-            <Search
-              aria-hidden
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-            />
-            <Input
-              id="source-search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Name, description or vendor…"
-              className="pl-9"
-            />
-          </div>
-        </div>
-
+        {/* Counted across every kind, not just the open tab — a contract that
+            lapsed is news whichever tab you are standing in. */}
         {expiredCount > 0 && (
           <Alert variant="warning">
             <AlertTriangle aria-hidden />
@@ -250,6 +351,38 @@ export default function DataSourcesPage() {
             <AlertDescription>These remain quotable until replaced.</AlertDescription>
           </Alert>
         )}
+
+        {/* The product's one filter treatment, sitting directly above what it
+            filters — the counts in the tab labels move with it, so the two have
+            to be read together. */}
+        <FilterBar activeCount={searching ? 1 : 0} onReset={() => setQuery("")}>
+          <FilterField label="Search sources" htmlFor="source-search" className="sm:w-80">
+            <div className="relative">
+              <Search
+                aria-hidden
+                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                id="source-search"
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Name, description or vendor…"
+                className="pl-9"
+              />
+            </div>
+          </FilterField>
+          {/* Given the height of a control, the count centres against the field
+              it sits beside — and still reads as a row of its own where the bar
+              wraps. */}
+          <p
+            role="status"
+            aria-live="polite"
+            className="text-body tabular-nums text-muted-foreground sm:ml-auto sm:flex sm:h-11 sm:items-center"
+          >
+            {filtered.length} of {DATA_SOURCES.length} sources
+          </p>
+        </FilterBar>
 
         <Tabs defaultValue={KIND_ORDER[0]} className="gap-4">
           {/* The list scrolls inside its own container rather than widening the
@@ -271,32 +404,42 @@ export default function DataSourcesPage() {
           {KIND_ORDER.map((k) => {
             const meta = KIND_META[k];
             const sources = filtered.filter((d) => d.kind === k);
+            const total = DATA_SOURCES.filter((d) => d.kind === k).length;
             return (
               <TabsContent key={k} value={k}>
                 {/* py-5 matches the 20px the table's edge cells inset by, so the
                     heading row and the rows below it share one left edge. */}
-                <Card className="min-w-0 gap-4 p-0 py-5">
+                <Card className="@container/sources min-w-0 gap-4 p-0 py-5">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-5">
                     <h2 className="text-h4 text-foreground">{meta.label}</h2>
                     <p className="text-caption tabular-nums text-muted-foreground">
-                      {sources.length} source{sources.length === 1 ? "" : "s"}
+                      {/* Under a search the denominator is what stops "1 source"
+                          reading as "this kind has one". */}
+                      {sources.length === total
+                        ? `${total} source${total === 1 ? "" : "s"}`
+                        : `${sources.length} of ${total} sources`}
                     </p>
                   </div>
                   {sources.length ? (
-                    <SourceTable sources={sources} />
+                    <>
+                      <div className="hidden @2xl/sources:block">
+                        <SourceTable sources={sources} />
+                      </div>
+                      <SourceList sources={sources} />
+                    </>
                   ) : (
                     <div className="px-5">
                       <EmptyState
-                        icon={query ? undefined : meta.icon}
-                        title={query ? "No matching sources" : "No sources of this kind"}
+                        icon={searching ? undefined : meta.icon}
+                        title={searching ? "No matching sources" : "No sources of this kind"}
                         description={
-                          query
+                          searching
                             ? `Nothing under ${meta.label} matches “${query}”. Another tab may still have results.`
                             : meta.blurb
                         }
                         className="border-dashed shadow-none"
                         action={
-                          query ? (
+                          searching ? (
                             <Button size="sm" variant="outline" onClick={() => setQuery("")}>
                               Clear search
                             </Button>
@@ -346,7 +489,18 @@ function BulkUploadDialog() {
             <p className="text-caption text-muted-foreground">XLS / XLSX, CSV or PDF — up to 25 MB</p>
             {/* Full height, not sm: on a touch device this is the only way in —
                 there is nothing to drag from. */}
-            <Button variant="outline" className="mt-2" onClick={() => toast("Choose a file to upload")}>
+            <Button
+              variant="outline"
+              className="mt-2"
+              // Inert, and says so: there is no upload endpoint behind this
+              // preview, so promising a file picker would be the one thing
+              // worse than not opening one.
+              onClick={() =>
+                toast("No file picker in this preview", {
+                  description: "Choosing a contract needs an upload endpoint this development preview does not have.",
+                })
+              }
+            >
               Browse files
             </Button>
           </div>
@@ -372,7 +526,9 @@ function BulkUploadDialog() {
                 ))}
               </TableBody>
             </Table>
-            <p className="text-caption text-muted-foreground">124 rows parsed · 3 shown · 2 flagged for review</p>
+            <p className="text-caption text-muted-foreground">
+              Sample output — 124 rows parsed · 3 shown · 2 flagged for review.
+            </p>
           </div>
         </DialogBody>
 
