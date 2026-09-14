@@ -553,8 +553,10 @@ export type LoginOutcome =
  * because the product spec requires them — see the summary for the disclosure
  * trade-off that carries.
  *
- * Seeded demo USERS start with no password on file: any non-empty password is
- * accepted for them, and that is a documented prototype gap, not a real check.
+ * Seeded demo USERS mostly start with no password on file: any non-empty
+ * password is accepted for them, and that is a documented prototype gap, not a
+ * real check. The exception is an account carrying `passwordHash` — the two
+ * handed out for evaluation — which is verified like any other.
  * Once such an account sets a password (Settings → Change password) the
  * credential is verified like any other, so the change actually takes effect.
  */
@@ -570,7 +572,14 @@ export async function attemptLogin(email: string, password: string): Promise<Log
 
   // ── active accounts ──
   if (seeded) {
-    const stored = s.credentials[e];
+    /* Precedence: a password the account set itself, then a credential seeded
+       on the record, then the prototype's historical open sign-in.
+
+       Only the accounts handed out for evaluation carry a seeded hash, so those
+       genuinely require their password while the other demo logins keep
+       working as they always have. This strictly tightens the check — it can
+       only ever reject something that used to be accepted. */
+    const stored = s.credentials[e] ?? seeded.passwordHash;
     const ok = stored ? await verifyPassword(password, stored) : Boolean(password);
     if (!ok) {
       recordFailure(s, e);

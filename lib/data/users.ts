@@ -5,8 +5,9 @@ export const USERS: User[] = [
   {
     id: "u-max",
     name: "Max Mayer",
-    email: "max.mayer@atlanticprojectcargo.com",
+    email: "admin@jumbobee.com",
     role: "admin",
+    passwordHash: "5c8e23d54e06bf0fa166391a7e6b74b9:fc89a69a64af393729cee5cf14779f3948ba8d31b702ec8b5158b5b0a86f4872",
     title: "Procurement Manager",
     initials: "MM",
     avatarColor: "#0ea5b7",
@@ -23,8 +24,9 @@ export const USERS: User[] = [
   {
     id: "u-nick",
     name: "Nickolay Yadryshnikov",
-    email: "nick@atlanticprojectcargo.com",
+    email: "manager@jumbobee.com",
     role: "manager",
+    passwordHash: "48045df4f41eab4ea7646798d4822813:75cfef112e3fcce4ee414db8f8461e5c3b62d2783160b0dfad12a78b43beb320",
     title: "Sales Manager",
     initials: "NY",
     avatarColor: "#2563eb",

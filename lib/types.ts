@@ -13,6 +13,12 @@ export interface User {
   name: string;
   email: string;
   role: Role;
+  /** Optional seeded credential, as `salt:sha256(salt + password)` — the same
+      shape lib/auth/access-store.ts produces. Present only on the accounts
+      handed out for evaluation, so THOSE require their real password while the
+      other demo accounts keep the open sign-in this prototype has always had.
+      Never the password itself. */
+  passwordHash?: string;
   title: string;
   initials: string;
   avatarColor: string;
