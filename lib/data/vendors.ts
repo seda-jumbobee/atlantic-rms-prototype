@@ -1,4 +1,4 @@
-import type { Vendor, DataSource } from "@/lib/types";
+import type { Vendor, DataSource, VendorServiceKind, VendorTier } from "@/lib/types";
 
 // Inland / loading / service vendors ("agents"), tiered 1st/2nd/3rd by capability.
 // 1st class owns equipment (crane), widest service pool, gets most shipments.
@@ -100,3 +100,52 @@ export function dataSourcesForVendor(vendorId: string): DataSource[] {
 export function dataSourcesForCarrier(carrierId: string): DataSource[] {
   return DATA_SOURCES.filter((d) => d.carrierId === carrierId);
 }
+
+/* ── Vendor vocabulary ──────────────────────────────────────────────────────
+   Shared by the vendor list, the vendor detail page and the reports that rank
+   vendors, so a service or a tier is never described two different ways. */
+
+export const SERVICE_LABEL: Record<VendorServiceKind, string> = {
+  trucking: "Trucking",
+  rail: "Rail",
+  loading: "Loading",
+  disassembly: "Disassembly",
+  washing: "Washing",
+  fumigation: "Fumigation",
+  fastening: "Fastening",
+  certification: "Certification",
+  tire_service: "Tire service",
+  drayage: "Drayage",
+  customs: "Customs",
+  ocean: "Ocean",
+  warehouse: "Warehouse",
+  inspection: "Inspection",
+  packing: "Packing",
+};
+
+export const VENDOR_SERVICES = Object.keys(SERVICE_LABEL) as VendorServiceKind[];
+
+export const VENDOR_TIERS: VendorTier[] = [1, 2, 3];
+
+/** What a tier means operationally — the guidance an admin needs before moving
+    a vendor between them. */
+export const TIER_GUIDE: { tier: VendorTier; title: string; description: string }[] = [
+  {
+    tier: 1,
+    title: "Owns equipment",
+    description:
+      "Owns equipment such as a crane, covers the widest range of services and is the most reliable. Gets the most shipments and the expensive or oversized cargo.",
+  },
+  {
+    tier: 2,
+    title: "Solid partner",
+    description:
+      "A dependable partner with fewer services. Used where Tier 1 has no coverage, and for routine lanes where its rates are competitive.",
+  },
+  {
+    tier: 3,
+    title: "Fallback",
+    description:
+      "Used when no higher tier covers the lane, or as a price check. Expect narrower service coverage and less consistent performance.",
+  },
+];
