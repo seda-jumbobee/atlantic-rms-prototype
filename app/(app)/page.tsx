@@ -1,9 +1,11 @@
 "use client";
 
+import { useMemo } from "react";
+
 import Link from "next/link";
 import {
   Sparkles, Calculator, ArrowRight, FileText, Briefcase, TrendingUp,
-  LayoutTemplate, Route,
+  LayoutTemplate, Route, Inbox,
   type LucideIcon,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -11,14 +13,15 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { IconTile } from "@/components/stat-card";
-import { QuoteStatusBadge } from "@/components/status-badge";
+import { QuoteStatusBadge, StatusBadge } from "@/components/status-badge";
 import { CountryFlag } from "@/components/location-label";
 import { LinkedTableRow } from "@/components/linked-table-row";
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
-import { useSession } from "@/components/session-provider";
+import { useSession, useIsAdmin } from "@/components/session-provider";
 import { QUOTE_HISTORY, CALC_HISTORY } from "@/lib/data/history";
+import { FRONT_RATE_REQUESTS } from "@/lib/data/front";
 import type { QuoteHistoryItem, CalcHistoryItem } from "@/lib/data/history";
 import { DEALS } from "@/lib/data/deals";
 import { money, fmtDate, relativeAge } from "@/lib/format";
@@ -126,7 +129,12 @@ const QUICK_ACTIONS = [
   { href: "/route-builder", label: "Build custom route", icon: Route },
 ];
 
-function QuickActions() {
+/* Procurement's own entry point. Appended rather than woven in, so the four
+   actions every manager uses keep their order and their muscle memory. */
+const ADMIN_QUICK_ACTION = { href: "/admin/front-review", label: "Rate queue", icon: Inbox };
+
+function QuickActions({ isAdmin }: { isAdmin: boolean }) {
+  const actions = isAdmin ? [...QUICK_ACTIONS, ADMIN_QUICK_ACTION] : QUICK_ACTIONS;
   return (
     <Card asChild className="p-5">
       <section aria-labelledby="quick-actions-heading">
@@ -135,7 +143,7 @@ function QuickActions() {
             Quick actions
           </h2>
           <div className="flex flex-wrap gap-2">
-            {QUICK_ACTIONS.map((a) => (
+            {actions.map((a) => (
               <Button key={a.href} asChild variant="outline" size="sm">
                 <Link href={a.href}>
                   <a.icon aria-hidden className="size-4" /> {a.label}
@@ -196,8 +204,109 @@ function Cell({ label, children }: { label: string; children: React.ReactNode })
   );
 }
 
+/* The Front rate queue, surfaced where the day starts. A summary, not the
+   queue itself: the five oldest unreviewed requests, with everything else a
+   click away. Anything more would be the queue page rendered twice. */
+const ATTENTION_LIMIT = 5;
+
+function AttentionQueue() {
+  const pending = useMemo(
+    () =>
+      FRONT_RATE_REQUESTS.filter((r) => r.status === "new")
+        .sort((a, b) => a.receivedAt.localeCompare(b.receivedAt)),
+    [],
+  );
+  const shown = pending.slice(0, ATTENTION_LIMIT);
+
+  return (
+    <TableSection
+      id="attention-heading"
+      title="Quotes requiring attention"
+      viewAllHref="/admin/front-review"
+      viewAllLabel="View the whole rate queue"
+    >
+      {shown.length === 0 ? (
+        <div className="px-5">
+          <EmptyState
+            icon={Inbox}
+            title="Nothing waiting"
+            description="Rate requests arriving from Front will appear here for review."
+            className="border-dashed shadow-none"
+            action={null}
+          />
+        </div>
+      ) : (
+        <>
+          <div className="hidden md:block">
+            <Table plain>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead>Request</TableHead>
+                  <TableHead>Route</TableHead>
+                  <TableHead>Requested by</TableHead>
+                  <TableHead>Received</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {shown.map((r) => (
+                  <LinkedTableRow key={r.id} href="/admin/front-review">
+                    <TableCell className="max-w-72 truncate font-medium" title={r.subject}>
+                      {r.subject}
+                    </TableCell>
+                    <TableCell className="text-body">
+                      {r.parsed.lane ? <LaneCell location={r.parsed.lane} /> : <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell className="text-body">{r.fromName}</TableCell>
+                    <TableCell className="text-body text-muted-foreground">
+                      <span title={fmtDate(r.receivedAt)}>{relativeAge(r.receivedAt)}</span>
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge tone="warning" dot={false}>Awaiting review</StatusBadge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end">
+                        <Button asChild variant="ghost" size="sm" className="px-2">
+                          <Link href="/admin/front-review" aria-label={`See details for ${r.subject}`}>
+                            See details <ArrowRight aria-hidden className="size-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </LinkedTableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          <ul className="md:hidden">
+            {shown.map((r) => (
+              <MobileRow key={r.id}>
+                <dl className="col-span-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
+                  <Cell label="Request"><span className="font-medium">{r.subject}</span></Cell>
+                  <Cell label="Route">{r.parsed.lane ?? "—"}</Cell>
+                  <Cell label="Requested by">{r.fromName}</Cell>
+                  <Cell label="Received">{relativeAge(r.receivedAt)}</Cell>
+                  <Cell label="Status"><StatusBadge tone="warning" dot={false}>Awaiting review</StatusBadge></Cell>
+                </dl>
+                <div className="col-span-2 pt-1">
+                  <Button asChild variant="ghost" size="sm" className="px-2">
+                    <Link href="/admin/front-review">See details <ArrowRight aria-hidden className="size-4" /></Link>
+                  </Button>
+                </div>
+              </MobileRow>
+            ))}
+          </ul>
+        </>
+      )}
+    </TableSection>
+  );
+}
+
 export default function DashboardPage() {
   const { user } = useSession();
+  const isAdmin = useIsAdmin();
   const firstName = user?.name.split(" ")[0] ?? "there";
   const uid = user?.id;
 
@@ -287,9 +396,13 @@ export default function DashboardPage() {
       </div>
 
       {/* 2 · Quick actions */}
-      <QuickActions />
+      <QuickActions isAdmin={isAdmin} />
 
-      {/* 3 · Recent quotes */}
+      {/* 3 · What needs Procurement's attention, before anything historical.
+             Admin only: a manager has no queue to act on. */}
+      {isAdmin && <AttentionQueue />}
+
+      {/* 4 · Recent quotes */}
       <TableSection
         id="recent-quotes-heading"
         title="Recent quotes"
@@ -382,7 +495,7 @@ export default function DashboardPage() {
         )}
       </TableSection>
 
-      {/* 4 · Recent calculations — a separate table, never merged with quotes */}
+      {/* 5 · Recent calculations — a separate table, never merged with quotes */}
       <TableSection
         id="recent-calculations-heading"
         title="Recent calculations"
